@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  roleId        String
+  role          Role      @relation(fields: [roleId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isActive      Boolean   @default(true)
+}
+
+model Role {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  description   String?
+  isSystem      Boolean   @default(false)
+  permissions   Permission[]
+  users         User[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Permission {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  description   String?
+  roles         Role[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model DashboardCard {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  component     String
+  roles         Role[]    @relation("DashboardCardRoles")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  price         Float
+  stock         Int       @default(0)
+  category      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Customer {
+  id            String    @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id])
+  status        String
+  total         Float
+  items         OrderItem[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model OrderItem {
+  id            String    @id @default(cuid())
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id])
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id])
+  quantity      Int
+  price         Float
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Production {
+  id            String    @id @default(cuid())
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id])
+  status        String
+  type          String    // Print, Press, Cutting, DTF
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model FinancialTransaction {
+  id            String    @id @default(cuid())
+  type          String    // Income, Expense
+  amount        Float
+  description   String?
+  category      String?
+  date          DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

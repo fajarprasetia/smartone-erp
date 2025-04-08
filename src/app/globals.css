@@ -1,26 +1,396 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+    --background: 250 70% 40%;
+    --foreground: 0 0% 100%;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+    --card: 270 70% 40%;
+    --card-foreground: 0 0% 100%;
+ 
+    --popover: 270 70% 40%;
+    --popover-foreground: 0 0% 100%;
+ 
+    --primary: 270 100% 60%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 270 30% 50%;
+    --secondary-foreground: 0 0% 100%;
+ 
+    --muted: 270 30% 60%;
+    --muted-foreground: 0 0% 90%;
+ 
+    --accent: 270 30% 50%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --border: 270 30% 70%;
+    --input: 270 30% 70%;
+    --ring: 270 100% 60%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 270 50% 5%;
+    --foreground: 270 10% 90%;
+ 
+    --card: 270 50% 5%;
+    --card-foreground: 270 10% 90%;
+ 
+    --popover: 270 50% 5%;
+    --popover-foreground: 270 10% 90%;
+ 
+    --primary: 270 100% 50%;
+    --primary-foreground: 270 10% 98%;
+ 
+    --secondary: 270 30% 15%;
+    --secondary-foreground: 270 10% 90%;
+ 
+    --muted: 270 30% 15%;
+    --muted-foreground: 270 10% 60%;
+ 
+    --accent: 270 30% 15%;
+    --accent-foreground: 270 10% 90%;
+ 
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 10% 98%;
+ 
+    --border: 270 30% 20%;
+    --input: 270 30% 20%;
+    --ring: 270 100% 50%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+  body {
+    @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))];
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(147, 112, 219, 0.3) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, rgba(186, 104, 200, 0.3) 0%, transparent 20%),
+      radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.2) 0%, transparent 50%),
+      linear-gradient(135deg, rgba(147, 112, 219, 0.1) 0%, rgba(186, 104, 200, 0.1) 100%);
+    background-attachment: fixed;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.glass-effect {
+  @apply bg-white/10 dark:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-lg shadow-lg;
+}
+
+.glass-card {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-lg shadow-lg;
+}
+
+.glass-button {
+  @apply bg-white/30 dark:bg-white/10 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-md hover:bg-white/40 dark:hover:bg-white/20 transition-all duration-300;
+}
+
+.glass-input {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-md shadow-inner;
+}
+
+.glass-select {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-md shadow-inner;
+}
+
+.glass-textarea {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-md shadow-inner;
+}
+
+.glass-checkbox {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded shadow-inner;
+}
+
+.glass-radio {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full shadow-inner;
+}
+
+.glass-switch {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full shadow-inner;
+}
+
+.glass-slider {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full shadow-inner;
+}
+
+.glass-progress {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full shadow-inner overflow-hidden;
+}
+
+.glass-tooltip {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-lg;
+}
+
+.glass-popover {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-lg shadow-lg;
+}
+
+.glass-dialog {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-lg shadow-lg;
+}
+
+.glass-dropdown {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-lg;
+}
+
+.glass-menu {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-lg;
+}
+
+.glass-tabs {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-md shadow-inner;
+}
+
+.glass-accordion {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-md shadow-inner;
+}
+
+.glass-alert {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-lg;
+}
+
+.glass-toast {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-lg;
+}
+
+.glass-notification {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-lg;
+}
+
+.glass-modal {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-lg shadow-lg;
+}
+
+.glass-drawer {
+  @apply bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-lg shadow-lg;
+}
+
+.glass-sidebar {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border-r border-white/30 dark:border-white/10 shadow-lg;
+}
+
+.glass-header {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border-b border-white/30 dark:border-white/10 shadow-lg;
+}
+
+.glass-footer {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border-t border-white/30 dark:border-white/10 shadow-lg;
+}
+
+.glass-nav {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border-b border-white/30 dark:border-white/10 shadow-lg;
+}
+
+.glass-table {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-lg shadow-lg overflow-hidden;
+}
+
+.glass-form {
+  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-lg shadow-lg p-6;
+}
+
+.glass-card-hover {
+  @apply hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-300;
+}
+
+.glass-button-hover {
+  @apply hover:bg-white/40 dark:hover:bg-white/20 transition-all duration-300;
+}
+
+.glass-input-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-select-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-textarea-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-checkbox-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-radio-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-switch-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-slider-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-progress-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-tooltip-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-popover-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-dialog-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-dropdown-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-menu-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-tabs-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-accordion-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-alert-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-toast-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-notification-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-modal-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-drawer-focus {
+  @apply focus:bg-white/40 dark:focus:bg-white/20 focus:border-white/60 dark:focus:border-white/40 transition-all duration-300;
+}
+
+.glass-sidebar-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-header-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-footer-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-nav-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-table-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+.glass-form-focus {
+  @apply focus:bg-white/30 dark:focus:bg-white/10 focus:border-white/50 dark:focus:border-white/30 transition-all duration-300;
+}
+
+/* Light theme background with deeper purple base and white glassmorphism */
+:root {
+  background: linear-gradient(135deg, hsl(270, 70%, 40%) 0%, hsl(280, 60%, 30%) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+:root::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(circle at 10% 20%, rgba(200, 150, 255, 0.6) 0%, rgba(200, 150, 255, 0) 40%),
+    radial-gradient(circle at 90% 40%, rgba(180, 130, 255, 0.6) 0%, rgba(180, 130, 255, 0) 40%),
+    radial-gradient(circle at 30% 70%, rgba(160, 110, 255, 0.6) 0%, rgba(160, 110, 255, 0) 40%);
+  z-index: 0;
+}
+
+:root::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 30%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 30%),
+    radial-gradient(circle at 60% 10%, rgba(230, 200, 255, 0.5) 0%, rgba(230, 200, 255, 0) 30%),
+    radial-gradient(circle at 40% 90%, rgba(210, 180, 255, 0.5) 0%, rgba(210, 180, 255, 0) 30%);
+  z-index: 0;
+}
+
+/* Dark theme background with colorful glassmorphism style */
+.dark {
+  background: linear-gradient(120deg, #1a1a1a 0%, #121212 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.dark::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(40, 40, 40, 0.8) 0%, rgba(40, 40, 40, 0) 50%),
+    radial-gradient(circle at 85% 30%, rgba(40, 40, 40, 0.8) 0%, rgba(40, 40, 40, 0) 50%),
+    radial-gradient(circle at 50% 80%, rgba(40, 40, 40, 0.8) 0%, rgba(40, 40, 40, 0) 50%),
+    radial-gradient(circle at 10% 20%, rgba(25, 25, 112, 0.4) 0%, rgba(25, 25, 112, 0) 40%),
+    radial-gradient(circle at 90% 40%, rgba(75, 0, 130, 0.4) 0%, rgba(75, 0, 130, 0) 40%),
+    radial-gradient(circle at 30% 70%, rgba(47, 79, 79, 0.4) 0%, rgba(47, 79, 79, 0) 40%);
+  z-index: 0;
+}
+
+.dark::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(40, 40, 40, 0.3) 0%, rgba(40, 40, 40, 0) 30%),
+    radial-gradient(circle at 75% 75%, rgba(40, 40, 40, 0.3) 0%, rgba(40, 40, 40, 0) 30%),
+    radial-gradient(circle at 60% 10%, rgba(72, 61, 139, 0.3) 0%, rgba(72, 61, 139, 0) 30%),
+    radial-gradient(circle at 40% 90%, rgba(85, 107, 47, 0.3) 0%, rgba(85, 107, 47, 0) 30%);
+  z-index: 0;
+}
+
+/* Ensure content is above the background */
+body > * {
+  position: relative;
+  z-index: 1;
 }
