@@ -243,8 +243,8 @@ export function MainNav({ isCollapsed = false }) {
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
                     isActive(item.href) || isSubmenuActive(item.items)
-                      ? "bg-primary/20 text-white font-bold"
-                      : "hover:bg-white/10 text-white"
+                      ? "bg-primary/20 text-black font-bold"
+                      : "hover:bg-white/10 text-black"
                   )}
                 >
                   {isCollapsed ? (
@@ -284,8 +284,8 @@ export function MainNav({ isCollapsed = false }) {
                         className={cn(
                           "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                           isActive(subItem.href)
-                            ? "bg-primary/20 text-white font-bold"
-                            : "hover:bg-white/10 text-white/90"
+                            ? "bg-primary/20 text-black font-bold"
+                            : "hover:bg-white/10 text-black/90"
                         )}
                       >
                         <div className="flex items-center space-x-3">
@@ -303,8 +303,8 @@ export function MainNav({ isCollapsed = false }) {
                 className={cn(
                   "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                   isActive(item.href)
-                    ? "bg-primary/20 text-white font-bold"
-                    : "hover:bg-white/10 text-white"
+                    ? "bg-primary/20 text-black font-bold"
+                    : "hover:bg-white/10 text-black"
                 )}
               >
                 {isCollapsed ? (

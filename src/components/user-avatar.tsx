@@ -3,6 +3,7 @@
 import * as React from "react"
 import { LogOut, User } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { signOut, useSession } from "next-auth/react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -17,19 +18,13 @@ import {
 
 export function UserAvatar() {
   const router = useRouter()
+  const { data: session } = useSession()
   
-  // This would typically come from your auth context or session
-  const user = {
-    name: "John Doe",
-    email: "john@example.com",
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: "/auth/signin" })
   }
 
-  const handleLogout = () => {
-    // Implement logout logic here
-    console.log("Logging out...")
-    // Redirect to login page
-    router.push("/login")
-  }
+  if (!session?.user) return null
 
   return (
     <DropdownMenu>
@@ -37,7 +32,7 @@ export function UserAvatar() {
         <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-white/10 dark:bg-black/20 backdrop-blur-sm hover:bg-white/20 dark:hover:bg-black/30">
           <Avatar className="h-10 w-10">
             <AvatarFallback className="bg-primary/10 text-white">
-              {user.name.charAt(0)}
+              {session.user.name?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -45,9 +40,9 @@ export function UserAvatar() {
       <DropdownMenuContent className="w-56 bg-white/20 dark:bg-black/90 backdrop-blur-md border-white/30 dark:border-white/10" align="end" forceMount>
         <DropdownMenuLabel className="font-normal text-white">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-white">{user.name}</p>
+            <p className="text-sm font-medium leading-none text-white">{session.user.name}</p>
             <p className="text-xs leading-none text-white/70">
-              {user.email}
+              {session.user.email}
             </p>
           </div>
         </DropdownMenuLabel>

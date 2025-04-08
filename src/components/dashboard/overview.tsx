@@ -1,7 +1,7 @@
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts"
-import { formatCurrency } from "@/lib/utils"
+import { formatNumber } from "@/lib/utils"
 
 const data = [
   {
@@ -32,6 +32,26 @@ const data = [
     name: "Jul",
     total: Math.floor(Math.random() * 5000000) + 1000000,
   },
+  {
+    name: "Aug",
+    total: Math.floor(Math.random() * 5000000) + 1000000,
+  },
+  {
+    name: "Sep",
+    total: Math.floor(Math.random() * 5000000) + 1000000,
+  },
+  {
+    name: "Oct",
+    total: Math.floor(Math.random() * 5000000) + 1000000,
+  },
+  {
+    name: "Nov",
+    total: Math.floor(Math.random() * 5000000) + 1000000,
+  },
+  {
+    name: "Dec",
+    total: Math.floor(Math.random() * 5000000) + 1000000,
+  },
 ]
 
 // Define a colorful gradient palette
@@ -48,14 +68,14 @@ const COLORS = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border bg-white/20 dark:bg-black/80 backdrop-blur-sm p-3 shadow-lg border-white/30 dark:border-white/10">
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
         <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col">
-            <span className="text-[0.70rem] uppercase text-white/80">
+            <span className="text-[0.70rem] uppercase text-muted-foreground">
               {label}
             </span>
-            <span className="font-bold text-white">
-              {formatCurrency(payload[0].value)}
+            <span className="font-bold">
+              {formatNumber(payload[0].value as number)}
             </span>
           </div>
         </div>
@@ -76,29 +96,27 @@ export function Overview() {
             <stop offset="95%" stopColor="rgba(255, 255, 255, 0.2)" stopOpacity={0.2}/>
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-white/20" />
+        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis
           dataKey="name"
-          stroke="white"
+          stroke="currentColor"
           fontSize={12}
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => value}
-          tick={{ fill: "white" }}
         />
         <YAxis
-          stroke="white"
+          stroke="currentColor"
           fontSize={12}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => formatCurrency(value)}
-          tick={{ fill: "white" }}
+          tickFormatter={(value) => formatNumber(value)}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar
           dataKey="total"
-          radius={[6, 6, 0, 0]}
-          className="fill-white"
+          radius={[4, 4, 0, 0]}
+          className="fill-primary"
         >
           {data.map((entry, index) => (
             <Cell 

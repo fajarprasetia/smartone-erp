@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { formatCurrency } from "@/lib/utils"
+import { formatDate, formatNumber } from "@/lib/utils"
 
 const recentSales = [
   {
@@ -64,10 +64,13 @@ export function RecentSales() {
           <AvatarFallback>OM</AvatarFallback>
         </Avatar>
         <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none text-white">Olivia Martin</p>
-          <p className="text-sm text-white/70">olivia.martin@email.com</p>
+          <p className="text-sm font-medium leading-none">Olivia Martin</p>
+          <p className="text-sm text-muted-foreground">olivia.martin@email.com</p>
         </div>
-        <div className="ml-auto font-medium text-white">{formatCurrency(1999000)}</div>
+        <div className="ml-auto font-medium text-right">
+          <div>{formatNumber(1999000)}</div>
+          <div className="text-xs text-green-700">Completed</div>
+        </div>
       </div>
       <div className="flex items-center">
         <Avatar className="h-9 w-9">
@@ -75,10 +78,13 @@ export function RecentSales() {
           <AvatarFallback>JL</AvatarFallback>
         </Avatar>
         <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none text-white">Jackson Lee</p>
-          <p className="text-sm text-white/70">jackson.lee@email.com</p>
+          <p className="text-sm font-medium leading-none">Jackson Lee</p>
+          <p className="text-sm text-muted-foreground">jackson.lee@email.com</p>
         </div>
-        <div className="ml-auto font-medium text-white">{formatCurrency(3999000)}</div>
+        <div className="ml-auto font-medium text-right">
+          <div>{formatNumber(3999000)}</div>
+          <div className="text-xs text-green-700">Completed</div>
+        </div>
       </div>
       <div className="flex items-center">
         <Avatar className="h-9 w-9">
@@ -86,10 +92,13 @@ export function RecentSales() {
           <AvatarFallback>IN</AvatarFallback>
         </Avatar>
         <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none text-white">Isabella Nguyen</p>
-          <p className="text-sm text-white/70">isabella.nguyen@email.com</p>
+          <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
+          <p className="text-sm text-muted-foreground">isabella.nguyen@email.com</p>
         </div>
-        <div className="ml-auto font-medium text-white">{formatCurrency(2999000)}</div>
+        <div className="ml-auto font-medium text-right">
+          <div>{formatNumber(2999000)}</div>
+          <div className="text-xs text-yellow-700">Processing</div>
+        </div>
       </div>
       <div className="flex items-center">
         <Avatar className="h-9 w-9">
@@ -97,10 +106,13 @@ export function RecentSales() {
           <AvatarFallback>WK</AvatarFallback>
         </Avatar>
         <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none text-white">William Kim</p>
-          <p className="text-sm text-white/70">will@email.com</p>
+          <p className="text-sm font-medium leading-none">William Kim</p>
+          <p className="text-sm text-muted-foreground">william.kim@email.com</p>
         </div>
-        <div className="ml-auto font-medium text-white">{formatCurrency(4999000)}</div>
+        <div className="ml-auto font-medium text-right">
+          <div>{formatNumber(4999000)}</div>
+          <div className="text-xs text-green-700">Completed</div>
+        </div>
       </div>
       <div className="flex items-center">
         <Avatar className="h-9 w-9">
@@ -108,10 +120,13 @@ export function RecentSales() {
           <AvatarFallback>SD</AvatarFallback>
         </Avatar>
         <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none text-white">Sofia Davis</p>
-          <p className="text-sm text-white/70">sofia.davis@email.com</p>
+          <p className="text-sm font-medium leading-none">Sofia Davis</p>
+          <p className="text-sm text-muted-foreground">sofia.davis@email.com</p>
         </div>
-        <div className="ml-auto font-medium text-white">{formatCurrency(1999000)}</div>
+        <div className="ml-auto font-medium text-right">
+          <div>{formatNumber(1999000)}</div>
+          <div className="text-xs text-red-700">Failed</div>
+        </div>
       </div>
     </div>
   )
