@@ -6,13 +6,13 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-function AlertDialog({
+export function AlertDialog({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
 }
 
-function AlertDialogTrigger({
+export function AlertDialogTrigger({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
   return (
@@ -20,7 +20,7 @@ function AlertDialogTrigger({
   )
 }
 
-function AlertDialogPortal({
+export function AlertDialogPortal({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Portal>) {
   return (
@@ -28,7 +28,7 @@ function AlertDialogPortal({
   )
 }
 
-function AlertDialogOverlay({
+export function AlertDialogOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
@@ -44,8 +44,9 @@ function AlertDialogOverlay({
   )
 }
 
-function AlertDialogContent({
+export function AlertDialogContent({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
   return (
@@ -58,12 +59,14 @@ function AlertDialogContent({
           className
         )}
         {...props}
-      />
+      >
+        {children}
+      </AlertDialogPrimitive.Content>
     </AlertDialogPortal>
   )
 }
 
-function AlertDialogHeader({
+export function AlertDialogHeader({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -76,7 +79,7 @@ function AlertDialogHeader({
   )
 }
 
-function AlertDialogFooter({
+export function AlertDialogFooter({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -92,7 +95,7 @@ function AlertDialogFooter({
   )
 }
 
-function AlertDialogTitle({
+export function AlertDialogTitle({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
@@ -105,7 +108,7 @@ function AlertDialogTitle({
   )
 }
 
-function AlertDialogDescription({
+export function AlertDialogDescription({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
@@ -118,7 +121,7 @@ function AlertDialogDescription({
   )
 }
 
-function AlertDialogAction({
+export function AlertDialogAction({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
@@ -130,7 +133,7 @@ function AlertDialogAction({
   )
 }
 
-function AlertDialogCancel({
+export function AlertDialogCancel({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
@@ -142,16 +145,4 @@ function AlertDialogCancel({
   )
 }
 
-export {
-  AlertDialog,
-  AlertDialogPortal,
-  AlertDialogOverlay,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogAction,
-  AlertDialogCancel,
-}
+// Components are already exported individually above

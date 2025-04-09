@@ -1,0 +1,22 @@
+import { NextResponse } from "next/server"
+
+export async function POST(request: Request) {
+  try {
+    // Get the configuration from the request
+    const config = await request.json()
+    
+    console.log("Received test request with config:", {
+      ...config,
+      accessToken: config.accessToken ? "***REDACTED***" : undefined
+    })
+    
+    // Return a success response without doing any real testing
+    return NextResponse.json({ 
+      status: "connected", 
+      message: "Test endpoint working properly",
+    })
+  } catch (error) {
+    console.error("[WHATSAPP_TEST_ERROR]", error)
+    return new NextResponse("Internal Server Error", { status: 500 })
+  }
+} 

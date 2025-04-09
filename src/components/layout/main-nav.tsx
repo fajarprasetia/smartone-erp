@@ -69,9 +69,26 @@ const navItems: NavItem[] = [
         icon: <MessageSquarePlus className="h-4 w-4" />,
       },
       {
-        title: "WhatsApp",
+        title: "WhatsApp Business Platform",
         href: "/marketing/whatsapp",
-        icon: <MessageSquareReply className="h-4 w-4" />,
+        icon: <MessageSquare className="h-4 w-4" />,
+        items: [
+          {
+            title: "Dashboard",
+            href: "/marketing/whatsapp",
+            icon: <LayoutDashboard className="h-4 w-4" />,
+          },
+          {
+            title: "Templates",
+            href: "/marketing/whatsapp/templates",
+            icon: <FileText className="h-4 w-4" />,
+          },
+        ],
+      },
+      {
+        title: "WhatsApp Chat",
+        href: "/marketing/whatsapp/chat",
+        icon: <MessageSquare className="h-4 w-4" />,
       },
     ],
   },
@@ -205,6 +222,11 @@ const navItems: NavItem[] = [
         title: "Roles",
         href: "/settings/roles",
         icon: <Shield className="h-4 w-4" />,
+      },
+      {
+        title: "WhatsApp",
+        href: "/settings/whatsapp",
+        icon: <MessageSquareReply className="h-4 w-4" />,
       },
     ],
   },

@@ -1,0 +1,91 @@
+-- AlterTable
+ALTER TABLE "Production" ADD COLUMN     "orderDetailsId" TEXT;
+
+-- CreateTable
+CREATE TABLE "OrderDetails" (
+    "id" TEXT NOT NULL,
+    "tanggal" TIMESTAMP(3),
+    "spk" VARCHAR(10),
+    "reject" VARCHAR(10),
+    "panjang_reject" VARCHAR(10),
+    "panjang_order" VARCHAR(10),
+    "lebar_kertas" VARCHAR(10),
+    "marketing" VARCHAR(10),
+    "nominal" VARCHAR(30),
+    "harga_satuan" VARCHAR(30),
+    "keterangan" VARCHAR(20),
+    "invoice" VARCHAR(30),
+    "jenis_pembayaran" VARCHAR(30),
+    "dp" VARCHAR(30),
+    "tgl_dp" TIMESTAMP(3),
+    "sisa" VARCHAR(30),
+    "pelunasan" VARCHAR(30),
+    "biaya_tambahan" VARCHAR(30),
+    "tgl_lunas" TIMESTAMP(3),
+    "tgl_invoice" TIMESTAMP(3),
+    "status" VARCHAR(20),
+    "statusm" VARCHAR(20),
+    "approval" VARCHAR(20),
+    "approve_mng" VARCHAR(20),
+    "approval_barang" VARCHAR(20),
+    "approval_opr" VARCHAR(20),
+    "opr_id" INTEGER,
+    "user_id" INTEGER,
+    "userId" TEXT,
+    "print_id" INTEGER,
+    "press_id" INTEGER,
+    "cutting_id" INTEGER,
+    "dtf_id" INTEGER,
+    "penyerahan_id" INTEGER,
+    "designer_id" INTEGER,
+    "manager_id" INTEGER,
+    "customer_id" INTEGER,
+    "customerId" TEXT,
+    "rip" VARCHAR(20),
+    "produk" VARCHAR(255),
+    "path" VARCHAR(100),
+    "tf_dp" VARCHAR(100),
+    "tf_pelunasan" VARCHAR(100),
+    "tf_full" VARCHAR(100),
+    "catatan_tf" TEXT,
+    "capture" VARCHAR(100),
+    "capture_name" VARCHAR(100),
+    "asal_bahan" VARCHAR(30),
+    "nama_kain" VARCHAR(100),
+    "jumlah_kain" VARCHAR(20),
+    "tipe_produk" VARCHAR(50),
+    "qty" VARCHAR(200),
+    "kategori" VARCHAR(50),
+    "gramasi" VARCHAR(30),
+    "nama_produk" VARCHAR(50),
+    "catatan" TEXT,
+    "catatan_print" TEXT,
+    "catatan_press" TEXT,
+    "catatan_cutting" TEXT,
+    "lebar_file" VARCHAR(255),
+    "est_order" TIMESTAMP(3),
+    "jns_produk_id" INTEGER,
+    "no_project" VARCHAR(255),
+    "tgl_print" TIMESTAMP(3),
+    "print_done" TIMESTAMP(3),
+    "tgl_press" TIMESTAMP(3),
+    "press_done" TIMESTAMP(3),
+    "tgl_cutting" TIMESTAMP(3),
+    "cutting_done" TIMESTAMP(3),
+    "tgl_dtf" TIMESTAMP(3),
+    "dtf_done" TIMESTAMP(3),
+    "warna_acuan" VARCHAR(255),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "OrderDetails_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "Production" ADD CONSTRAINT "Production_orderDetailsId_fkey" FOREIGN KEY ("orderDetailsId") REFERENCES "OrderDetails"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderDetails" ADD CONSTRAINT "OrderDetails_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderDetails" ADD CONSTRAINT "OrderDetails_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;

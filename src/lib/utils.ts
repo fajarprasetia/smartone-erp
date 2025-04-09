@@ -38,3 +38,10 @@ export function formatNumber(amount: number): string {
   const value = amount.toFixed(2);
   return `Rp. ${value.endsWith('.00') ? value.slice(0, -3) : value.replace(/\.?0+$/, '')}`;
 }
+
+export function formatTime(date: Date): string {
+  return new Intl.DateTimeFormat('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
