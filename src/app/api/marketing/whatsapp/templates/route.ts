@@ -4,18 +4,25 @@ import { prisma } from '@/lib/prisma'
 // GET /api/marketing/whatsapp/templates - Get all WhatsApp templates
 export async function GET(req: NextRequest) {
   try {
+    // Fetch templates from the database
     const templates = await prisma.whatsAppTemplate.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' }
-    })
+    });
     
-    return NextResponse.json(templates)
+    // Parse the JSON components field for each template to make it usable by the frontend
+    const parsedTemplates = templates.map(template => ({
+      ...template,
+      components: template.components as any // This is already a parsed JSON object from Prisma
+    }));
+    
+    return NextResponse.json(parsedTemplates);
   } catch (error) {
-    console.error('Error fetching WhatsApp templates:', error)
+    console.error('Error fetching WhatsApp templates:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch WhatsApp templates' },
+      { error: 'Failed to fetch WhatsApp templates', details: String(error) },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -32,11 +39,12 @@ export async function POST(req: NextRequest) {
       )
     }
     
+    // Create the template in the database
     const template = await prisma.whatsAppTemplate.create({
       data: {
         name,
         language: language || 'en',
-        components,
+        components, // Prisma will automatically convert this to JSON
         isActive: true
       }
     })

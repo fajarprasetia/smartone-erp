@@ -60,7 +60,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header */}
-        <header className="h-16 glass-effect border-b border-white/30 dark:border-white/10">
+        <header className="h-16 glass-effect border-b border-white/30 dark:border-white/10 relative z-10 shrink-0">
           <div className="flex items-center justify-end h-full px-4">
             <div className="flex items-center space-x-4">
               <ThemeToggle />
@@ -70,12 +70,32 @@ export function MainLayout({ children }: MainLayoutProps) {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto p-6">
-          <div className="glass-card h-full p-6 rounded-xl border border-white/30 dark:border-white/10">
+        <main className="flex-1 p-6 relative z-0 overflow-hidden print:overflow-visible">
+          <div className="glass-card h-full p-6 rounded-xl border border-white/30 dark:border-white/10 overflow-auto print:overflow-visible">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Add global print styles */}
+      <style jsx global>{`
+        @media print {
+          .glass-card {
+            background: white !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            height: auto !important;
+            overflow: visible !important;
+            padding: 0 !important;
+          }
+          
+          html, body, .h-screen, .overflow-hidden {
+            height: auto !important;
+            overflow: visible !important;
+          }
+        }
+      `}</style>
     </div>
   );
 } 

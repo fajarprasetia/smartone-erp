@@ -22,6 +22,12 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster />
+          {/* Portal container for popovers */}
+          <div id="popover-portal" className="fixed inset-0 z-[999]">
+            <div className="pointer-events-none absolute inset-0" />
+          </div>
+          {/* Portal container for custom popovers */}
+          <div id="custom-popover-portal" className="fixed inset-0 z-[1000]" />
         </Providers>
       </body>
     </html>

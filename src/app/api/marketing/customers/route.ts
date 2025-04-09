@@ -4,12 +4,19 @@ import { prisma } from '@/lib/prisma'
 // GET /api/marketing/customers - Get all customers
 export async function GET(req: NextRequest) {
   try {
-    // Use raw SQL query instead of Prisma model to handle BigInt ID
-    const customers = await prisma.$queryRaw`SELECT * FROM customer ORDER BY nama ASC`;
+    // Use raw SQL query for legacy customers
+    const legacyCustomers = await prisma.$queryRaw`SELECT * FROM customer ORDER BY nama ASC`;
     
-    // Map the result and convert BigInt ID to string for JSON serialization
-    const mappedCustomers = Array.isArray(customers) 
-      ? customers.map(customer => ({
+    // Get new model customers
+    const newCustomers = await prisma.Customer.findMany({
+      orderBy: {
+        name: 'asc'
+      }
+    });
+    
+    // Map the legacy customers
+    const mappedLegacyCustomers = Array.isArray(legacyCustomers) 
+      ? legacyCustomers.map(customer => ({
           id: String(customer.id),
           name: customer.nama,
           phone: customer.telp,
@@ -17,11 +24,28 @@ export async function GET(req: NextRequest) {
           address: null,
           status: null,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          isLegacy: true
         }))
       : [];
     
-    return NextResponse.json(mappedCustomers)
+    // Format the new customers to match the legacy format
+    const formattedNewCustomers = newCustomers.map(customer => ({
+      id: customer.id,
+      name: customer.name,
+      phone: customer.phone || null,
+      email: customer.email || null,
+      address: customer.address || null,
+      status: null,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt,
+      isLegacy: false
+    }));
+    
+    // Combine both sets of customers
+    const allCustomers = [...mappedLegacyCustomers, ...formattedNewCustomers];
+    
+    return NextResponse.json(allCustomers)
   } catch (error) {
     console.error('Error fetching customers:', error)
     return NextResponse.json(
@@ -38,36 +62,30 @@ export async function POST(req: NextRequest) {
     
     const { name, phone, email, address } = body
     
-    // Use raw SQL query to insert customer
-    const result = await prisma.$queryRaw`
-      INSERT INTO customer (nama, telp)
-      VALUES (${name}, ${phone || null})
-      RETURNING *
-    `;
+    // Create customer using new Customer model
+    const customer = await prisma.Customer.create({
+      data: {
+        name,
+        phone,
+        email,
+        address
+      }
+    });
     
-    // Extract the customer from the result
-    const customer = Array.isArray(result) && result.length > 0 ? result[0] : null;
-    
-    if (!customer) {
-      return NextResponse.json(
-        { error: 'Failed to create customer' },
-        { status: 500 }
-      );
-    }
-    
-    // Map to uppercase model format for consistent frontend handling
-    const mappedCustomer = {
-      id: String(customer.id),
-      name: customer.nama,
-      phone: customer.telp,
-      email: null,
-      address: null,
+    // Format response
+    const formattedCustomer = {
+      id: customer.id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
       status: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt,
+      isLegacy: false
     }
     
-    return NextResponse.json(mappedCustomer, { status: 201 })
+    return NextResponse.json(formattedCustomer, { status: 201 })
   } catch (error) {
     console.error('Error creating customer:', error)
     return NextResponse.json(

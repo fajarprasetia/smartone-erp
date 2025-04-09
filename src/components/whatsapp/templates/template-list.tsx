@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { 
@@ -38,26 +38,55 @@ import {
 import {
   Badge
 } from "@/components/ui/badge"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 interface Template {
   id: string
   name: string
-  description: string
-  content: string
-  status: "APPROVED" | "PENDING" | "REJECTED"
-  createdBy: string
+  description?: string
+  language: string
+  components: any
+  isActive: boolean
   createdAt: Date
+  updatedAt: Date
 }
 
 interface TemplateListProps {
-  templates: Template[]
+  initialTemplates?: Template[]
 }
 
-export function TemplateList({ templates }: TemplateListProps) {
+export function TemplateList({ initialTemplates = [] }: TemplateListProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null)
+  const [templates, setTemplates] = useState<Template[]>(initialTemplates)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Fetch templates if none were provided initially
+  useEffect(() => {
+    if (initialTemplates.length === 0) {
+      fetchTemplates()
+    }
+  }, [initialTemplates])
+
+  const fetchTemplates = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/marketing/whatsapp/templates')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch templates')
+      }
+      
+      const data = await response.json()
+      setTemplates(data)
+    } catch (error) {
+      console.error('Error fetching templates:', error)
+      toast.error('Failed to load templates')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleDelete = (templateId: string) => {
     setTemplateToDelete(templateId)
@@ -68,41 +97,35 @@ export function TemplateList({ templates }: TemplateListProps) {
     if (!templateToDelete) return
 
     try {
-      // In a real implementation, you would call your API
-      // await fetch(`/api/whatsapp/templates/${templateToDelete}`, {
-      //   method: "DELETE",
-      // })
-
-      // For now, we'll just show a success toast
-      toast({
-        title: "Template deleted",
-        description: "The template has been deleted successfully.",
+      setIsLoading(true)
+      const response = await fetch(`/api/marketing/whatsapp/templates/${templateToDelete}`, {
+        method: "DELETE",
       })
 
-      // Refresh the templates list
-      router.refresh()
+      if (!response.ok) {
+        throw new Error('Failed to delete template')
+      }
+
+      // Remove the deleted template from the state
+      setTemplates(templates.filter(template => template.id !== templateToDelete))
+      
+      toast.success("Template deleted successfully")
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete the template. Please try again.",
-        variant: "destructive",
-      })
+      console.error('Error deleting template:', error)
+      toast.error("Failed to delete the template. Please try again.")
     } finally {
       setOpen(false)
       setTemplateToDelete(null)
+      setIsLoading(false)
     }
   }
 
-  const getStatusBadge = (status: Template["status"]) => {
-    switch (status) {
-      case "APPROVED":
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100">Approved</Badge>
-      case "PENDING":
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100">Pending</Badge>
-      case "REJECTED":
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100">Rejected</Badge>
-      default:
-        return null
+  // Generate a status badge based on isActive property
+  const getStatusBadge = (isActive: boolean) => {
+    if (isActive) {
+      return <Badge className="bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100">Active</Badge>
+    } else {
+      return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100">Inactive</Badge>
     }
   }
 
@@ -113,15 +136,21 @@ export function TemplateList({ templates }: TemplateListProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead>Language</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Created By</TableHead>
               <TableHead>Created At</TableHead>
+              <TableHead>Updated At</TableHead>
               <TableHead className="w-[70px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {templates.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  Loading templates...
+                </TableCell>
+              </TableRow>
+            ) : templates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center">
                   No templates found. Create your first template to get started.
@@ -131,10 +160,10 @@ export function TemplateList({ templates }: TemplateListProps) {
               templates.map((template) => (
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">{template.name}</TableCell>
-                  <TableCell className="max-w-xs truncate">{template.description}</TableCell>
-                  <TableCell>{getStatusBadge(template.status)}</TableCell>
-                  <TableCell>{template.createdBy}</TableCell>
-                  <TableCell>{formatDate(template.createdAt)}</TableCell>
+                  <TableCell>{template.language}</TableCell>
+                  <TableCell>{getStatusBadge(template.isActive)}</TableCell>
+                  <TableCell>{formatDate(new Date(template.createdAt))}</TableCell>
+                  <TableCell>{formatDate(new Date(template.updatedAt))}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -159,6 +188,7 @@ export function TemplateList({ templates }: TemplateListProps) {
                         <DropdownMenuItem 
                           className="text-red-600 focus:text-red-600"
                           onClick={() => handleDelete(template.id)}
+                          disabled={isLoading}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
@@ -186,8 +216,9 @@ export function TemplateList({ templates }: TemplateListProps) {
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-700"
+              disabled={isLoading}
             >
-              Delete
+              {isLoading ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

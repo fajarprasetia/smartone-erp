@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
   try {
@@ -10,10 +11,14 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { phoneNumber, message } = body
+    const { phoneNumber, message, customerId } = body
 
     if (!phoneNumber || !message) {
       return new NextResponse("Missing required fields", { status: 400 })
+    }
+
+    if (!customerId) {
+      return new NextResponse("Customer ID is required", { status: 400 })
     }
 
     // Get WhatsApp settings from environment variables
@@ -52,6 +57,26 @@ export async function POST(req: Request) {
     }
 
     const data = await response.json()
+    
+    // Save the message to the database
+    try {
+      const whatsappMessageId = data.messages?.[0]?.id || `manual-${Date.now()}`
+      
+      await prisma.chatMessage.create({
+        data: {
+          customerId,
+          content: message,
+          isIncoming: false,  // Outgoing message
+          messageType: "text",
+          status: "sent",
+          whatsappMessageId
+        }
+      })
+    } catch (error) {
+      console.error("Error saving message to database:", error)
+      // Continue anyway since the message was sent successfully
+    }
+    
     return NextResponse.json(data)
   } catch (error) {
     console.error("Error sending WhatsApp message:", error)

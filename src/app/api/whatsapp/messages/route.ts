@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: Request) {
   try {
@@ -17,67 +18,91 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Customer ID is required" }, { status: 400 })
     }
     
-    // Mock messages for the selected customer
-    const mockMessages = [
-      {
-        id: "msg1",
-        content: "Hello! How can I assist you today?",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        isIncoming: false,
-        status: "read"
+    // Get real messages from the database
+    const messages = await prisma.chatMessage.findMany({
+      where: {
+        customerId: customerId
       },
-      {
-        id: "msg2",
-        content: "I have a question about my order #12345",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.9), // 1.9 hours ago
-        isIncoming: true,
-        status: "read"
-      },
-      {
-        id: "msg3",
-        content: "I'd be happy to help with that. What specifically would you like to know about your order?",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.8), // 1.8 hours ago
-        isIncoming: false,
-        status: "read"
-      },
-      {
-        id: "msg4",
-        content: "When will it be delivered?",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.7), // 1.7 hours ago
-        isIncoming: true,
-        status: "read"
-      },
-      {
-        id: "msg5",
-        content: "Your order is currently being processed and will be shipped within 2 business days. You should receive it by next week Tuesday.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.6), // 1.6 hours ago
-        isIncoming: false,
-        status: "read"
-      },
-      {
-        id: "msg6",
-        content: "Thank you for the information!",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.5), // 1.5 hours ago
-        isIncoming: true,
-        status: "read"
-      },
-      {
-        id: "msg7",
-        content: "You're welcome! Is there anything else I can help you with?",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-        isIncoming: false,
-        status: "read"
+      orderBy: {
+        timestamp: 'asc'
       }
-    ];
+    });
+    
+    // If no messages found yet, return empty array
+    if (!messages || messages.length === 0) {
+      return NextResponse.json({ messages: [] });
+    }
     
     return NextResponse.json({
-      messages: mockMessages
-    })
+      messages: messages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        isIncoming: msg.isIncoming,
+        status: msg.status,
+        messageType: msg.messageType,
+        mediaUrl: msg.mediaUrl,
+        whatsappMessageId: msg.whatsappMessageId
+      }))
+    });
   } catch (error) {
     console.error("Error fetching WhatsApp messages:", error)
     return NextResponse.json(
       { error: "Failed to fetch WhatsApp messages" },
       { status: 500 }
     )
+  }
+}
+
+// POST endpoint to send a new message
+export async function POST(request: Request) {
+  try {
+    // Check authentication
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json();
+    const { customerId, content, messageType = "text", mediaUrl } = body;
+    
+    if (!customerId || !content) {
+      return NextResponse.json(
+        { error: "Customer ID and message content are required" }, 
+        { status: 400 }
+      );
+    }
+    
+    // Create a new outgoing message
+    const message = await prisma.chatMessage.create({
+      data: {
+        customerId,
+        content,
+        isIncoming: false, // Outgoing message
+        messageType,
+        mediaUrl,
+        status: "sent", // Initial status
+        whatsappMessageId: `manual-${Date.now()}`, // Placeholder ID for manual messages
+      }
+    });
+    
+    return NextResponse.json({ 
+      message: {
+        id: message.id,
+        content: message.content,
+        timestamp: message.timestamp,
+        isIncoming: message.isIncoming,
+        status: message.status,
+        messageType: message.messageType,
+        mediaUrl: message.mediaUrl,
+        whatsappMessageId: message.whatsappMessageId
+      }
+    }, { status: 201 });
+  } catch (error) {
+    console.error("Error sending WhatsApp message:", error);
+    return NextResponse.json(
+      { error: "Failed to send WhatsApp message" },
+      { status: 500 }
+    );
   }
 } 

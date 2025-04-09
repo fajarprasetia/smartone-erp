@@ -87,11 +87,33 @@ export function TemplateForm({
     try {
       setIsLoading(true)
       
-      // This would be replaced with an actual API call
-      console.log("Form data:", data)
+      // Format the data for the API
+      const apiData = {
+        name: data.name,
+        language: "en", // Default language
+        components: data.components,
+      };
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Determine if this is a create or update operation
+      const url = isEditing 
+        ? `/api/marketing/whatsapp/templates/${initialData.id}` 
+        : "/api/marketing/whatsapp/templates";
+      
+      const method = isEditing ? "PUT" : "POST";
+      
+      // Send the data to the API
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(apiData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save template");
+      }
       
       toast.success(isEditing ? "Template updated successfully!" : "Template created successfully!")
       

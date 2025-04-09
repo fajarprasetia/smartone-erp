@@ -122,26 +122,57 @@ export default function WhatsAppChatPage() {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        // In a real implementation, you would fetch from your API
-        const response = await fetch('/api/whatsapp/templates');
+        // Fetch templates from the API endpoint with proper error handling
+        const response = await fetch('/api/marketing/whatsapp/templates', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-store'
+        });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch templates');
+          const errorData = await response.text();
+          console.error('Template fetch response not OK:', response.status, errorData);
+          throw new Error(`Failed to fetch templates: ${response.status} ${errorData}`);
         }
         
         const data = await response.json();
         
+        if (!Array.isArray(data)) {
+          console.error('Template data is not an array:', data);
+          throw new Error('Template data format is invalid');
+        }
+        
         // Format templates to match our interface
-        const formattedTemplates: Template[] = data.map((template: any) => ({
-          id: template.id || template.name,
-          name: template.name,
-          description: template.description || "",
-          parameterCount: template.parameterCount || 0,
-        }));
+        const formattedTemplates: Template[] = data.map((template: any) => {
+          // Count parameters in components
+          let paramCount = 0;
+          if (template.components && Array.isArray(template.components)) {
+            for (const component of template.components) {
+              if (component.text) {
+                // Count occurrences of {{n}} where n is a number
+                const matches = component.text.match(/\{\{[0-9]+\}\}/g);
+                if (matches) {
+                  paramCount = Math.max(paramCount, matches.length);
+                }
+              }
+            }
+          }
+          
+          return {
+            id: template.id,
+            name: template.name,
+            description: template.language || "en",
+            parameterCount: paramCount,
+          };
+        });
         
         setTemplates(formattedTemplates);
       } catch (error) {
         console.error("Error fetching templates:", error);
+        // Show error toast to inform user
+        toast.error("Failed to load templates. Please try again later.");
         // Fallback to empty templates array
         setTemplates([]);
       }
@@ -156,8 +187,8 @@ export default function WhatsAppChatPage() {
       if (!selectedContact) return;
       
       try {
-        // In a real implementation, fetch messages from your API
-        const response = await fetch(`/api/whatsapp/messages?customerId=${selectedContact.id}`);
+        // Fetch messages from the API using the correct endpoint
+        const response = await fetch(`/api/marketing/whatsapp/chats/${selectedContact.id}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch messages');
@@ -166,17 +197,20 @@ export default function WhatsAppChatPage() {
         const data = await response.json();
         
         // Format messages to match our interface
-        const formattedMessages: Message[] = data.messages?.map((msg: any) => ({
+        const formattedMessages: Message[] = data.map((msg: any) => ({
           id: msg.id,
           content: msg.content,
           timestamp: new Date(msg.timestamp || msg.createdAt),
           isSent: !msg.isIncoming,
           status: msg.status || "sent",
-        })) || [];
+        }));
         
         setMessages(formattedMessages);
+        // Scroll to bottom after messages load
+        setTimeout(scrollToBottom, 100);
       } catch (error) {
         console.error("Error fetching chat history:", error);
+        toast.error("Failed to load chat history");
         // If API fails, set empty messages
         setMessages([]);
       }
@@ -192,12 +226,14 @@ export default function WhatsAppChatPage() {
     const messageContent = newMessage.trim();
 
     try {
+      // Use the correct API endpoint
       const response = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          customerId: selectedContact.id,
           phoneNumber: selectedContact.phoneNumber,
           message: messageContent,
         }),
@@ -206,9 +242,13 @@ export default function WhatsAppChatPage() {
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
-
+      
+      // Get the message data from the response
+      const data = await response.json();
+      
+      // Create a temporary message object for the UI
       const newMessageObj: Message = {
-        id: Date.now().toString(),
+        id: data.message?.id || `temp-${Date.now()}`,
         content: messageContent,
         timestamp: new Date(),
         isSent: true,
@@ -217,6 +257,9 @@ export default function WhatsAppChatPage() {
 
       setMessages((prev) => [...prev, newMessageObj]);
       setNewMessage("");
+      
+      // Scroll to bottom to show the new message
+      setTimeout(scrollToBottom, 100);
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -245,6 +288,7 @@ export default function WhatsAppChatPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          customerId: selectedContact.id,
           phoneNumber: selectedContact.phoneNumber,
           templateName: template.name,
           parameters: templateParams,
@@ -255,11 +299,14 @@ export default function WhatsAppChatPage() {
         throw new Error("Failed to send template message");
       }
       
+      // Get the response data
+      const data = await response.json();
+      
       // Create a message object to display in the chat
       const content = `[Template: ${template.name}]${templateParams.length > 0 ? ` With params: ${templateParams.join(", ")}` : ''}`;
       
       const newMessageObj: Message = {
-        id: Date.now().toString(),
+        id: data.message?.id || `temp-${Date.now()}`,
         content: content,
         timestamp: new Date(),
         isSent: true,
@@ -272,6 +319,9 @@ export default function WhatsAppChatPage() {
       setTemplateDialogOpen(false);
       setSelectedTemplate("");
       setTemplateParams([]);
+      
+      // Scroll to bottom to show the new message
+      setTimeout(scrollToBottom, 100);
       
       toast.success("Template message sent successfully!");
     } catch (error) {
@@ -291,7 +341,7 @@ export default function WhatsAppChatPage() {
 
   return (
     <div className="h-[calc(100vh-8rem)] p-0">
-      <div className="h-full rounded-lg border bg-white/20 dark:bg-white/5 backdrop-blur-xl border-white/30 dark:border-white/10 shadow-lg">
+      <div className="h-full flex flex-col rounded-lg border bg-white/20 dark:bg-white/5 backdrop-blur-xl border-white/30 dark:border-white/10 shadow-lg overflow-hidden">
         <div className="flex h-full">
           {/* Sidebar - Made more compact */}
           <div className="w-56 border-r border-white/20 dark:border-white/10 p-0.5 flex flex-col">
@@ -347,7 +397,7 @@ export default function WhatsAppChatPage() {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col bg-white/5 dark:bg-black/10 backdrop-blur-sm">
+          <div className="flex-1 flex flex-col bg-white/5 dark:bg-black/10 backdrop-blur-sm overflow-hidden">
             {selectedContact ? (
               <>
                 {/* Contact Header - Made more compact */}
@@ -367,18 +417,18 @@ export default function WhatsAppChatPage() {
                   </div>
                 </div>
 
-                {/* Chat Messages - Modified to position messages at the bottom */}
+                {/* Chat Messages - Fixed positioning to fill the container properly */}
                 <div 
-                  className="flex-grow overflow-auto p-1.5 bg-slate-50/10 dark:bg-slate-900/20"
+                  className="flex-1 overflow-auto p-1.5 bg-slate-50/10 dark:bg-slate-900/20 flex flex-col justify-end"
                 >
                   {messages.length === 0 ? (
-                    <div className="h-full flex items-end justify-center pb-3">
+                    <div className="flex-1 flex items-center justify-center">
                       <p className="text-[10px] text-center text-muted-foreground bg-white/10 dark:bg-black/20 backdrop-blur-sm py-0.5 px-2 rounded-full">
                         Send a message to start the conversation
                       </p>
                     </div>
                   ) : (
-                    <div className="flex flex-col justify-end min-h-full">
+                    <div className="flex-1 flex flex-col justify-end">
                       <div className="flex flex-col space-y-1">
                         {messages.map((message, index) => (
                           <div
@@ -470,7 +520,7 @@ export default function WhatsAppChatPage() {
         </div>
       </div>
 
-      {/* Template Dialog - Made more compact */}
+      {/* Template Dialog - Fixed positioning to appear in the middle of viewport */}
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -560,4 +610,4 @@ export default function WhatsAppChatPage() {
       </Dialog>
     </div>
   );
-} 
+}

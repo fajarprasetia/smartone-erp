@@ -514,3 +514,97 @@ body > * {
     @apply bg-background text-foreground;
 }
 }
+
+@layer utilities {
+  /* Popover and overlay fix for positioning */
+  .radix-popover-content-wrapper {
+    z-index: 1000 !important;
+    position: absolute !important;
+  }
+  
+  /* Ensure popovers can be interacted with */
+  #popover-portal > * {
+    pointer-events: auto !important;
+  }
+  
+  /* Allow popover to always be on top of other content */
+  [data-radix-popper-content-wrapper] {
+    z-index: 999 !important;
+  }
+
+  /* Custom popover styles */
+  #custom-popover-portal {
+    pointer-events: none;
+  }
+
+  #custom-popover-portal > * {
+    pointer-events: auto;
+  }
+
+  /* Modal backdrop blur effect */
+  .modal-backdrop {
+    backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Print styles for A4 paper */
+  @media print {
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+    
+    html, body {
+      height: auto !important;
+      overflow: visible !important;
+      background: white !important;
+      font-size: 12pt;
+    }
+    
+    .print\:a4 {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 10mm;
+      margin: 0 auto;
+      background: white;
+    }
+    
+    .print\:hidden {
+      display: none !important;
+    }
+    
+    /* Glass effects removal for print */
+    .glass-card, .glass-effect {
+      background: white !important;
+      backdrop-filter: none !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+    
+    /* Table printing optimizations */
+    table {
+      page-break-inside: auto;
+    }
+    
+    tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+    
+    th, td {
+      border-color: black !important;
+    }
+    
+    /* Hide UI elements */
+    header, nav, aside, footer, .glass-sidebar, button:not(.print-button) {
+      display: none !important;
+    }
+    
+    /* Improve color handling */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+}
