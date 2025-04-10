@@ -11,7 +11,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal
+  MoreHorizontal,
+  X
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -44,6 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
 // Define the OrderItem interface based on requirements
 interface OrderItem {
@@ -98,12 +100,112 @@ const getStatusBadge = (status: string | null | undefined) => {
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
+// Add the OrderRedirectDialog component
+function OrderRedirectDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const router = useRouter()
+  
+  // Add overflow hidden to body when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [open])
+  
+  if (!open) return null
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal */}
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-md mx-4 overflow-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40">
+          <div>
+            <h2 className="text-lg font-semibold">Add New Order</h2>
+            <p className="text-sm text-muted-foreground">
+              Choose how you want to create the new order
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="space-y-2 bg-background/50 p-4 rounded-lg border border-border/40">
+            <h3 className="font-medium">Quick Create</h3>
+            <p className="text-sm text-muted-foreground">
+              Create a basic order with minimal information
+            </p>
+            <Button 
+              className="w-full mt-2 bg-primary/90 backdrop-blur-sm hover:bg-primary text-primary-foreground"
+              onClick={() => {
+                onOpenChange(false)
+                router.push("/order/add")
+              }}
+            >
+              <PlusCircle className="h-4 w-4 mr-2" /> Quick Create
+            </Button>
+          </div>
+          
+          <div className="space-y-2 bg-background/50 p-4 rounded-lg border border-border/40">
+            <h3 className="font-medium">Detailed Form</h3>
+            <p className="text-sm text-muted-foreground">
+              Create a detailed order with all information and attachments
+            </p>
+            <Button 
+              className="w-full mt-2"
+              variant="outline"
+              onClick={() => {
+                onOpenChange(false)
+                router.push("/order/add/detailed")
+              }}
+            >
+              Create Detailed Order
+            </Button>
+          </div>
+
+          <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4")}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function OrderPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredOrders, setFilteredOrders] = useState<OrderItem[]>([])
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   
   // Pagination state
   const [pagination, setPagination] = useState<Pagination>({
@@ -243,7 +345,7 @@ export default function OrderPage() {
           </Button>
           <Button 
             className="bg-primary/90 hover:bg-primary text-primary-foreground"
-            onClick={() => router.push("/order/add")}
+            onClick={() => setIsAddDialogOpen(true)}
           >
             <PlusCircle className="h-4 w-4 mr-2" /> Add New Order
           </Button>
@@ -428,6 +530,12 @@ export default function OrderPage() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Add Order Dialog */}
+      <OrderRedirectDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      />
     </div>
   )
 } 

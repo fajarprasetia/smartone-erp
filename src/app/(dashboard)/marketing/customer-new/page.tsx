@@ -2,7 +2,6 @@
 
 import { Suspense } from 'react'
 import { Card } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
@@ -15,7 +14,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table'
-import { Search, Plus, Pencil, Trash2, MessageSquare } from 'lucide-react'
+import { Search, Plus, Pencil, Trash2, MessageSquare, X } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
@@ -24,6 +23,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { cn } from '@/lib/utils'
 
 // Form validation schema
 const formSchema = z.object({
@@ -47,18 +47,35 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-type CustomerWithFormatting = Customer & {
+// Override the imported Customer type with our application-specific customer fields
+interface CustomCustomer {
+  id: string
+  nama: string
+  telp: string
+  email: string | null
+  address: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+type CustomerWithFormatting = CustomCustomer & {
   formattedPhone: string
 }
 
-function IntegratedCustomerTableNew() {
-  const router = useRouter();
-  const [customers, setCustomers] = useState<CustomerWithFormatting[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+// Customer form dialog component
+function CustomerFormDialog({
+  open,
+  onOpenChange,
+  customer,
+  onSubmit,
+  isSubmitting,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  customer: CustomCustomer | null
+  onSubmit: (data: FormValues) => Promise<void>
+  isSubmitting: boolean
+}) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -71,13 +88,13 @@ function IntegratedCustomerTableNew() {
   
   // Reset form when dialog opens or customer changes
   useEffect(() => {
-    if (isDialogOpen) {
-      if (selectedCustomer) {
+    if (open) {
+      if (customer) {
         form.reset({
-          nama: selectedCustomer.nama || '',
-          telp: selectedCustomer.telp || '',
-          email: selectedCustomer.email || '',
-          address: selectedCustomer.address || ''
+          nama: customer.nama || '',
+          telp: customer.telp || '',
+          email: customer.email || '',
+          address: customer.address || ''
         });
       } else {
         form.reset({
@@ -88,7 +105,155 @@ function IntegratedCustomerTableNew() {
         });
       }
     }
-  }, [isDialogOpen, selectedCustomer, form]);
+  }, [open, customer, form]);
+  
+  // Add overflow hidden to body when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [open]);
+  
+  const handleSubmit = form.handleSubmit(onSubmit);
+  
+  if (!open) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal */}
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-md mx-4 overflow-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {customer ? 'Edit Customer' : 'Add Customer'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {customer
+                ? "Update customer information"
+                : "Add a new customer to your database"}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6">
+          <Form {...form}>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="nama"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Customer name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="telp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Phone number (e.g. 81234567 or 6281234567)" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Email address (optional)" 
+                        type="email"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Address (optional)" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4")}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                  className="border-border/40 bg-background/50"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting} className="bg-primary/90 backdrop-blur-sm hover:bg-primary">
+                  {isSubmitting 
+                    ? customer ? "Updating..." : "Adding..." 
+                    : customer ? "Update" : "Add"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IntegratedCustomerTableNew() {
+  const router = useRouter();
+  const [customers, setCustomers] = useState<CustomerWithFormatting[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Load customers
   useEffect(() => {
@@ -132,6 +297,7 @@ function IntegratedCustomerTableNew() {
   // Submit form handler
   const onSubmit = async (data: FormValues) => {
     try {
+      setIsSubmitting(true);
       // Process phone number - remove leading 0 or 62
       const processedTelp = data.telp ? data.telp.replace(/^(0|62)/, '') : '';
       
@@ -188,6 +354,8 @@ function IntegratedCustomerTableNew() {
         description: "Failed to save customer data.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -330,101 +498,13 @@ function IntegratedCustomerTableNew() {
       )}
       
       {/* Customer Form Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={(open) => !open && setIsDialogOpen(false)}>
-        <DialogContent className="max-w-md top-[20%] translate-y-0">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedCustomer ? 'Edit Customer' : 'Add Customer'}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedCustomer ? 'Update customer information.' : 'Add a new customer to your database.'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="nama"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Customer name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="telp"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Phone number (e.g. 81234567 or 6281234567)" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Email address (optional)" 
-                        type="email"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Address (optional)" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {selectedCustomer ? 'Update' : 'Add'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <CustomerFormDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        customer={selectedCustomer}
+        onSubmit={onSubmit}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

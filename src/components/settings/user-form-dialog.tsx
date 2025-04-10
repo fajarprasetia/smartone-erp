@@ -7,14 +7,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { User, Role } from "@prisma/client"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { X } from "lucide-react"
 import {
   Form,
   FormControl,
@@ -151,129 +144,158 @@ export function UserFormDialog({
   if (!open) return null
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{user ? "Edit User" : "Create User"}</DialogTitle>
-          <DialogDescription>
-            {user
-              ? "Update the user's information."
-              : "Add a new user to the system."}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter user name" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    The full name of the user.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter email address"
-                      type="email"
-                      {...field}
-                      disabled={user?.email === "systemadministrator@smartone.id"}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    The email address for the user account.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {!user && (
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter password"
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      The password for the user account.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="roleId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={user?.email === "systemadministrator@smartone.id"}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    The role assigned to the user.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal */}
+      <div className="bg-background z-50 rounded-lg border shadow-lg w-full max-w-lg mx-4 overflow-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {user ? "Edit User" : "Create User"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {user
+                ? "Update the user's information"
+                : "Fill in the details to create a new user"}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6">
+          {isSystemAdmin ? (
+            <div className="text-center py-6">
+              <p className="text-muted-foreground">
+                System administrator account cannot be edited.
+              </p>
               <Button
-                type="button"
-                variant="outline"
+                className="mt-4"
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+                Close
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading
-                  ? user
-                    ? "Updating..."
-                    : "Creating..."
-                  : user
-                  ? "Update User"
-                  : "Create User"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter user name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter email address"
+                          type="email"
+                          {...field}
+                          disabled={isSystemAdmin}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {!user && (
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter password"
+                            type="password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                <FormField
+                  control={form.control}
+                  name="roleId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={isSystemAdmin}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {roles.map((role) => (
+                            <SelectItem key={role.id} value={role.id}>
+                              {role.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div
+                  className={cn(
+                    "flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4"
+                  )}
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading
+                      ? user
+                        ? "Updating..."
+                        : "Creating..."
+                      : user
+                      ? "Update User"
+                      : "Create User"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
+        </div>
+      </div>
+    </div>
   )
 } 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, CheckCircle, XCircle, RefreshCw } from "lucide-react"
+import { Search, CheckCircle, XCircle, RefreshCw, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -25,17 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { cn } from "@/lib/utils"
 
 // Define the order interface based on schema
 interface Order {
@@ -51,6 +41,102 @@ interface Order {
   statusm?: string | null
   status?: string | null
   approval_barang?: string | null
+}
+
+// ConfirmActionDialog component
+function ConfirmActionDialog({
+  open,
+  onOpenChange,
+  actionType,
+  onConfirm,
+  isLoading,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  actionType: "handover" | "reject_qc" | null
+  onConfirm: () => void
+  isLoading: boolean
+}) {
+  // Add overflow hidden to body when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [open])
+
+  if (!open || !actionType) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal */}
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-md mx-4 overflow-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {actionType === "handover" ? "Confirm Hand Over" : "Confirm Rejection"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {actionType === "handover"
+                ? "Are you sure you want to mark this order as handed over?"
+                : "Are you sure you want to reject this order?"}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6">
+          <p className="text-muted-foreground mb-6">
+            {actionType === "handover"
+              ? "This action will mark the order as handed over to the customer. This action cannot be undone."
+              : "This will mark the QC as rejected. Are you sure you want to proceed?"}
+          </p>
+
+          <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+              className="border-border/40 bg-background/50"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              onClick={onConfirm}
+              disabled={isLoading}
+              className={actionType === "handover" 
+                ? "bg-green-600/90 hover:bg-green-700 text-white backdrop-blur-sm" 
+                : "bg-red-600/90 hover:bg-red-700 text-white backdrop-blur-sm"}
+            >
+              {isLoading 
+                ? "Processing..." 
+                : actionType === "handover" 
+                  ? "Confirm Hand Over" 
+                  : "Confirm Rejection"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function InventoryOutboundPage() {
@@ -290,40 +376,14 @@ export default function InventoryOutboundPage() {
         </CardContent>
       </Card>
       
-      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {actionType === "handover" 
-                ? "Confirm Hand Over" 
-                : "Confirm Rejection"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {actionType === "handover"
-                ? "Are you sure you want to mark this order as handed over to the customer? This action cannot be undone."
-                : "Are you sure you want to reject this order? This will mark the QC as rejected."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleOrderAction}
-              disabled={isLoading}
-              className={
-                actionType === "handover"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-600 hover:bg-red-700"
-              }
-            >
-              {isLoading 
-                ? "Processing..." 
-                : actionType === "handover" 
-                  ? "Confirm Hand Over" 
-                  : "Confirm Rejection"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Confirmation Dialog */}
+      <ConfirmActionDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        actionType={actionType}
+        onConfirm={handleOrderAction}
+        isLoading={isLoading}
+      />
     </div>
   )
 } 

@@ -124,25 +124,31 @@ interface Customer {
 // Page size options
 const pageSizeOptions = [10, 20, 50, 100];
 
-export default function InventoryInboundPage() {
-  const router = useRouter()
-  const [items, setItems] = useState<InventoryItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([])
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isAddingItem, setIsAddingItem] = useState(false)
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [comboboxOpen, setComboboxOpen] = useState(false)
+// InboundFormDialog component
+function InboundFormDialog({
+  open,
+  onOpenChange,
+  customers,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  customers: Customer[]
+}) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
   
-  // Pagination state
-  const [pagination, setPagination] = useState<Pagination>({
-    total: 0,
-    pageCount: 0,
-    page: 1,
-    pageSize: 10
-  })
-  const [pageSize, setPageSize] = useState(10)
+  // Add overflow hidden to body when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [open]);
   
   // Initialize form with default values
   const form = useForm<FormValues>({
@@ -158,7 +164,297 @@ export default function InventoryInboundPage() {
       roll: "",
       keterangan: "",
     },
+  });
+  
+  // Handle form submission
+  const onSubmit = async (data: FormValues) => {
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch("/api/inventory/inbound", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to create inventory item")
+      }
+      
+      toast.success("Inventory item added successfully")
+      
+      // Close the dialog and reset the form
+      onOpenChange(false)
+      form.reset({
+        asal_bahan: "",
+        nama_bahan: "",
+        lebar_bahan: "",
+        berat_bahan: "",
+        est_pjg_bahan: "",
+        tanggal: new Date(),
+        foto: "",
+        roll: "",
+        keterangan: "",
+      })
+      
+      // Refresh the inventory list
+      router.refresh();
+    } catch (error) {
+      console.error("Error creating inventory item:", error)
+      toast.error("Failed to add inventory item")
+    } finally {
+      setIsLoading(false)
+    }
+  };
+  
+  if (!open) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal */}
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 overflow-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40">
+          <div>
+            <h2 className="text-lg font-semibold">Add Inventory Item</h2>
+            <p className="text-sm text-muted-foreground">
+              Fill in the details to add a new inventory item
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="nama_bahan"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fabric Name*</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter fabric name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="asal_bahan"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Fabric Source</FormLabel>
+                    <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? customers.find(customer => customer.id === field.value)?.name
+                              : "Select customer"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search customer..." />
+                          <CommandEmpty>No customer found.</CommandEmpty>
+                          <CommandGroup>
+                            {customers.map(customer => (
+                              <CommandItem
+                                value={customer.name}
+                                key={customer.id}
+                                onSelect={() => {
+                                  form.setValue("asal_bahan", customer.id)
+                                  setComboboxOpen(false)
+                                }}
+                              >
+                                {customer.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="lebar_bahan"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Width</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter width" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="berat_bahan"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Weight</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter weight" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="est_pjg_bahan"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estimated Length</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter est. length" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="roll"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Roll</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter roll" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="tanggal"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="keterangan"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter notes" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Adding..." : "Add Item"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function InventoryInboundPage() {
+  const router = useRouter()
+  const [items, setItems] = useState<InventoryItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([])
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [customers, setCustomers] = useState<Customer[]>([])
+  
+  // Pagination state
+  const [pagination, setPagination] = useState<Pagination>({
+    total: 0,
+    pageCount: 0,
+    page: 1,
+    pageSize: 10
   })
+  const [pageSize, setPageSize] = useState(10)
   
   // Fetch customers for the source dropdown
   useEffect(() => {
@@ -251,49 +547,6 @@ export default function InventoryInboundPage() {
     fetchInventory(1, newSize);
   }
 
-  // Handle form submission
-  const onSubmit = async (data: FormValues) => {
-    try {
-      setIsAddingItem(true)
-      
-      const response = await fetch("/api/inventory/inbound", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-      
-      if (!response.ok) {
-        throw new Error("Failed to create inventory item")
-      }
-      
-      toast.success("Inventory item added successfully")
-      
-      // Close the dialog and reset the form
-      setIsAddDialogOpen(false)
-      form.reset({
-        asal_bahan: "",
-        nama_bahan: "",
-        lebar_bahan: "",
-        berat_bahan: "",
-        est_pjg_bahan: "",
-        tanggal: new Date(),
-        foto: "",
-        roll: "",
-        keterangan: "",
-      })
-      
-      // Refresh the inventory list
-      fetchInventory(1, pageSize)
-    } catch (error) {
-      console.error("Error creating inventory item:", error)
-      toast.error("Failed to add inventory item")
-    } finally {
-      setIsAddingItem(false)
-    }
-  }
-
   return (
     <div className="container mx-auto space-y-4 h-full flex flex-col overflow-visible">
       {/* Page Header */}
@@ -310,7 +563,7 @@ export default function InventoryInboundPage() {
           </Button>
           <Button 
             className="bg-primary/90 hover:bg-primary text-primary-foreground"
-            onClick={() => router.push("/inventory/inbound/add")}
+            onClick={() => setIsAddDialogOpen(true)}
           >
             <PlusCircle className="h-4 w-4 mr-2" /> Add New Item
           </Button>
@@ -482,6 +735,13 @@ export default function InventoryInboundPage() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Add New Item Dialog */}
+      <InboundFormDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        customers={customers}
+      />
     </div>
   )
 } 
