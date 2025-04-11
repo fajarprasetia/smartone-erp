@@ -1,5 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { createReadStream, mkdirSync } from 'fs';
+import { join } from 'path';
+import { formidable } from 'formidable';
+import { VisionCamera } from 'react-native-vision-camera';
+import { Uploader } from 'react-uploader';
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,6 +20,18 @@ export async function GET(req: NextRequest) {
     
     // Fetch inventory items with pagination
     const inventory = await prisma.inventory.findMany({
+      select: {
+        id: true,
+        asal_bahan: true,
+        nama_bahan: true,
+        lebar_bahan: true,
+        berat_bahan: true,
+        est_pjg_bahan: true,
+        roll: true,
+        tanggal: true,
+        keterangan: true,
+        foto: true
+      },
       orderBy: {
         id: 'desc'
       },
@@ -64,7 +81,7 @@ export async function GET(req: NextRequest) {
       try {
         // Fetch customer data from the customer table - using parameterized query to avoid SQL injection
         const customersRaw = await prisma.$queryRaw`
-          SELECT id, nama FROM customer WHERE id::text = ANY(ARRAY[${customerIds.join(',')}]::text[])
+          SELECT id, nama FROM customer WHERE id = ANY(ARRAY[${customerIds.join(',')}]::bigint[])
         `;
   
         // Serialize the data to handle BigInt values
@@ -86,7 +103,19 @@ export async function GET(req: NextRequest) {
 
     // Enrich inventory items with customer names
     const enrichedInventory = serializedInventory.map((item: any) => ({
-      ...item,
+      id: item.id,
+      "Fabric Name": item.nama_bahan,
+      "Width": item.lebar_bahan,
+      "Weight": item.berat_bahan,
+      "Est. Length": item.est_pjg_bahan,
+      "Roll": item.roll,
+      "Date": item.tanggal,
+      "Notes": item.keterangan,
+      "Capture Image": item.foto ? {
+        src: item.foto,
+        alt: `Fabric ${item.nama_bahan}`,
+        thumbnail: true
+      } : null,
       customer_name: item.asal_bahan ? customerMap.get(String(item.asal_bahan)) || 'Unknown' : 'N/A'
     }));
 
@@ -117,7 +146,22 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const uploadDir = join(process.cwd(), 'public', 'fabric');
+    mkdirSync(uploadDir, { recursive: true });
+
+    const form = formidable({
+      uploadDir,
+      keepExtensions: true,
+      maxFiles: 5,
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+      filter: ({ mimetype }) => !!mimetype?.startsWith('image/')
+    });
+
+    const [fields, files] = await form.parse(await req.formData());
+
+    const filePaths = files.files?.map(file => 
+      `/fabric/${file.newFilename}`
+    ) || [];
     
     // Extract inventory item data
     const {
@@ -130,7 +174,7 @@ export async function POST(req: NextRequest) {
       foto,
       roll,
       keterangan
-    } = body;
+    } = fields;
     
     // Validate required fields
     if (!nama_bahan) {
@@ -189,4 +233,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

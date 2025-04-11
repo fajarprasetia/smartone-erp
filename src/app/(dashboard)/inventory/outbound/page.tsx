@@ -181,8 +181,7 @@ export default function InventoryOutboundPage() {
       const filtered = orders.filter(order => 
         (order.spk && order.spk.toLowerCase().includes(lowercaseQuery)) ||
         (order.produk && order.produk.toLowerCase().includes(lowercaseQuery)) ||
-        (order.customer && order.customer.name && 
-          order.customer.name.toLowerCase().includes(lowercaseQuery))
+        (order.customer?.nama && order.customer.nama.toLowerCase().includes(lowercaseQuery))
       )
       setFilteredOrders(filtered)
     } else {
@@ -386,4 +385,4 @@ export default function InventoryOutboundPage() {
       />
     </div>
   )
-} 
+}

@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Order, Customer } from '@prisma/client'
+import { Order } from '@prisma/client'
 import { ColumnDef, createColumnHelper, useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import {
   Table,
@@ -29,7 +29,11 @@ import {
 } from '@/components/ui/alert-dialog'
 
 type OrderWithCustomer = Order & {
-  customer: Customer | null
+  customer?: {
+    id?: number
+    nama?: string
+    telp?: string
+  } | null
 }
 
 type OrderTableProps = {
@@ -44,12 +48,12 @@ type OrderTableProps = {
 
 const columnHelper = createColumnHelper<OrderWithCustomer>()
 
-export function OrderTable({ 
-  orders = [], 
+export function OrderTable({
+  orders = [],
   approvalStatus,
   rejectionStatus,
   role,
-  showActions = false, 
+  showActions = false,
   showStatus = false,
   showRejectActions = false
 }: OrderTableProps) {
@@ -75,9 +79,18 @@ export function OrderTable({
         </Button>
       )
     }),
-    columnHelper.accessor('customer.nama', {
+    columnHelper.accessor('customer_id', {
+      id: 'customer_name',
       header: 'Customer',
       cell: ({ row }) => row.original.customer?.nama || 'N/A'
+    }),
+    columnHelper.accessor('customer_id', {
+      id: 'customer_phone',
+      header: 'Phone',
+      cell: ({ row }) => {
+        const phone = row.original.customer?.telp || ''
+        return phone ? `62${phone.startsWith('8') ? phone : phone.replace(/^0+/, '')}` : 'N/A'
+      }
     }),
     columnHelper.accessor('nama_produk', {
       header: 'Product'
@@ -109,31 +122,32 @@ export function OrderTable({
     }),
     {
       header: 'Actions',
-      accessor: 'id',
-      cell: ({ value }) => {
+      accessorKey: 'id',
+      cell: ({ row }) => {
+        const value = row.original.id
         return showActions ? (
           <div className="flex space-x-2">
             <Button variant="destructive" onClick={() => {
-              setCurrentAction('reject');
-              setSelectedOrderId(value);
-              setOpenDialog(true);
+              setCurrentAction('reject')
+              setSelectedOrderId(value)
+              setOpenDialog(true)
             }}>Reject</Button>
             <Button onClick={() => {
-              setCurrentAction('approve');
-              setSelectedOrderId(value);
-              setOpenDialog(true);
+              setCurrentAction('approve')
+              setSelectedOrderId(value)
+              setOpenDialog(true)
             }}>Approve</Button>
           </div>
-        ) : null;
+        ) : null
       }
     },
     {
       header: 'Status',
-      accessor: 'status',
+      accessorKey: 'status',
       cell: ({ row }) => {
         return showStatus ? (
           <Badge variant="outline">APPROVED</Badge>
-        ) : null;
+        ) : null
       }
     }
   ]
@@ -144,8 +158,8 @@ export function OrderTable({
     getCoreRowModel: getCoreRowModel(),
     initialState: {
       columnVisibility: {
-        // Hide customer_id from table display
-        customer_id: false
+        customer_id: false,
+        customer_phone: true
       }
     }
   })
@@ -166,7 +180,7 @@ export function OrderTable({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                // Handle approval/rejection logic here
+                // TODO: Add backend call to approve/reject
                 setOpenDialog(false)
               }}
             >
@@ -175,49 +189,47 @@ export function OrderTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
+
       <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder ? null : flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </>
   )
 }

@@ -8,18 +8,24 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String         @unique
-  password      String
-  roleId        String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  isActive      Boolean        @default(true)
-  createdOrders Order[]        @relation("UserCreatedOrders")
-  createdBy     Order[]        @relation("OrderCreatedBy")
-  orders        OrderDetails[] @relation("UserOrderDetails")
-  role          Role           @relation(fields: [roleId], references: [id])
+  id     String @id @default(cuid()) // Changed from BigInt if needed
+  name   String
+  email  String @unique
+  password String
+  isActive Boolean @default(true)
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  ordersCreated   Order[] @relation("UserCreatedOrders")
+  ordersAsCreator Order[] @relation("OrderCreatedBy")
+  ordersManaged   Order[] @relation("OrderManager")
+  ordersDesigned  Order[] @relation("OrderDesigner")
+  ordersHandled   Order[] @relation("OrderPenyerahan")
+  ordersDTF       Order[] @relation("OrderDTF")
+  ordersCutting   Order[] @relation("OrderCutting")
+  ordersPress     Order[] @relation("OrderPress")
+  ordersPrint     Order[] @relation("OrderPrint")
+  ordersOperated  Order[] @relation("OrderOperator")
 }
 
 model Role {
@@ -50,56 +56,36 @@ model DashboardCard {
   description String?
   component   String
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now())
   roles       Role[]   @relation("DashboardCardRoles")
 }
 
 model Product {
-  id          String      @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String?
   price       Float
-  stock       Int         @default(0)
+  stock       Int      @default(0)
   category    String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
-}
-
-model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  order     Order    @relation(fields: [orderId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
-}
-
-model Customer {
-  id           String         @id @default(cuid())
-  name         String
-  email        String?        @unique
-  phone        String?
-  address      String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  chatMessages ChatMessage[]
-  orders       Order[]
-  orderDetails OrderDetails[] @relation("CustomerOrderDetails")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
 }
 
 model customer {
-  id   BigInt  @id @default(autoincrement())
-  nama String  @db.VarChar(255)
-  telp String? @db.VarChar(255)
+  id           BigInt        @id @default(autoincrement())
+  nama         String        @db.VarChar(255)
+  telp         String?       @db.VarChar(255)
+  chatMessages ChatMessage[]
+  orders       Order[]       @relation("CustomerOrders")
+  inventories  inventory[]   @relation("InventoryCustomer")
+  asalBahanFor Order[]       @relation("AsalBahanCustomer") // new, clear name for asal_bahan_rel
+
+  @@map("customer")
 }
 
 model inventory {
   id            BigInt    @id @default(autoincrement())
-  asal_bahan    String?   @db.VarChar(255)
+  asal_bahan    BigInt?   @map("asal_bahan")
   nama_bahan    String?   @db.VarChar(255)
   lebar_bahan   String?   @db.VarChar(255)
   berat_bahan   String?   @db.VarChar(255)
@@ -108,11 +94,13 @@ model inventory {
   foto          String?   @db.VarChar(255)
   roll          String?   @db.VarChar(255)
   keterangan    String?
+
+  asal_bahan_rel customer? @relation("InventoryCustomer", fields: [asal_bahan], references: [id])
 }
 
 model ChatMessage {
   id                String   @id @default(cuid())
-  customerId        String
+  customerId        BigInt
   content           String
   isIncoming        Boolean  @default(true)
   timestamp         DateTime @default(now())
@@ -123,7 +111,7 @@ model ChatMessage {
   metadata          String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer          customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model WhatsAppTemplate {
@@ -133,7 +121,7 @@ model WhatsAppTemplate {
   components Json
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime @default(now())
 }
 
 model WhatsAppConfig {
@@ -146,21 +134,7 @@ model WhatsAppConfig {
   status             String    @default("disconnected")
   lastChecked        DateTime?
   createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-}
-
-model Production {
-  id             String        @id @default(cuid())
-  orderId        String
-  status         String
-  type           String
-  startDate      DateTime?
-  endDate        DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  orderDetailsId String?
-  orderDetails   OrderDetails? @relation(fields: [orderDetailsId], references: [id])
-  order          Order         @relation(fields: [orderId], references: [id])
+  updatedAt          DateTime  @default(now())
 }
 
 model FinancialTransaction {
@@ -171,216 +145,164 @@ model FinancialTransaction {
   category    String?
   date        DateTime
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now())
 }
 
 model Order {
-  id               String       @id @default(cuid())
-  tanggal          DateTime?    @db.Date
-  spk              String?      @db.VarChar(255)
-  reject           String?      @db.VarChar(255)
-  panjang_reject   String?      @db.VarChar(255)
-  panjang_order    String?      @db.VarChar(255)
-  lebar_kertas     String?      @db.VarChar(255)
-  marketing        String?      @db.VarChar(255)
-  nominal          String?      @db.VarChar(255)
-  harga_satuan     String?      @db.VarChar(255)
-  keterangan       String?      @db.VarChar(255)
-  invoice          String?      @db.VarChar(255)
-  jenis_pembayaran String?      @db.VarChar(255)
-  dp               String?      @db.VarChar(255)
-  tgl_dp           DateTime?    @db.Date
-  sisa             String?      @db.VarChar(255)
-  pelunasan        String?      @db.VarChar(255)
-  biaya_tambahan   String?      @db.VarChar(255)
-  tgl_lunas        DateTime?    @db.Date
-  tgl_invoice      DateTime?    @db.Date
-  status           String?      @db.VarChar(255)
-  statusm          String?      @db.VarChar(255)
-  approval         String?      @db.VarChar(255)
-  approve_mng      String?      @db.VarChar(255)
-  approval_barang  String?      @db.VarChar(255)
-  approval_opr     String?      @db.VarChar(255)
-  opr_id           Int?
-  user_id          Int?
-  userId           String?
-  createdById      String?
-  customerId       String?
-  print_id         Int?
-  press_id         Int?
-  cutting_id       Int?
-  dtf_id           Int?
-  penyerahan_id    Int?
-  designer_id      Int?
-  manager_id       Int?
-  customer_id      Int?
-  rip              String?      @db.VarChar(255)
-  produk           String?      @db.VarChar(255)
-  path             String?      @db.VarChar(255)
-  tf_dp            String?      @db.VarChar(255)
-  tf_pelunasan     String?      @db.VarChar(255)
-  tf_full          String?      @db.VarChar(255)
+  id               String    @id @default(cuid())
+  tanggal          DateTime? @db.Date
+  spk              String?   @db.VarChar(255)
+  reject           String?   @db.VarChar(255)
+  panjang_reject   String?   @db.VarChar(255)
+  panjang_order    String?   @db.VarChar(255)
+  lebar_kertas     String?   @db.VarChar(255)
+  marketing        String?   @db.VarChar(255)
+  nominal          String?   @db.VarChar(255)
+  harga_satuan     String?   @db.VarChar(255)
+  keterangan       String?   @db.VarChar(255)
+  invoice          String?   @db.VarChar(255)
+  jenis_pembayaran String?   @db.VarChar(255)
+  dp               String?   @db.VarChar(255)
+  tgl_dp           DateTime? @db.Date
+  sisa             String?   @db.VarChar(255)
+  pelunasan        String?   @db.VarChar(255)
+  biaya_tambahan   String?   @db.VarChar(255)
+  tgl_lunas        DateTime? @db.Date
+  tgl_invoice      DateTime? @db.Date
+  status           String?   @db.VarChar(255)
+  statusm          String?   @db.VarChar(255)
+  approval         String?   @db.VarChar(255)
+  approve_mng      String?   @db.VarChar(255)
+  approval_barang  String?   @db.VarChar(255)
+  approval_opr     String?   @db.VarChar(255)
+  rip              String?   @db.VarChar(255)
+  produk           String?   @db.VarChar(255)
+  path             String?   @db.VarChar(255)
+  tf_dp            String?   @db.VarChar(255)
+  tf_pelunasan     String?   @db.VarChar(255)
+  tf_full          String?   @db.VarChar(255)
   catatan_tf       String?
-  capture          String?      @db.VarChar(255)
-  capture_name     String?      @db.VarChar(255)
-  asal_bahan       String?      @db.VarChar(255)
-  nama_kain        String?      @db.VarChar(255)
-  jumlah_kain      String?      @db.VarChar(255)
-  tipe_produk      String?      @db.VarChar(255)
-  qty              String?      @db.VarChar(255)
-  kategori         String?      @db.VarChar(255)
-  gramasi          String?      @db.VarChar(255)
-  nama_produk      String?      @db.VarChar(255)
+  capture          String?   @db.VarChar(255)
+  capture_name     String?   @db.VarChar(255)
+  nama_kain        String?   @db.VarChar(255)
+  jumlah_kain      String?   @db.VarChar(255)
+  tipe_produk      String?   @db.VarChar(255)
+  qty              String?   @db.VarChar(255)
+  kategori         String?   @db.VarChar(255)
+  gramasi          String?   @db.VarChar(255)
+  nama_produk      String?   @db.VarChar(255)
   catatan          String?
   catatan_print    String?
   catatan_press    String?
   catatan_cutting  String?
-  lebar_file       String?      @db.VarChar(255)
-  est_order        DateTime?    @db.Date
-  jns_produk_id    Int?
-  no_project       String?      @db.VarChar(255)
-  tgl_print        DateTime?    @db.Timestamp(6)
-  print_done       DateTime?    @db.Timestamp(6)
-  tgl_press        DateTime?    @db.Timestamp(6)
-  press_done       DateTime?    @db.Timestamp(6)
-  tgl_cutting      DateTime?    @db.Timestamp(6)
-  cutting_done     DateTime?    @db.Timestamp(6)
-  tgl_dtf          DateTime?    @db.Timestamp(6)
-  dtf_done         DateTime?    @db.Timestamp(6)
-  warna_acuan      String?      @db.VarChar(255)
-  statusprod       String?      @db.VarChar(255)
-  lebar_kain       String?      @db.VarChar(255)
-  prioritas        String?      @db.VarChar(255)
-  prints_mesin     String?      @db.VarChar(255)
-  prints_icc       String?      @db.VarChar(255)
-  prints_target    String?      @db.VarChar(255)
-  dimensi_file     String?      @db.VarChar(255)
-  prints_qty       String?      @db.VarChar(255)
-  total_kertas     String?      @db.VarChar(255)
-  waktu_rip        DateTime?    @db.Time(6)
-  prints_bagus     String?      @db.VarChar(255)
-  prints_reject    String?      @db.VarChar(255)
-  prints_waste     String?      @db.VarChar(255)
-  press_mesin      String?      @db.VarChar(255)
-  press_presure    String?      @db.VarChar(255)
-  press_suhu       String?      @db.VarChar(255)
+  lebar_file       String?   @db.VarChar(255)
+  est_order        DateTime? @db.Date
+  no_project       String?   @db.VarChar(255)
+  warna_acuan      String?   @db.VarChar(255)
+  statusprod       String?   @db.VarChar(255)
+  lebar_kain       String?   @db.VarChar(255)
+  prioritas        String?   @db.VarChar(255)
+  prints_mesin     String?   @db.VarChar(255)
+  prints_icc       String?   @db.VarChar(255)
+  prints_target    String?   @db.VarChar(255)
+  dimensi_file     String?   @db.VarChar(255)
+  prints_qty       String?   @db.VarChar(255)
+  total_kertas     String?   @db.VarChar(255)
+  prints_bagus     String?   @db.VarChar(255)
+  prints_reject    String?   @db.VarChar(255)
+  prints_waste     String?   @db.VarChar(255)
+  press_mesin      String?   @db.VarChar(255)
+  press_presure    String?   @db.VarChar(255)
+  press_suhu       String?   @db.VarChar(255)
   press_speed      Float?
-  press_protect    String?      @db.VarChar(255)
-  total_kain       String?      @db.VarChar(255)
-  press_bagus      String?      @db.VarChar(255)
-  press_reject     String?      @db.VarChar(255)
-  press_waste      String?      @db.VarChar(255)
-  printd_mesin     String?      @db.VarChar(255)
-  printd_icc       String?      @db.VarChar(255)
-  pet              String?      @db.VarChar(255)
-  suhu_meja        String?      @db.VarChar(255)
-  printd_speed     String?      @db.VarChar(255)
-  white_setting    String?      @db.VarChar(255)
-  choke            String?      @db.VarChar(255)
-  white_precentage String?      @db.VarChar(255)
-  total_pet        String?      @db.VarChar(255)
-  cutting_mesin    String?      @db.VarChar(255)
-  cutting_speed    String?      @db.VarChar(255)
-  acc              String?      @db.VarChar(255)
-  power            String?      @db.VarChar(255)
-  cutting_bagus    String?      @db.VarChar(255)
-  cutting_reject   String?      @db.VarChar(255)
-  tgl_pengiriman   DateTime?    @db.Date
+  press_protect    String?   @db.VarChar(255)
+  total_kain       String?   @db.VarChar(255)
+  press_bagus      String?   @db.VarChar(255)
+  press_reject     String?   @db.VarChar(255)
+  press_waste      String?   @db.VarChar(255)
+  printd_mesin     String?   @db.VarChar(255)
+  printd_icc       String?   @db.VarChar(255)
+  pet              String?   @db.VarChar(255)
+  suhu_meja        String?   @db.VarChar(255)
+  printd_speed     String?   @db.VarChar(255)
+  white_setting    String?   @db.VarChar(255)
+  choke            String?   @db.VarChar(255)
+  white_precentage String?   @db.VarChar(255)
+  total_pet        String?   @db.VarChar(255)
+  cutting_mesin    String?   @db.VarChar(255)
+  cutting_speed    String?   @db.VarChar(255)
+  acc              String?   @db.VarChar(255)
+  power            String?   @db.VarChar(255)
+  cutting_bagus    String?   @db.VarChar(255)
+  cutting_reject   String?   @db.VarChar(255)
+  tgl_pengiriman   DateTime? @db.Date
   tambah_bahan     String?
-  tambah_cutting   String?      @db.VarChar(255)
-  tambah_cutting1  String?      @db.VarChar(255)
-  tambah_cutting2  String?      @db.VarChar(255)
-  tambah_cutting3  String?      @db.VarChar(255)
-  tambah_cutting4  String?      @db.VarChar(255)
-  tambah_cutting5  String?      @db.VarChar(255)
-  satuan_bahan     String?      @db.VarChar(255)
-  satuan_cutting   String?      @db.VarChar(255)
-  satuan_cutting1  String?      @db.VarChar(255)
-  satuan_cutting2  String?      @db.VarChar(255)
-  satuan_cutting3  String?      @db.VarChar(255)
-  satuan_cutting4  String?      @db.VarChar(255)
-  satuan_cutting5  String?      @db.VarChar(255)
-  qty_bahan        String?      @db.VarChar(255)
-  qty_cutting      String?      @db.VarChar(255)
-  qty_cutting1     String?      @db.VarChar(255)
-  qty_cutting2     String?      @db.VarChar(255)
-  qty_cutting3     String?      @db.VarChar(255)
-  qty_cutting4     String?      @db.VarChar(255)
-  qty_cutting5     String?      @db.VarChar(255)
-  total_bahan      String?      @db.VarChar(255)
-  total_cutting    String?      @db.VarChar(255)
-  total_cutting1   String?      @db.VarChar(255)
-  total_cutting2   String?      @db.VarChar(255)
-  total_cutting3   String?      @db.VarChar(255)
-  total_cutting4   String?      @db.VarChar(255)
-  total_cutting5   String?      @db.VarChar(255)
-  nominal_total    String?      @db.VarChar(255)
+  tambah_cutting   String?   @db.VarChar(255)
+  tambah_cutting1  String?   @db.VarChar(255)
+  tambah_cutting2  String?   @db.VarChar(255)
+  tambah_cutting3  String?   @db.VarChar(255)
+  tambah_cutting4  String?   @db.VarChar(255)
+  tambah_cutting5  String?   @db.VarChar(255)
+  satuan_bahan     String?   @db.VarChar(255)
+  satuan_cutting   String?   @db.VarChar(255)
+  satuan_cutting1  String?   @db.VarChar(255)
+  satuan_cutting2  String?   @db.VarChar(255)
+  satuan_cutting3  String?   @db.VarChar(255)
+  satuan_cutting4  String?   @db.VarChar(255)
+  satuan_cutting5  String?   @db.VarChar(255)
+  qty_bahan        String?   @db.VarChar(255)
+  qty_cutting      String?   @db.VarChar(255)
+  qty_cutting1     String?   @db.VarChar(255)
+  qty_cutting2     String?   @db.VarChar(255)
+  qty_cutting3     String?   @db.VarChar(255)
+  qty_cutting4     String?   @db.VarChar(255)
+  qty_cutting5     String?   @db.VarChar(255)
+  total_bahan      String?   @db.VarChar(255)
+  total_cutting    String?   @db.VarChar(255)
+  total_cutting1   String?   @db.VarChar(255)
+  total_cutting2   String?   @db.VarChar(255)
+  total_cutting3   String?   @db.VarChar(255)
+  total_cutting4   String?   @db.VarChar(255)
+  total_cutting5   String?   @db.VarChar(255)
+  nominal_total    String?   @db.VarChar(255)
   no               Int?
   nospk            Int?
   catatan_design   String?
-  tgl_app_cs       DateTime?    @db.Timestamp(6)
-  tgl_app_prod     DateTime?    @db.Timestamp(6)
-  tgl_app_manager  DateTime?    @db.Timestamp(6)
-  diskon           String?      @db.VarChar(255)
-  tambah_produk    String?      @db.VarChar(255)
-  created_at       DateTime?    @db.Timestamp(6)
-  updated_at       DateTime?    @db.Timestamp(6)
-  customer         Customer?    @relation(fields: [customerId], references: [id])
-  user             User?        @relation("UserCreatedOrders", fields: [userId], references: [id])
-  createdBy        User?        @relation("OrderCreatedBy", fields: [createdById], references: [id])
-  items            OrderItem[]
-  productions      Production[]
-}
+  tgl_app_cs       DateTime? @db.Timestamp(6)
+  tgl_app_prod     DateTime? @db.Timestamp(6)
+  tgl_app_manager  DateTime? @db.Timestamp(6)
+  diskon           String?   @db.VarChar(255)
+  tambah_produk    String?   @db.VarChar(255)
+  created_at       DateTime? @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
 
-model OrderDetails {
-  id              String       @id @default(cuid())
-  userId          String?
-  print_id        Int?
-  press_id        Int?
-  cutting_id      Int?
-  dtf_id          Int?
-  penyerahan_id   Int?
-  designer_id     Int?
-  manager_id      Int?
-  customer_id     Int?
-  customerId      String?
-  rip             String?      @db.VarChar(255)
-  produk          String?      @db.VarChar(255)
-  path            String?      @db.VarChar(255)
-  tf_dp           String?      @db.VarChar(255)
-  tf_pelunasan    String?      @db.VarChar(255)
-  tf_full         String?      @db.VarChar(255)
-  catatan_tf      String?
-  capture         String?      @db.VarChar(255)
-  capture_name    String?      @db.VarChar(255)
-  asal_bahan      String?      @db.VarChar(255)
-  nama_kain       String?      @db.VarChar(255)
-  jumlah_kain     String?      @db.VarChar(255)
-  tipe_produk     String?      @db.VarChar(255)
-  qty             String?      @db.VarChar(255)
-  kategori        String?      @db.VarChar(255)
-  gramasi         String?      @db.VarChar(255)
-  nama_produk     String?      @db.VarChar(255)
-  catatan         String?
-  catatan_print   String?
-  catatan_press   String?
-  catatan_cutting String?
-  lebar_file      String?      @db.VarChar(255)
-  est_order       DateTime?
-  jns_produk_id   Int?
-  no_project      String?      @db.VarChar(255)
-  tgl_print       DateTime?
-  print_done      DateTime?
-  tgl_press       DateTime?
-  press_done      DateTime?
-  tgl_cutting     DateTime?
-  cutting_done    DateTime?
-  tgl_dtf         DateTime?
-  dtf_done        DateTime?
-  warna_acuan     String?      @db.VarChar(255)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  customer        Customer?    @relation("CustomerOrderDetails", fields: [customerId], references: [id])
-  user            User?        @relation("UserOrderDetails", fields: [userId], references: [id])
-  productions     Production[]
+  customerId    BigInt? @map("customer_id")
+  asal_bahan_id BigInt? @map("asal_bahan") // rename in the schema if this changes the DB column
+
+  customer       customer? @relation("CustomerOrders", fields: [customerId], references: [id])
+  asal_bahan_rel customer? @relation("AsalBahanCustomer", fields: [asal_bahan_id], references: [id])
+
+  userId        String?
+  createdById   String?
+  manager_id    String?
+  designer_id   String?
+  penyerahan_id String?
+  dtf_id        String?
+  cutting_id    String?
+  press_id      String?
+  print_id      String?
+  opr_id        String?
+
+  user       User? @relation("UserCreatedOrders", fields: [userId], references: [id])
+  createdBy  User? @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  manager    User? @relation("OrderManager", fields: [manager_id], references: [id])
+  designer   User? @relation("OrderDesigner", fields: [designer_id], references: [id])
+  penyerahan User? @relation("OrderPenyerahan", fields: [penyerahan_id], references: [id])
+  dtf        User? @relation("OrderDTF", fields: [dtf_id], references: [id])
+  cutting    User? @relation("OrderCutting", fields: [cutting_id], references: [id])
+  press      User? @relation("OrderPress", fields: [press_id], references: [id])
+  print      User? @relation("OrderPrint", fields: [print_id], references: [id])
+  operator   User? @relation("OrderOperator", fields: [opr_id], references: [id])
+
+  @@map("orders")
 }

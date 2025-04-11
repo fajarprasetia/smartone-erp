@@ -1,47 +1,73 @@
-﻿import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
-// GET /api/marketing/customers-new
+// GET /api/marketing/customers-new - Get all customers
 export async function GET(req: NextRequest) {
   try {
-    const customers = await prisma.$queryRaw`SELECT * FROM customer ORDER BY nama ASC`;
+    // Get customers from the Customer model
+    const customers = await prisma.customer.findMany({
+      orderBy: {
+        name: 'asc'
+      }
+    });
     
-    const mappedCustomers = Array.isArray(customers) 
-      ? customers.map(c => ({
-          id: String(c.id),
-          name: c.nama,
-          phone: c.telp
-        }))
-      : [];
+    // Format the customers for the response
+    const formattedCustomers = customers.map(customer => ({
+      id: customer.id,
+      name: customer.name,
+      phone: customer.telp || null,
+      email: null, // Email field removed from schema
+      address: customer.address || null,
+      status: null,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt,
+      isLegacy: false
+    }));
     
-    return NextResponse.json(mappedCustomers);
+    return NextResponse.json(formattedCustomers)
   } catch (error) {
-    console.error("Error:", error);
-    return NextResponse.json({ error: "Failed to fetch customers" }, { status: 500 });
+    console.error('Error fetching customers:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch customers' },
+      { status: 500 }
+    )
   }
 }
 
-// POST /api/marketing/customers-new
+// POST /api/marketing/customers-new - Create a new customer
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { name, phone } = body;
+    const body = await req.json()
     
-    const result = await prisma.$queryRaw`
-      INSERT INTO customer (nama, telp) 
-      VALUES (${name}, ${phone || null})
-      RETURNING *
-    `;
+    const { name, phone } = body
     
-    const customer = Array.isArray(result) && result.length > 0 ? result[0] : null;
-    
-    return NextResponse.json({
-      id: String(customer.id),
-      name: customer.nama,
-      phone: customer.telp
+    // Create customer using customer model
+    const customer = await prisma.customer.create({
+      data: {
+        name: name,
+        phone: phone
+      }
     });
+    
+    // Format response
+    const formattedCustomer = {
+      id: customer.id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
+      status: null,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt,
+      isLegacy: false
+    }
+    
+    return NextResponse.json(formattedCustomer, { status: 201 })
   } catch (error) {
-    console.error("Error:", error);
-    return NextResponse.json({ error: "Failed to create customer" }, { status: 500 });
+    console.error('Error creating customer:', error)
+    return NextResponse.json(
+      { error: 'Failed to create customer' },
+      { status: 500 }
+    )
   }
 }

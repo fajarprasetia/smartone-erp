@@ -1,4 +1,4 @@
-import { Tabs, TabList, TabTrigger, TabContent } from '@/components/ui/tabs'
+import { Tabs, TabsList as TabList, TabsTrigger as TabTrigger, TabsContent as TabContent } from '@/components/ui/tabs'
 import { OrderTable } from '@/components/order-table'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'

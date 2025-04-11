@@ -43,6 +43,9 @@ export async function GET(req: NextRequest) {
 
     // Fetch orders with pagination and include customer data
     const orders = await prisma.Order.findMany({
+  include: {
+    customer: true
+  },
       where: whereCondition,
       include: {
         customer: true,
@@ -52,14 +55,37 @@ export async function GET(req: NextRequest) {
       orderBy: { tanggal: "desc" },
     });
 
-    // Process orders to include marketing info
-    const processedOrders = orders.map(order => {
+    // For orders with customer_id but no customer relation, fetch from lowercase customer model
+    const processedOrders = await Promise.all(orders.map(async order => {
+      let customerData = order.customer;
+      
+      // If no customer data from relation but has customer_id, try to fetch from lowercase customer model
+      if (!customerData && order.customer_id) {
+        try {
+          const lowercaseCustomer = await prisma.$queryRaw`
+            SELECT id, nama, telp FROM customer WHERE id = ${order.customer_id}
+          `;
+          
+          if (Array.isArray(lowercaseCustomer) && lowercaseCustomer.length > 0) {
+            customerData = {
+              id: lowercaseCustomer[0].id.toString(),
+              nama: lowercaseCustomer[0].nama,
+              telp: lowercaseCustomer[0].telp
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching lowercase customer:', error);
+        }
+      }
+      
       return {
         ...order,
         // Create marketingInfo object from the marketing string field
         marketingInfo: order.marketing ? { name: order.marketing } : null,
+        // Override customer with fetched data if available
+        customer: customerData
       };
-    });
+    }));
 
     return NextResponse.json(
       serializeData({

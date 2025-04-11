@@ -8,11 +8,22 @@ export async function GET(req: NextRequest) {
     const legacyCustomers = await prisma.$queryRaw`SELECT * FROM customer ORDER BY nama ASC`;
     
     // Get new model customers
-    const newCustomers = await prisma.Customer.findMany({
+    const newCustomers = await prisma.customer.findMany({
       orderBy: {
-        name: 'asc'
+        nama: 'asc'
+      },
+      select: {
+        id: true,
+        nama: true,
+        telp: true
       }
     });
+
+    const mappedCustomers = newCustomers.map(customer => ({
+      id: customer.id,
+      name: customer.nama,
+      phone: customer.telp
+    }));
     
     // Map the legacy customers
     const mappedLegacyCustomers = Array.isArray(legacyCustomers) 
@@ -45,7 +56,7 @@ export async function GET(req: NextRequest) {
     // Combine both sets of customers
     const allCustomers = [...mappedLegacyCustomers, ...formattedNewCustomers];
     
-    return NextResponse.json(allCustomers)
+    return NextResponse.json(mappedCustomers);
   } catch (error) {
     console.error('Error fetching customers:', error)
     return NextResponse.json(

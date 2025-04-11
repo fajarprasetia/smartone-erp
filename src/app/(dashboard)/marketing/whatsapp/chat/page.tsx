@@ -80,7 +80,7 @@ export default function WhatsAppChatPage() {
     const fetchCustomers = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch('/api/marketing/customers', { cache: 'no-store' });
+        const res = await fetch('/api/marketing/customers-new', { cache: 'no-store' });
         
         if (!res.ok) {
           throw new Error('Failed to fetch customers');

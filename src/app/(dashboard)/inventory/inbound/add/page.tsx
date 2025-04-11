@@ -110,15 +110,24 @@ export default function AddInventoryItemPage() {
   // Handle form submission
   const onSubmit = async (data: FormValues) => {
     try {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
+      
+      const formData = new FormData();
+      formData.append('nama_bahan', data.nama_bahan);
+      formData.append('asal_bahan', data.asal_bahan || '');
+      
+      // Append file uploads
+      const fileInput = document.getElementById('images') as HTMLInputElement;
+      if (fileInput.files) {
+        Array.from(fileInput.files).forEach(file => {
+          formData.append('files', file);
+        });
+      }
       
       const response = await fetch("/api/inventory/inbound", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
+        body: formData
+      });
       
       if (!response.ok) {
         throw new Error("Failed to create inventory item")
@@ -379,4 +388,15 @@ export default function AddInventoryItemPage() {
       </Card>
     </div>
   )
-} 
+}
+
+<div className="mb-4">
+  <label className="block text-sm font-medium mb-2">Product Images</label>
+  <input
+    type="file"
+    id="images"
+    multiple
+    accept="image/*"
+    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+  />
+</div>

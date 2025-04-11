@@ -28,7 +28,23 @@ interface OrderWithCustomer {
   } | null
   capture?: string | null
   capture_name?: string | null
-  createdBy?: {
+  user?: { // From user_id -> User relation
+    id: string
+    name: string
+  } | null
+  createdBy?: { // From createdById -> User relation
+    id: string
+    name: string
+  } | null
+  designerInfo?: { // Added from API processing for designer_id
+    id: string
+    name: string
+  } | null
+  operationInfo?: { // Added from API processing for opr_id
+    id: string
+    name: string
+  } | null
+  managerInfo?: { // Added from API processing for manager_id
     id: string
     name: string
   } | null
@@ -186,19 +202,21 @@ export default function ViewOrderData({ order }: { order: OrderWithCustomer }) {
       <div className="grid grid-cols-4 gap-4 mt-8">
         <div className="text-center border-t pt-4">
           <p className="font-medium">Created by</p>
-          <p>{order.createdBy?.name || 'N/A'}</p>
+          <p>{order.createdBy?.name || order.user?.name || 'N/A'}</p>
           <p className="text-sm text-gray-500 mt-2">
             {order.created_at ? formatDate(order.created_at) : 'N/A'}
           </p>
         </div>
         <div className="text-center border-t pt-4">
           <p className="font-medium">Manager Approval</p>
+          <p>{order.managerInfo?.name || 'N/A'}</p>
           <p className="text-sm text-gray-500 mt-2">
             {order.statusm === 'APPROVED' ? 'Approved' : (order.statusm === 'REJECT' ? 'Rejected' : 'Pending')}
           </p>
         </div>
         <div className="text-center border-t pt-4">
-          <p className="font-medium">Production Approval</p>
+          <p className="font-medium">Operation Approval</p>
+          <p>{order.operationInfo?.name || 'N/A'}</p>
           <p className="text-sm text-gray-500 mt-2">
             {order.status === 'APPROVED' ? 'Approved' : (order.status === 'REJECT' ? 'Rejected' : 'Pending')}
           </p>
@@ -207,6 +225,12 @@ export default function ViewOrderData({ order }: { order: OrderWithCustomer }) {
           <p className="font-medium">Marketing</p>
           <p>{order.marketingInfo?.name || order.marketing || 'N/A'}</p>
         </div>
+      </div>
+      
+      {/* Designer Information */}
+      <div className="mt-4 text-center border-t pt-4">
+        <p className="font-medium">Designed by</p>
+        <p>{order.designerInfo?.name || 'N/A'}</p>
       </div>
     </div>
   )

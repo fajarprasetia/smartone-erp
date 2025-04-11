@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { Customer } from '@prisma/client'
-import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/use-toast'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -13,36 +11,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { XIcon } from "lucide-react"
+import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-// Custom DialogContent with adjusted positioning
-const CustomDialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPrimitive.Portal>
-    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed z-50 grid w-full max-w-lg gap-4 rounded-lg border border-gray-200/30 bg-white/90 p-6 shadow-lg backdrop-blur-md backdrop-saturate-150 duration-200 sm:rounded-lg max-h-[85vh] overflow-y-auto",
-        "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-        <XIcon className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPrimitive.Portal>
-))
-CustomDialogContent.displayName = DialogPrimitive.Content.displayName
 
 // Form validation schema
 const formSchema = z.object({
@@ -75,16 +45,23 @@ interface CustomerFormDialogProps {
   isWhatsAppContact?: boolean
 }
 
-export function CustomerFormDialogNew({ 
-  open, 
-  customer, 
-  onClose,
-  isWhatsAppContact = false
-}: CustomerFormDialogProps) {
+export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppContact = false }: CustomerFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState("basic")
   
   const isEditing = !!customer
+  
+  // Add overflow hidden to body when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [open])
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -177,33 +154,47 @@ export function CustomerFormDialogNew({
     }
   }
   
+  if (!open) return null
+  
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose(false)}>
-      <CustomDialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing 
-              ? isWhatsAppContact ? 'Edit WhatsApp Contact' : 'Edit Customer' 
-              : isWhatsAppContact ? 'Add WhatsApp Contact' : 'Add Customer'
-            }
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing 
-              ? 'Update customer information.' 
-              : 'Add a new customer to your database.'}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {isWhatsAppContact ? (
-              <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50"
+        onClick={() => onClose(false)}
+      />
+
+      {/* Modal */}
+      <div className="bg-background z-50 rounded-lg border shadow-lg w-full max-w-lg mx-4 overflow-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {isEditing ? 'Edit Customer' : 'Add New Customer'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {isEditing 
+                ? 'Update customer details below' 
+                : 'Fill in the required information to add a new customer'}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onClose(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                  <TabsTrigger value="whatsapp">WhatsApp Settings</TabsTrigger>
+                  <TabsTrigger value="additional">Additional Info</TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="basic" className="space-y-4 pt-2">
+                <TabsContent value="basic" className="space-y-4">
                   <FormField
                     control={form.control}
                     name="nama"
@@ -211,30 +202,27 @@ export function CustomerFormDialogNew({
                       <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Contact name" {...field} />
+                          <Input placeholder="Enter customer name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
                   <FormField
                     control={form.control}
                     name="telp"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone</FormLabel>
+                        <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="WhatsApp number (e.g. 81234567 or 6281234567)" 
-                            {...field} 
-                          />
+                          <Input placeholder="Enter phone number" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+                </TabsContent>
+                <TabsContent value="additional" className="space-y-4">
                   <FormField
                     control={form.control}
                     name="email"
@@ -242,63 +230,12 @@ export function CustomerFormDialogNew({
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Email address (optional)" 
-                            type="email"
-                            {...field} 
-                          />
+                          <Input placeholder="Enter email address" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </TabsContent>
-                
-                <TabsContent value="whatsapp" className="space-y-4 pt-2">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>WhatsApp Status</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="VERIFIED">Verified</SelectItem>
-                            <SelectItem value="UNVERIFIED">Unverified</SelectItem>
-                            <SelectItem value="INACTIVE">Inactive</SelectItem>
-                            <SelectItem value="BLOCKED">Blocked</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tags</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Comma-separated tags (e.g. VIP, Customer)" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
                   <FormField
                     control={form.control}
                     name="address"
@@ -306,10 +243,42 @@ export function CustomerFormDialogNew({
                       <FormItem>
                         <FormLabel>Address</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Address (optional)" 
-                            {...field} 
-                          />
+                          <Input placeholder="Enter customer address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="UNVERIFIED">Unverified</SelectItem>
+                            <SelectItem value="ACTIVE">Active</SelectItem>
+                            <SelectItem value="INACTIVE">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tags</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter tags (comma separated)" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -317,91 +286,30 @@ export function CustomerFormDialogNew({
                   />
                 </TabsContent>
               </Tabs>
-            ) : (
-              <>
-                <FormField
-                  control={form.control}
-                  name="nama"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Customer name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="telp"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Phone number (e.g. 81234567 or 6281234567)" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Email address (optional)" 
-                          type="email"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Address (optional)" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-            
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onClose(false)}
+
+              <div
+                className={cn(
+                  "flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4"
+                )}
               >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : isEditing ? 'Update' : 'Add'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </CustomDialogContent>
-    </Dialog>
-  )
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onClose(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting 
+                    ? 'Saving...' 
+                    : (isEditing ? 'Save Changes' : 'Add Customer')}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
+    </div>
+  );
 }

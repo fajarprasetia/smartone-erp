@@ -117,6 +117,8 @@ export default function ViewOrderPage() {
           visibility: visible;
         }
         .print-container {
+          width: 100% !important;
+          padding: 0 !important;
           position: absolute;
           left: 0;
           top: 0;
@@ -174,331 +176,260 @@ export default function ViewOrderPage() {
 
       {/* SPK Document - styled to match the PHP template */}
       <div className="bg-white p-4 rounded-md shadow-sm border print:shadow-none print:border-0 print:p-0 print:a4 print-container overflow-auto">
-        {/* Header */}
-        <table className="w-full border-collapse border mb-4">
-          <thead>
-            <tr>
-              <th colSpan={5} className="text-center border py-1.5 px-2 bg-muted/20">
-                <h2 className="text-lg font-bold">Surat Perintah Kerja</h2>
-              </th>
-            </tr>
-          </thead>
+  {/* 1. Header Table */}
+  <table className="w-full table-fixed border-collapse border mb-4">
+    <colgroup>
+      <col className="w-[80px]" />
+      <col className="w-[20%]" />
+      <col className="w-[25%]" />
+      <col className="w-[20%]" />
+      <col className="w-[25%]" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colSpan={5} className="text-center border py-1.5 px-2 bg-muted/20">
+          <h2 className="text-lg font-bold">Surat Perintah Kerja</h2>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowSpan={3} className="text-center border p-1.5">
+          <div className="relative h-[70px] w-[70px] mx-auto">
+            <Image src="/logo.png" alt="SmartOne Logo" width={70} height={70} style={{ objectFit: "contain" }} />
+          </div>
+        </td>
+        <td className="border p-1.5 text-sm font-medium">No Invoice</td>
+        <td className="border p-1.5 text-sm">{order.invoice || "N/A"}</td>
+        <td className="border p-1.5 text-sm font-medium">No Project</td>
+        <td className="border p-1.5 text-sm">{order.no_project || "N/A"}</td>
+      </tr>
+      <tr>
+        <td className="border p-1.5 text-sm font-medium">Revisi</td>
+        <td className="border p-1.5 text-sm">-</td>
+        <td className="border p-1.5 text-sm font-medium">No. SPK</td>
+        <td className="border p-1.5 text-sm">{order.spk || "N/A"}</td>
+      </tr>
+      <tr>
+        <td className="border p-1.5 text-sm font-medium">Estimasi</td>
+        <td className="border p-1.5 text-sm">{formatDate(order.est_order || order.targetSelesai)}</td>
+        <td className="border p-1.5 text-sm font-medium">Tanggal</td>
+        <td className="border p-1.5 text-sm">{formatDate(order.created_at || order.tanggal)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {/* 2. Detail Order Table */}
+  <h1 className="text-base font-bold mb-1.5">1. Detail Order</h1>
+  <table className="w-full border-collapse border mb-4 table-fixed">
+    <colgroup>
+      <col className="w-[30%]" />
+      <col className="w-[40%]" />
+      <col className="w-[30%]" />
+    </colgroup>
+    <thead>
+      <tr className="bg-muted/20">
+        <th className="border p-1.5 text-center text-sm font-medium">KETERANGAN</th>
+        <th className="border p-1.5 text-center text-sm font-medium">DESKRIPSI</th>
+        <th className="border p-1.5 text-center text-sm font-medium">CATATAN</th>
+      </tr>
+    </thead>
+    <tbody className="text-sm">
+      <tr><td className="border p-1.5">1. Asal Bahan</td><td className="border p-1.5">{order.asal_bahan || "N/A"}</td><td rowSpan={8} className="border p-1.5 align-top">
+        {order.catatan_design && (
+          <>
+            <span className="text-xs font-medium">Catatan Designer:</span>
+            <p className="text-sm font-bold text-red-600 mt-1">{order.catatan_design}</p>
+          </>
+        )}
+      </td></tr>
+      <tr><td className="border p-1.5">2. Nama Kain</td><td className="border p-1.5">{order.nama_kain || "N/A"}</td></tr>
+      <tr><td className="border p-1.5">3. Jumlah Kain</td><td className="border p-1.5">{order.jumlah_kain || "N/A"}</td></tr>
+      <tr><td className="border p-1.5">4. Lebar Kertas</td><td className="border p-1.5">{order.lebar_kertas || "N/A"}</td></tr>
+      <tr><td className="border p-1.5">5. Aplikasi Produk</td><td className="border p-1.5">{order.nama_produk || order.produk || "N/A"}</td></tr>
+      <tr><td className="border p-1.5">6. Quantity Produksi</td><td className="border p-1.5">{order.qty || "N/A"}</td></tr>
+      <tr><td className="border p-1.5">7. Panjang Layout</td><td className="border p-1.5">
+        {order.lebar_kertas && order.qty ? `${order.lebar_kertas} X ${order.qty}` : "N/A"}
+      </td></tr>
+      <tr><td className="border p-1.5">8. Nama File</td><td className="border p-1.5">{order.path || "N/A"}</td></tr>
+    </tbody>
+  </table>
+
+  {/* 3. Preview Project Table */}
+<h1 className="text-base font-bold mb-1.5">2. Preview Project</h1>
+<table className="w-full border-collapse border mb-4 preview-project-table">
+  <colgroup>
+    <col className="w-[70%]" />
+    <col className="w-[30%]" />
+  </colgroup>
+  <tbody className="text-sm">
+    <tr>
+      <td rowSpan={2} className="border p-1.5 text-center">
+        <p className="text-base font-medium">{order.customer?.nama || "N/A"}</p>
+      </td>
+      <td className="border p-1.5 font-medium">Marketing</td>
+    </tr>
+    <tr>
+      <td className="border p-1.5">{order.marketingInfo?.name || order.marketing || "N/A"}</td>
+    </tr>
+    <tr>
+      <td className="border p-1.5 text-center align-middle">
+        <div className="min-h-[220px] flex flex-col justify-center items-center">
+          <p className="text-base font-bold text-red-600">{order.produk || "N/A"}</p>
+          <p className="text-sm font-bold text-red-600 mt-0.5">{order.kategori || "N/A"}</p>
+          <div className="flex justify-center gap-3 mt-3 flex-wrap">
+            {order.capture && (
+              <div className="relative h-[150px] w-[200px] flex-shrink-0">
+                <Image
+                  src={`/uploads/${order.capture}`}
+                  alt="Design preview"
+                  width={200}
+                  height={150}
+                  className="object-contain max-h-[150px]"
+                />
+              </div>
+            )}
+            {order.capture_name && (
+              <div className="relative h-[100px] w-[240px] flex-shrink-0">
+                <Image
+                  src={`/uploads/${order.capture_name}`}
+                  alt="Name preview"
+                  width={240}
+                  height={100}
+                  className="object-contain max-h-[100px]"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </td>
+      <td className="border p-1.5 align-top">
+        <table className="w-full border-collapse text-xs min-w-0">
+          <colgroup>
+            <col className="w-[50%]" />
+            <col className="w-[50%]" />
+          </colgroup>
           <tbody>
-            <tr>
-              <td rowSpan={3} className="text-center border p-1.5 w-[80px]">
-                <div className="relative h-[70px] w-[70px] mx-auto">
-                  <Image
-                    src="/logo.png"
-                    alt="SmartOne Logo"
-                    width={70}
-                    height={70}
-                    style={{ objectFit: "contain" }}
-                  />
-                </div>
-              </td>
-              <td className="border p-1.5 text-sm font-medium">No Invoice</td>
-              <td className="border p-1.5 text-sm">{order.invoice || "N/A"}</td>
-              <td className="border p-1.5 text-sm font-medium">No Project</td>
-              <td className="border p-1.5 text-sm">{order.no_project || "N/A"}</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5 text-sm font-medium">Revisi</td>
-              <td className="border p-1.5 text-sm">-</td>
-              <td className="border p-1.5 text-sm font-medium">No. SPK</td>
-              <td className="border p-1.5 text-sm">{order.spk || "N/A"}</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5 text-sm font-medium">Estimasi</td>
-              <td className="border p-1.5 text-sm">{formatDate(order.est_order || order.targetSelesai)}</td>
-              <td className="border p-1.5 text-sm font-medium">Tanggal</td>
-              <td className="border p-1.5 text-sm">{formatDate(order.created_at || order.tanggal)}</td>
-            </tr>
+            <tr><td className="pr-1 py-0.5">Lebar Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order.lebar_kertas || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Gramasi Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order.gramasi || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Lebar Kain</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order.lebar_kain || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Lebar File</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order.lebar_file || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Warna Acuan</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order.warna_acuan || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Status Produksi</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order.statusprod || order.status || ""} disabled /></td></tr>
           </tbody>
         </table>
+        <div className="mt-2">
+          <p className="text-xs font-medium">Catatan:</p>
+          <p className="text-sm font-medium text-red-600 break-words mt-0.5">{order.catatan || "N/A"}</p>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-        {/* Detail Order Section */}
-        <h1 className="text-base font-bold mb-1.5">1. Detail Order</h1>
-        <table className="w-full border-collapse border mb-4 table-fixed">
-          <thead>
-            <tr className="bg-muted/20">
-              <th className="border p-1.5 text-center w-[30%] text-sm font-medium">KETERANGAN</th>
-              <th className="border p-1.5 text-center w-[40%] text-sm font-medium">DESKRIPSI</th>
-              <th className="border p-1.5 text-center w-[30%] text-sm font-medium">CATATAN</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            <tr>
-              <td className="border p-1.5">1. Asal Bahan</td>
-              <td className="border p-1.5">{order.asal_bahan || "N/A"}</td>
-              <td rowSpan={8} className="border p-1.5 align-top">
-                {order.catatan_design ? (
-                  <>
-                    <span className="text-xs font-medium">Catatan Designer:</span>
-                    <p className="text-sm font-bold text-red-600 mt-1">{order.catatan_design}</p>
-                  </>
-                ) : null}
-              </td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">2. Nama Kain</td>
-              <td className="border p-1.5">{order.nama_kain || "N/A"}</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">3. Jumlah Kain</td>
-              <td className="border p-1.5">{order.jumlah_kain || "N/A"}</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">4. Lebar Kertas</td>
-              <td className="border p-1.5">{order.lebar_kertas || "N/A"}</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">5. Aplikasi Produk</td>
-              <td className="border p-1.5">{order.nama_produk || order.produk || "N/A"}</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">6. Quantity Produksi</td>
-              <td className="border p-1.5">{order.qty || "N/A"}</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">7. Panjang Layout</td>
-              <td className="border p-1.5">
-                {order.lebar_kertas && order.qty
-                  ? `${order.lebar_kertas} X ${order.qty}`
-                  : "N/A"}
-              </td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">8. Nama File</td>
-              <td className="border p-1.5">{order.path || "N/A"}</td>
-            </tr>
-          </tbody>
-        </table>
 
-        {/* Preview Project Section */}
-        <h1 className="text-base font-bold mb-1.5">2. Preview Project</h1>
-        <table className="w-full border-collapse border mb-4 table-fixed">
-          <tbody className="text-sm">
-            <tr>
-              <td rowSpan={2} colSpan={3} className="border p-1.5 text-center">
-                <p className="text-base font-medium">
-                  {order.customer?.nama || "N/A"}
-                </p>
-              </td>
-              <td className="border p-1.5 font-medium">Marketing</td>
-            </tr>
-            <tr>
-              <td className="border p-1.5">
-                {order.marketingInfo?.name || order.marketing || "N/A"}
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={3} className="border p-1.5 text-center">
-                <p className="text-base font-bold text-red-600">
-                  {order.produk || "N/A"}
-                </p>
-                <p className="text-sm font-bold text-red-600 mt-0.5">
-                  {order.kategori || "N/A"}
-                </p>
-                <div className="flex justify-center gap-3 my-3 flex-wrap">
-                  {order.capture && (
-                    <div className="relative h-[150px] w-[200px] flex-shrink-0">
-                      <Image
-                        src={`/uploads/${order.capture}`}
-                        alt="Design preview"
-                        width={200}
-                        height={150}
-                        style={{ objectFit: "contain" }}
-                      />
-                    </div>
-                  )}
-                  {order.capture_name && (
-                    <div className="relative h-[100px] w-[240px] flex-shrink-0">
-                      <Image
-                        src={`/uploads/${order.capture_name}`}
-                        alt="Name preview"
-                        width={240}
-                        height={100}
-                        style={{ objectFit: "contain" }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </td>
-              <td className="border p-1.5">
-                <table className="w-full border-collapse text-xs">
-                  <tbody>
-                    <tr>
-                      <td className="pr-1 py-0.5 font-medium">Lebar Kertas</td>
-                      <td>
-                        <input
-                          type="text"
-                          className="border border-green-500 p-0.5 w-full text-xs"
-                          value={order.lebar_kertas || ""}
-                          disabled
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pr-1 py-0.5 font-medium">Gramasi Kertas</td>
-                      <td>
-                        <input
-                          type="text"
-                          className="border border-green-500 p-0.5 w-full text-xs"
-                          value={order.gramasi || ""}
-                          disabled
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pr-1 py-0.5 font-medium">Lebar Kain</td>
-                      <td>
-                        <input
-                          type="text"
-                          className="border border-green-500 p-0.5 w-full text-xs"
-                          value={order.lebar_kain || ""}
-                          disabled
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pr-1 py-0.5 font-medium">Lebar File</td>
-                      <td>
-                        <input
-                          type="text"
-                          className="border border-green-500 p-0.5 w-full text-xs"
-                          value={order.lebar_file || ""}
-                          disabled
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pr-1 py-0.5 font-medium">Warna Acuan</td>
-                      <td>
-                        <input
-                          type="text"
-                          className="border border-green-500 p-0.5 w-full text-xs"
-                          value={order.warna_acuan || ""}
-                          disabled
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="pr-1 py-0.5 font-medium">Status Produksi</td>
-                      <td>
-                        <input
-                          type="text"
-                          className="border border-green-500 p-0.5 w-full text-xs"
-                          value={order.statusprod || order.status || ""}
-                          disabled
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div className="mt-2">
-                  <p className="text-xs font-medium">Catatan:</p>
-                  <p className="text-sm font-medium text-red-600 break-words mt-0.5">
-                    {order.catatan || "N/A"}
-                  </p>
-                </div>
-              </td>
-            </tr>
-            <tr className="text-center text-xs">
-              <td className="border p-1 w-[25%]">
-                <span className="font-medium">Created by</span><br />
-                {order.createdBy?.name || "N/A"}
-              </td>
-              <td className="border p-1 w-[25%]">
-                <span className="font-medium">Designed by</span><br />
-                {"N/A"} {/* This field might not be available in your data */}
-              </td>
-              <td className="border p-1 w-[25%]">
-                <span className="font-medium">Operation Approval by</span><br />
-                {"N/A"} {/* This field might not be available in your data */}
-              </td>
-              <td className="border p-1 w-[25%]">
-                <span className="font-medium">Approved by</span><br />
-                {"N/A"} {/* This field might not be available in your data */}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  {/* 3. Approvals */}
+  <h1 className="text-base font-bold mb-1.5 mt-4">3. Approval</h1>
+  <table className="w-full approval-table border-collapse border mb-4">
+  <thead>
+    <tr className="bg-green-100 text-green-700 text-xs text-center">
+      <th className="border p-1">Created by</th>
+      <th className="border p-1">Designed by</th>
+      <th className="border p-1">Operation Approval by</th>
+      <th className="border p-1">Approved by</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr className="text-center h-10 align-center">
+      <td className="border p-1 text-[10px]">{order.user_id?.name}</td>
+      <td className="border p-1 text-[10px]">{order.designer_id?.name}</td>
+      <td className="border p-1 text-[10px]">{order.opr_id?.name}</td>
+      <td className="border p-1 text-[10px]">{order.manager_id?.name}</td>
+    </tr>
+  </tbody>
+</table>
 
-        {/* Footer */}
-        <p className="text-center text-xs mt-4 print:mt-2">
-          smartone.id
-        </p>
-      </div>
+  {/* Footer */}
+  <p className="text-center text-xs mt-4 print:mt-2">smartone.id</p>
+</div>
+
 
       {/* Add styles for printing */}
       <style jsx global>{`
         @media print {
-          @page {
-            size: A4;
-            margin: 10mm;
-          }
-          body {
-            background: white !important;
-            -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          html, body {
-            height: 100%;
-            overflow: visible !important;
-            font-size: 11pt;
-          }
-          .print\\:a4 {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 10mm !important;
-            margin: 0 auto !important;
-            background: white !important;
-          }
-          /* Hide unnecessary elements */
-          header, footer, nav, aside, .print\\:hidden {
-            display: none !important;
-          }
-          /* Ensure table fits the page */
-          table {
-            page-break-inside: auto;
-            font-size: 10pt;
-          }
-          tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-          }
-          td {
-            page-break-inside: avoid;
-          }
-          thead {
-            display: table-header-group;
-          }
-          tfoot {
-            display: table-footer-group;
-          }
-          input {
-            font-size: 9pt !important;
-          }
-          h1, h2 {
-            font-size: 12pt !important;
-          }
-        }
-        
-        /* Add styles for better scrolling */
-        .overflow-auto {
-          -webkit-overflow-scrolling: touch;
-        }
-        
-        /* Ensure tables don't overflow horizontally on smaller screens */
-        @media (max-width: 768px) {
-          table {
-            overflow-x: auto;
-            display: block;
-            max-width: 100%;
-          }
-        }
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto !important;
+    padding: 0;
+    overflow: hidden !important;
+    background: white !important;
+    font-size: 10pt;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print\\:a4 {
+    width: 100% !important;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    background: white !important;
+    scale: 0.98; /* Scale to prevent overflow */
+    transform-origin: top left;
+  }
+
+  /* Ensure all tables fit and don't break */
+  table {
+    width: 100% !important;
+    page-break-inside: auto;
+    font-size: 10pt;
+    table-layout: fixed;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  tr, td, th {
+    page-break-inside: avoid;
+  }
+
+  input {
+    font-size: 9pt !important;
+  }
+
+  h1, h2 {
+    font-size: 11pt !important;
+  }
+
+  /* Approval Table Full Width Fix */
+  .approval-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  .approval-table th,
+  .approval-table td {
+    width: 25% !important;
+  }
+
+  /* Hide UI-only elements */
+  header, footer, nav, aside, .print\\:hidden {
+    display: none !important;
+  }
+}
+
       `}</style>
     </div>
   );
-} 
+}

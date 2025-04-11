@@ -404,3 +404,183 @@ export function CustomerFormDialog({
     </Dialog>
   )
 }
+
+
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(8, "Phone number must be at least 8 characters"),
+  address: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+interface CustomerFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  customer?: any;
+}
+
+export function CustomerFormDialog({
+  open,
+  onOpenChange,
+  customer,
+}: CustomerFormDialogProps) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "auto";
+    return () => { document.body.style.overflow = "auto"; };
+  }, [open]);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+    },
+  });
+
+  useEffect(() => {
+    if (open && customer) {
+      form.reset(customer);
+    } else if (!open) {
+      form.reset();
+    }
+  }, [open, customer, form]);
+
+  async function onSubmit(data: FormValues) {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        customer ? `/api/marketing/customers/${customer.id}` : "/api/marketing/customers",
+        {
+          method: customer ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to save customer");
+
+      toast({
+        title: "Success",
+        description: `Customer ${customer ? "updated" : "created"} successfully`,
+      });
+
+      onOpenChange(false);
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
+      
+      <div className="bg-background z-50 rounded-lg border shadow-lg w-full max-w-lg mx-4 overflow-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {customer ? "Edit Customer" : "New Customer"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {customer ? "Update customer details" : "Add a new customer to the system"}
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Customer name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="email@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Full address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Saving..." : customer ? "Update Customer" : "Add Customer"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
+    </div>
+  );
+}

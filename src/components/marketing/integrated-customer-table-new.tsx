@@ -209,7 +209,7 @@ export function IntegratedCustomerTable({ showWhatsappStatus = true }: Integrate
           />
         </div>
         
-        <Button onClick={() => router.push('/marketing/customer/add')}>
+        <Button onClick={() => setIsDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Customer
         </Button>
@@ -300,8 +300,12 @@ export function IntegratedCustomerTable({ showWhatsappStatus = true }: Integrate
       <CustomerFormDialogNew
         open={isDialogOpen}
         customer={selectedCustomer}
-        onClose={handleDialogClose}
+        onClose={(shouldRefresh) => {
+          setIsDialogOpen(false)
+          setSelectedCustomer(null)
+          shouldRefresh && location.reload() // Temporary refresh until proper state management
+        }}
       />
     </div>
   )
-} 
+}

@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
     // Fetch orders with approval_barang set to "APPROVED" and status not "DISERAHKAN"
     const ordersRaw = await prisma.$queryRaw`
       SELECT o.*, c.nama as customer_name
-      FROM "Order" o
+      FROM "orders" o
       LEFT JOIN "customer" c ON o.customer_id = c.id
       WHERE o.approval_barang = 'APPROVED' 
       AND o.status != 'DISERAHKAN'
@@ -59,7 +59,7 @@ export async function PATCH(req: NextRequest) {
       if (action === 'handover') {
         // Update order status to "DISERAHKAN"
         result = await prisma.$queryRaw`
-          UPDATE "Order"
+          UPDATE "orders"
           SET status = 'DISERAHKAN', statusm = 'DISERAHKAN'
           WHERE id = ${id}
           RETURNING *
@@ -67,7 +67,7 @@ export async function PATCH(req: NextRequest) {
       } else if (action === 'reject_qc') {
         // Update order status for rejected QC
         result = await prisma.$queryRaw`
-          UPDATE "Order"
+          UPDATE "orders"
           SET approval_barang = 'REJECTED'
           WHERE id = ${id}
           RETURNING *
@@ -100,4 +100,4 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

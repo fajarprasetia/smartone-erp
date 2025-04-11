@@ -53,7 +53,7 @@ export async function GET(
     try {
       // Note the capitalized "Order" table name
       const rawOrder = await prisma.$queryRaw`
-        SELECT * FROM "Order" WHERE id = ${orderId} LIMIT 1
+        SELECT * FROM "order" WHERE id = ${orderId} LIMIT 1
       `;
       
       console.log("Raw order query result:", JSON.stringify(rawOrder, null, 2));
@@ -75,7 +75,7 @@ export async function GET(
     let order;
     try {
       // Use capitalized "Order" to match your Prisma schema
-      order = await prisma.Order.findUnique({
+      order = await prisma.order.findUnique({
         where: { id: orderId },
         include: {
           customer: true
@@ -109,11 +109,35 @@ export async function GET(
 
     console.log("Order found:", order.id);
 
-    // Process the marketing field which is a string, not a relation
+    // Process the fields and relationships
     const processedOrder = {
       ...order,
       marketingInfo: order.marketing ? { name: order.marketing } : null
     };
+
+    // Fallback customer data fetch
+    let customerData = order.customer;
+    if (!customerData && order.customer_id) {
+      try {
+        const lowercaseCustomer = await prisma.$queryRaw`
+          SELECT id::text as id, nama, telp 
+          FROM customer 
+          WHERE id = ${order.customer_id}
+        `;
+        
+        if (Array.isArray(lowercaseCustomer) && lowercaseCustomer.length > 0) {
+          customerData = {
+            id: lowercaseCustomer[0].id,
+            nama: lowercaseCustomer[0].nama,
+            telp: lowercaseCustomer[0].telp
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching customer:', error);
+      }
+    }
+
+    processedOrder.customer = customerData;
 
     return NextResponse.json(serializeData(processedOrder));
   } catch (error: any) {
@@ -159,6 +183,9 @@ export async function PUT(
     // Check if order exists
     const existingOrder = await prisma.Order.findUnique({
       where: { id: orderId },
+      include: {
+        customer: true
+      },
     });
 
     if (!existingOrder) {
@@ -171,12 +198,9 @@ export async function PUT(
     // Check if customer exists
     let customerExists = false;
     if (validatedData.customer_id) {
-      const customer = await prisma.Customer.findFirst({
+      const customer = await prisma.customer.findUnique({
         where: { 
-          OR: [
-            { id: String(validatedData.customer_id) }, // Try as string ID
-            { id: { equals: validatedData.customer_id.toString() } } // Try another approach
-          ]
+          id: String(validatedData.customer_id)
         }
       });
       
@@ -245,6 +269,9 @@ export async function DELETE(
     // Check if order exists
     const existingOrder = await prisma.Order.findUnique({
       where: { id: orderId },
+      include: {
+        customer: true
+      },
     });
 
     if (!existingOrder) {
@@ -271,4 +298,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}
