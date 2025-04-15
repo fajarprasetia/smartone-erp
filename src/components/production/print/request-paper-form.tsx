@@ -208,6 +208,84 @@ export function RequestPaperForm({ open, onOpenChange, onSubmit }: RequestPaperF
     }
   }
 
+  // Update available GSMs when paper type changes
+  useEffect(() => {
+    if (selectedPaperType) {
+      setIsLoading(true)
+      fetch(`/api/inventory/paper-stock/options?paper_type=${encodeURIComponent(selectedPaperType)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch GSM options")
+          }
+          return response.json()
+        })
+        .then(data => {
+          // Use a Set to ensure uniqueness
+          const uniqueGSMs = [...new Set(data.gsm as string[])]
+          setAvailableGSMs(uniqueGSMs)
+        })
+        .catch(error => {
+          console.error("Error fetching GSM options:", error)
+          toast.error("Failed to load GSM options")
+        })
+        .finally(() => setIsLoading(false))
+    } else {
+      setAvailableGSMs([])
+    }
+  }, [selectedPaperType])
+
+  // Update available widths when GSM changes
+  useEffect(() => {
+    if (selectedPaperType && selectedGSM) {
+      setIsLoading(true)
+      fetch(`/api/inventory/paper-stock/options?paper_type=${encodeURIComponent(selectedPaperType)}&gsm=${encodeURIComponent(selectedGSM)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch width options")
+          }
+          return response.json()
+        })
+        .then(data => {
+          // Use a Set to ensure uniqueness
+          const uniqueWidths = [...new Set(data.width as string[])]
+          setAvailableWidths(uniqueWidths)
+        })
+        .catch(error => {
+          console.error("Error fetching width options:", error)
+          toast.error("Failed to load width options")
+        })
+        .finally(() => setIsLoading(false))
+    } else {
+      setAvailableWidths([])
+    }
+  }, [selectedPaperType, selectedGSM])
+
+  // Update available lengths when width changes
+  useEffect(() => {
+    if (selectedPaperType && selectedGSM && selectedWidth) {
+      setIsLoading(true)
+      fetch(`/api/inventory/paper-stock/options?paper_type=${encodeURIComponent(selectedPaperType)}&gsm=${encodeURIComponent(selectedGSM)}&width=${encodeURIComponent(selectedWidth)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch length options")
+          }
+          return response.json()
+        })
+        .then(data => {
+          // Use a Set to ensure uniqueness
+          const uniqueLengths = [...new Set(data.length as string[])]
+          setAvailableLengths(uniqueLengths)
+        })
+        .catch(error => {
+          console.error("Error fetching length options:", error)
+          toast.error("Failed to load length options")
+        })
+        .finally(() => setIsLoading(false))
+    } else {
+      setAvailableLengths([])
+    }
+  }, [selectedPaperType, selectedGSM, selectedWidth])
+
   return (
     <DialogModal 
       open={open} 

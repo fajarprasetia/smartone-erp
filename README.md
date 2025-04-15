@@ -61,8 +61,8 @@ smartone_erp/
 ├── app/                 # Next.js app directory
 ├── components/          # Reusable components
 ├── lib/                 # Utility functions
-├── types/              # TypeScript type definitions
-└── public/             # Static assets
+├── types/               # TypeScript type definitions
+└── public/              # Static assets
 ```
 
 ## Contributing
@@ -77,7 +77,8 @@ smartone_erp/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Owner push to git repository
 
-git add .
-git commit -m "Initial commit"
-git push -u origin main
+1. git add .
+2. git commit -m "commit name"
+3. git push -u origin main

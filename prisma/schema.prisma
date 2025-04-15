@@ -39,6 +39,12 @@ model User {
   paperStocksAdded   PaperStock[]      @relation("UserAddedPaper")
   paperStocksTaken   PaperStock[]      @relation("UserTookPaper")
   paperStocksUpdated PaperStock[]      @relation("UserUpdatedPaper")
+  othersItemsAdded   OthersItem[]      @relation("UserAddedOthersItem")
+  othersItemsTaken   OthersItem[]      @relation("UserTookOthersItem")
+  othersLogs         OthersLog[]       @relation("UserOthersLogs")
+  othersRequests     OthersRequest[]   @relation("UserRequestedOthers")
+  othersApprovals    OthersRequest[]   @relation("UserApprovedOthers")
+  othersRejections   OthersRequest[]   @relation("UserRejectedOthers")
 }
 
 model Role {
@@ -506,4 +512,67 @@ enum PaperRequestStatus {
 enum InventoryAvailability {
   YES
   NO
+}
+
+model OthersItem {
+  id              String                @id @default(cuid())
+  qr_code         String?               @unique
+  category        String
+  item_name       String
+  description     String?
+  quantity        Int
+  unit            String
+  location        String?
+  notes           String?
+  availability    Boolean               @default(true)
+  user_id         String
+  taken_by_user_id String?
+  taken_at        DateTime?
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+  user            User                  @relation("UserAddedOthersItem", fields: [user_id], references: [id])
+  taken_by_user   User?                 @relation("UserTookOthersItem", fields: [taken_by_user_id], references: [id])
+  logs            OthersLog[]           @relation("OthersItemLogs")
+
+@@map("others_item")
+}
+
+model OthersRequest {
+  id               String    @id @default(cuid())
+  user_id          String
+  category         String
+  item_name        String
+  quantity         Int
+  unit             String
+  user_notes       String?
+  status           String    @default("PENDING")
+  approver_id      String?
+  rejector_id      String?
+  approved_at      DateTime?
+  rejected_at      DateTime?
+  approver_notes   String?
+  rejection_reason String?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  logs             OthersLog[] @relation("OthersRequestLogs")
+  user             User      @relation("UserRequestedOthers", fields: [user_id], references: [id])
+  approver         User?     @relation("UserApprovedOthers", fields: [approver_id], references: [id])
+  rejector         User?     @relation("UserRejectedOthers", fields: [rejector_id], references: [id])
+
+ @@map("others_requests")
+}
+
+model OthersLog {
+  id                String        @id @default(cuid())
+  action            String
+  user_id           String
+  others_request_id String?
+  others_item_id    String?
+  notes             String?
+  created_at        DateTime      @default(now())
+  user              User          @relation("UserOthersLogs", fields: [user_id], references: [id])
+  others_request    OthersRequest? @relation("OthersRequestLogs", fields: [others_request_id], references: [id])
+  others_item       OthersItem?   @relation("OthersItemLogs", fields: [others_item_id], references: [id])
+
+@@map("others_log")
 }
