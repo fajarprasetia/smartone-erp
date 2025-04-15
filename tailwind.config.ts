@@ -77,4 +77,21 @@ const config = {
   plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
+module.exports = {
+  theme: {
+    extend: {
+      keyframes: {
+        'toast-slide-up': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'toast-slide-up': 'toast-slide-up 300ms ease-out',
+      },
+    },
+  },
+}
+
+
 export default config 

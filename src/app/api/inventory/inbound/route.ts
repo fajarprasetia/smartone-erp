@@ -3,45 +3,58 @@ import { prisma } from '@/lib/prisma';
 import { createReadStream, mkdirSync } from 'fs';
 import { join } from 'path';
 import { formidable } from 'formidable';
-import { VisionCamera } from 'react-native-vision-camera';
-import { Uploader } from 'react-uploader';
+
+// Helper function to serialize data and handle BigInt values
+const serializeData = (data: any): any => {
+  return JSON.parse(JSON.stringify(data, (_, value) => 
+    typeof value === 'bigint' ? value.toString() : value
+  ));
+};
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    const pageSize = Math.min(Math.max(parseInt(searchParams.get('pageSize') || '10'), 1), 100);
+    const search = searchParams.get('search') || '';
     
     // Calculate skip for pagination
+    
+    
+    // Prepare filter conditions
+    const where = search ? {
+      OR: [
+        { nama_bahan: { contains: search, mode: 'insensitive' } },
+        { keterangan: { contains: search, mode: 'insensitive' } },
+        { roll: { contains: search, mode: 'insensitive' } },
+        { lebar_bahan: { contains: search, mode: 'insensitive' } },
+        { berat_bahan: { contains: search, mode: 'insensitive' } },
+        { est_pjg_bahan: { contains: search, mode: 'insensitive' } },
+        { asal_bahan_rel: { nama: { contains: search, mode: 'insensitive' } } }
+      ]
+    } : {};
+
     const skip = (page - 1) * pageSize;
     
-    // Get total count for pagination
-    const totalCount = await prisma.inventory.count();
     
-    // Fetch inventory items with pagination
+    
+    // Get total count for pagination
+    const totalCount = await prisma.inventory.count({ where });
+    
+    // Fetch inventory items with pagination and search
     const inventory = await prisma.inventory.findMany({
-      select: {
-        id: true,
-        asal_bahan: true,
-        nama_bahan: true,
-        lebar_bahan: true,
-        berat_bahan: true,
-        est_pjg_bahan: true,
-        roll: true,
-        tanggal: true,
-        keterangan: true,
-        foto: true
-      },
-      orderBy: {
-        id: 'desc'
-      },
-      skip,
-      take: pageSize
-    });
-
+        where,
+        orderBy: { id: 'desc' },
+        skip,
+        take: pageSize,
+        include: {
+          asal_bahan_rel: true
+        }
+      });
+      
+ 
     // Return empty array if no inventory items found
     if (!inventory || !Array.isArray(inventory)) {
-      console.log('No inventory items found or invalid response format:', inventory);
       return NextResponse.json({
         items: [],
         pagination: {
@@ -53,71 +66,25 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Helper function to handle BigInt serialization
-    const serializeData = (data: any) => {
-      return JSON.parse(JSON.stringify(data, (key, value) => {
-        // Convert BigInt to String to avoid serialization issues
-        if (typeof value === 'bigint') {
-          return value.toString();
-        }
-        return value;
-      }));
-    };
-
-    // We need to fetch associated customer names if available
-    // Since we're using a direct mapping to an existing table,
-    // we need to handle the customer relation manually
-    
-    // Get all unique customer IDs (asal_bahan)
-    const customerIds = inventory
-      .map(item => item.asal_bahan)
-      .filter(id => id !== null && id !== '' && id !== undefined) as string[];
-    
-    // Create a map of customer IDs to names
-    const customerMap = new Map();
-    
-    // Only fetch customer data if there are customer IDs
-    if (customerIds.length > 0) {
-      try {
-        // Fetch customer data from the customer table - using parameterized query to avoid SQL injection
-        const customersRaw = await prisma.$queryRaw`
-          SELECT id, nama FROM customer WHERE id = ANY(ARRAY[${customerIds.join(',')}]::bigint[])
-        `;
-  
-        // Serialize the data to handle BigInt values
-        const customers = serializeData(customersRaw);
-        
-        if (Array.isArray(customers)) {
-          customers.forEach((customer: any) => {
-            customerMap.set(String(customer.id), customer.nama);
-          });
-        }
-      } catch (customerError) {
-        console.error('Error fetching customer data:', customerError);
-        // Continue without customer data
-      }
-    }
-
-    // Serialize inventory items to handle BigInt values
+    // Serialize and format inventory items
     const serializedInventory = serializeData(inventory);
-
-    // Enrich inventory items with customer names
     const enrichedInventory = serializedInventory.map((item: any) => ({
-      id: item.id,
-      "Fabric Name": item.nama_bahan,
-      "Width": item.lebar_bahan,
-      "Weight": item.berat_bahan,
-      "Est. Length": item.est_pjg_bahan,
-      "Roll": item.roll,
-      "Date": item.tanggal,
-      "Notes": item.keterangan,
-      "Capture Image": item.foto ? {
-        src: item.foto,
-        alt: `Fabric ${item.nama_bahan}`,
-        thumbnail: true
-      } : null,
-      customer_name: item.asal_bahan ? customerMap.get(String(item.asal_bahan)) || 'Unknown' : 'N/A'
-    }));
+        id: item.id,
+        nama_bahan: item.nama_bahan,
+        lebar_bahan: item.lebar_bahan,
+        berat_bahan: item.berat_bahan,
+        est_pjg_bahan: item.est_pjg_bahan,
+        roll: item.roll,
+        tanggal: item.tanggal,
+        keterangan: item.keterangan,
+        foto: item.foto ? {
+          src: item.foto,
+          alt: `Fabric ${item.nama_bahan}`,
+          thumbnail: true
+        } : null,
+        asal_bahan: item.asal_bahan,
+        customer_name: item.asal_bahan_rel?.nama || "N/A"
+      }));     
 
     // Calculate pagination values
     const pageCount = Math.ceil(totalCount / pageSize);
@@ -135,10 +102,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching inventory:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch inventory', 
-        details: error instanceof Error ? error.message : String(error) 
-      },
+      { error: 'Failed to fetch inventory', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -157,13 +121,43 @@ export async function POST(req: NextRequest) {
       filter: ({ mimetype }) => !!mimetype?.startsWith('image/')
     });
 
-    const [fields, files] = await form.parse(await req.formData());
-
-    const filePaths = files.files?.map(file => 
-      `/fabric/${file.newFilename}`
-    ) || [];
+    // Process the form data directly instead of using formidable.parse
+    const formData = await req.formData();
     
-    // Extract inventory item data
+    // Extract fields from formData
+    const fields: Record<string, any> = {};
+    const files: Record<string, any> = { files: [] };
+    
+    // Process each entry in the formData
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        // Handle file uploads
+        const buffer = Buffer.from(await value.arrayBuffer());
+        const filename = `${Date.now()}-${value.name}`;
+        const filepath = join(uploadDir, filename);
+        
+        // Write file to disk
+        const fs = require('fs');
+        fs.writeFileSync(filepath, buffer);
+        
+        // Add file info to files array
+        files.files.push({
+          newFilename: filename,
+          filepath,
+          originalFilename: value.name,
+          mimetype: value.type,
+          size: value.size
+        });
+      } else {
+        // Handle form fields
+        if (!fields[key]) {
+          fields[key] = [];
+        }
+        fields[key].push(value.toString());
+      }
+    }
+
+    // Extract and validate required fields
     const {
       asal_bahan,
       nama_bahan,
@@ -171,61 +165,61 @@ export async function POST(req: NextRequest) {
       berat_bahan,
       est_pjg_bahan,
       tanggal,
-      foto,
       roll,
       keterangan
-    } = fields;
+    } = Object.fromEntries(
+      Object.entries(fields).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
+    );
     
-    // Validate required fields
     if (!nama_bahan) {
       return NextResponse.json(
         { error: 'Fabric name is required' },
         { status: 400 }
       );
     }
+
+    // Process uploaded files
+    const filePaths = files.files?.map(file => `/fabric/${file.newFilename}`) || [];
     
     // Create inventory item
-    const newInventory = await prisma.$queryRaw`
-      INSERT INTO inventory (
-        asal_bahan, 
-        nama_bahan, 
-        lebar_bahan, 
-        berat_bahan, 
-        est_pjg_bahan, 
-        tanggal, 
-        foto, 
-        roll, 
+    const newInventory = await prisma.inventory.create({
+      data: {
+        asal_bahan: asal_bahan ? BigInt(asal_bahan) : null,
+        nama_bahan,
+        lebar_bahan,
+        berat_bahan,
+        est_pjg_bahan,
+        tanggal: tanggal ? new Date(tanggal) : null,
+        foto: filePaths.length > 0 ? filePaths[0] : null,
+        roll,
         keterangan
-      ) 
-      VALUES (
-        ${asal_bahan || null}, 
-        ${nama_bahan}, 
-        ${lebar_bahan || null}, 
-        ${berat_bahan || null}, 
-        ${est_pjg_bahan || null}, 
-        ${tanggal ? new Date(tanggal) : null}, 
-        ${foto || null}, 
-        ${roll || null}, 
-        ${keterangan || null}
-      )
-      RETURNING *
-    `;
+      },
+      include: {
+        asal_bahan_rel: true
+      }
+    });
     
-    // Handle BigInt serialization
-    const createdItem = Array.isArray(newInventory) && newInventory.length > 0 
-      ? JSON.parse(JSON.stringify(newInventory[0], (key, value) => 
-          typeof value === 'bigint' ? value.toString() : value
-        ))
-      : null;
+    const serializedItem = serializeData(newInventory);
     
-    if (!createdItem) {
-      return NextResponse.json(
-        { error: 'Failed to create inventory item' },
-        { status: 500 }
-      );
-    }
+    // Format response
+    const formattedResponse = {
+      id: serializedItem.id,
+      "Fabric Name": serializedItem.nama_bahan,
+      "Width": serializedItem.lebar_bahan,
+      "Weight": serializedItem.berat_bahan,
+      "Est. Length": serializedItem.est_pjg_bahan,
+      "Roll": serializedItem.roll,
+      "Date": serializedItem.tanggal,
+      "Notes": serializedItem.keterangan,
+      "Capture Image": serializedItem.foto ? {
+        src: serializedItem.foto,
+        alt: `Fabric ${serializedItem.nama_bahan}`,
+        thumbnail: true
+      } : null,
+      "Source/Customer": serializedItem.asal_bahan_rel?.nama || 'N/A'
+    };
     
-    return NextResponse.json(createdItem, { status: 201 });
+    return NextResponse.json(formattedResponse, { status: 201 });
   } catch (error) {
     console.error('Error creating inventory item:', error);
     return NextResponse.json(

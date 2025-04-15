@@ -19,17 +19,17 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
     // Check if user has admin privileges
     const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { email: session.user.email },
       include: { role: true },
     })
 
-    if (!currentUser?.role?.isAdmin) {
+    if (!currentUser || (!currentUser.role?.isAdmin && !currentUser.role?.isSystem)) {
       return new NextResponse("Forbidden", { status: 403 })
     }
 
@@ -86,7 +86,16 @@ export async function PATCH(
     return NextResponse.json(userWithoutPassword)
   } catch (error) {
     console.error("[USER_UPDATE]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    if (error instanceof z.ZodError) {
+      return new NextResponse(JSON.stringify(error.errors), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    return new NextResponse(
+      `Internal error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { status: 500 }
+    )
   }
 }
 
@@ -97,17 +106,17 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
     // Check if user has admin privileges
     const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { email: session.user.email },
       include: { role: true },
     })
 
-    if (!currentUser?.role?.isAdmin) {
+    if (!currentUser || (!currentUser.role?.isAdmin && !currentUser.role?.isSystem)) {
       return new NextResponse("Forbidden", { status: 403 })
     }
 
@@ -138,4 +147,4 @@ export async function DELETE(
     console.error("[USER_DELETE]", error)
     return new NextResponse("Internal error", { status: 500 })
   }
-} 
+}

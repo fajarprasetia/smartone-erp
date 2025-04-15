@@ -100,112 +100,27 @@ const getStatusBadge = (status: string | null | undefined) => {
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
-// Add the OrderRedirectDialog component
-function OrderRedirectDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  const router = useRouter()
-  
-  // Add overflow hidden to body when modal is open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "auto"
-    }
-    return () => {
-      document.body.style.overflow = "auto"
-    }
-  }, [open])
-  
-  if (!open) return null
-  
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={() => onOpenChange(false)}
-      />
 
-      {/* Modal */}
-      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-md mx-4 overflow-auto">
-        <div className="flex justify-between items-center p-6 border-b border-border/40">
-          <div>
-            <h2 className="text-lg font-semibold">Add New Order</h2>
-            <p className="text-sm text-muted-foreground">
-              Choose how you want to create the new order
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
 
-        <div className="p-6 space-y-4">
-          <div className="space-y-2 bg-background/50 p-4 rounded-lg border border-border/40">
-            <h3 className="font-medium">Quick Create</h3>
-            <p className="text-sm text-muted-foreground">
-              Create a basic order with minimal information
-            </p>
-            <Button 
-              className="w-full mt-2 bg-primary/90 backdrop-blur-sm hover:bg-primary text-primary-foreground"
-              onClick={() => {
-                onOpenChange(false)
-                router.push("/order/add")
-              }}
-            >
-              <PlusCircle className="h-4 w-4 mr-2" /> Quick Create
-            </Button>
-          </div>
-          
-          <div className="space-y-2 bg-background/50 p-4 rounded-lg border border-border/40">
-            <h3 className="font-medium">Detailed Form</h3>
-            <p className="text-sm text-muted-foreground">
-              Create a detailed order with all information and attachments
-            </p>
-            <Button 
-              className="w-full mt-2"
-              variant="outline"
-              onClick={() => {
-                onOpenChange(false)
-                router.push("/order/add/detailed")
-              }}
-            >
-              Create Detailed Order
-            </Button>
-          </div>
-
-          <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4")}>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+// Add debounce function to prevent excessive API calls
+const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: NodeJS.Timeout;
+  
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
 
 export default function OrderPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [filteredOrders, setFilteredOrders] = useState<OrderItem[]>([])
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+
   
   // Pagination state
   const [pagination, setPagination] = useState<Pagination>({
@@ -234,7 +149,6 @@ export default function OrderPage() {
       const data = await response.json()
       
       setOrders(data.orders || [])
-      setFilteredOrders(data.orders || [])
       
       // Update pagination with the new structure
       setPagination({
@@ -251,29 +165,38 @@ export default function OrderPage() {
     }
   }
   
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setPagination(prev => ({
+      ...prev,
+      currentPage: 1
+    }));
+  }, [searchQuery])
+  
+  // Fetch orders when pagination, pageSize, or searchQuery changes
   useEffect(() => {
     fetchOrders(pagination.currentPage, pageSize, searchQuery)
-  }, [pagination.currentPage, pageSize])
+  }, [pagination.currentPage, pageSize, searchQuery])
   
-  // Handle search
+  // Initial fetch on component mount
   useEffect(() => {
-    if (searchQuery) {
-      const lowercaseQuery = searchQuery.toLowerCase()
-      const filtered = orders.filter(order => 
-        (order.spk && order.spk.toLowerCase().includes(lowercaseQuery)) ||
-        (order.no_project && order.no_project.toLowerCase().includes(lowercaseQuery)) ||
-        (order.produk && order.produk.toLowerCase().includes(lowercaseQuery)) ||
-        (order.customer?.nama && order.customer.nama.toLowerCase().includes(lowercaseQuery)) ||
-        (order.customer?.telp && order.customer.telp.includes(searchQuery)) ||
-        (order.status && order.status.toLowerCase().includes(lowercaseQuery)) ||
-        (order.marketing && order.marketing.toLowerCase().includes(lowercaseQuery)) ||
-        (order.marketingInfo?.name && order.marketingInfo.name.toLowerCase().includes(lowercaseQuery))
-      )
-      setFilteredOrders(filtered)
-    } else {
-      setFilteredOrders(orders)
-    }
-  }, [searchQuery, orders])
+    fetchOrders(1, pageSize)
+  }, [])
+  
+  // Debounced search function to prevent excessive API calls
+  const debouncedSearch = debounce((value: string) => {
+    setSearchQuery(value)
+  }, 500)
+  
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value) // Update the input field immediately for UI responsiveness
+    debouncedSearch(value) // Debounce the actual API call
+  }
+  
+  // Remove handleSearch and handleKeyPress functions as they're no longer needed
+  // since search happens automatically while typing
   
   // Format date
   const formatDate = (dateValue: Date | string | null | undefined) => {
@@ -345,7 +268,7 @@ export default function OrderPage() {
           </Button>
           <Button 
             className="bg-primary/90 hover:bg-primary text-primary-foreground"
-            onClick={() => setIsAddDialogOpen(true)}
+            onClick={() => router.push('/order/add')}
           >
             <PlusCircle className="h-4 w-4 mr-2" /> Add New Order
           </Button>
@@ -362,13 +285,17 @@ export default function OrderPage() {
                 placeholder="Search orders by SPK, project, customer, product..."
                 className="pl-10 bg-background/50 border-border/50 focus-visible:ring-primary/70"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
+                // Search happens automatically while typing
               />
             </div>
             <Button 
               variant="outline" 
               className="w-full md:w-auto bg-background/50 border-border/50 hover:bg-background/70"
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setSearchQuery("");
+                // Clear search will trigger useEffect to fetch all orders
+              }}
             >
               Clear Filters
             </Button>
@@ -413,7 +340,7 @@ export default function OrderPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredOrders.length === 0 ? (
+                    {orders.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={12} className="text-center py-6 text-muted-foreground">
                           {searchQuery 
@@ -422,7 +349,7 @@ export default function OrderPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredOrders.map((order) => (
+                      orders.map((order) => (
                         <TableRow key={order.id} className="hover:bg-muted/50">
                           <TableCell>{formatDate(order.created_at || order.tanggal)}</TableCell>
                           <TableCell>{order.no_project || "N/A"}</TableCell>
@@ -475,7 +402,7 @@ export default function OrderPage() {
               <div className="flex items-center justify-between px-4 py-3 border-t">
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-muted-foreground">
-                    Showing <span className="font-medium">{filteredOrders.length}</span> of{" "}
+                    Showing <span className="font-medium">{orders.length}</span> of{" "}
                     <span className="font-medium">{pagination.totalCount}</span> orders
                   </p>
                 </div>
@@ -531,11 +458,6 @@ export default function OrderPage() {
         </CardContent>
       </Card>
       
-      {/* Add Order Dialog */}
-      <OrderRedirectDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-      />
     </div>
   )
-} 
+}

@@ -27,8 +27,15 @@ export async function GET(req: NextRequest) {
       ? {
           OR: [
             { spk: { contains: search, mode: "insensitive" } },
+            { no_project: { contains: search, mode: "insensitive" } },
             { produk: { contains: search, mode: "insensitive" } },
+            { nama_kain: { contains: search, mode: "insensitive" } },
+            { status: { contains: search, mode: "insensitive" } },
+            { statusm: { contains: search, mode: "insensitive" } },
+            { catatan: { contains: search, mode: "insensitive" } },
+            { marketing: { contains: search, mode: "insensitive" } },
             { customer: { nama: { contains: search, mode: "insensitive" } } },
+            { customer: { telp: { contains: search } } },
           ],
         }
       : {};
@@ -43,9 +50,6 @@ export async function GET(req: NextRequest) {
 
     // Fetch orders with pagination and include customer data
     const orders = await prisma.Order.findMany({
-  include: {
-    customer: true
-  },
       where: whereCondition,
       include: {
         customer: true,
@@ -136,7 +140,7 @@ export async function POST(req: NextRequest) {
         customer_id: body.customer_id,
         marketing: body.marketing || "", // Store marketing as string
         produk: body.produk,
-        asal_bahan: body.asal_bahan || "",
+        asal_bahan_id: body.asal_bahan_id || null,
         panjang: body.panjang || 0,
         qty: body.qty || "",
         harga_satuan: body.harga || "",

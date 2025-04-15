@@ -8,24 +8,37 @@ datasource db {
 }
 
 model User {
-  id     String @id @default(cuid()) // Changed from BigInt if needed
-  name   String
-  email  String @unique
-  password String
-  isActive Boolean @default(true)
-  roleId String
-  role   Role   @relation(fields: [roleId], references: [id])
-
-  ordersCreated   Order[] @relation("UserCreatedOrders")
-  ordersAsCreator Order[] @relation("OrderCreatedBy")
-  ordersManaged   Order[] @relation("OrderManager")
-  ordersDesigned  Order[] @relation("OrderDesigner")
-  ordersHandled   Order[] @relation("OrderPenyerahan")
-  ordersDTF       Order[] @relation("OrderDTF")
-  ordersCutting   Order[] @relation("OrderCutting")
-  ordersPress     Order[] @relation("OrderPress")
-  ordersPrint     Order[] @relation("OrderPrint")
-  ordersOperated  Order[] @relation("OrderOperator")
+  id                 String            @id @default(cuid())
+  name               String
+  email              String            @unique
+  password           String
+  roleId             String
+  isActive           Boolean           @default(true)
+  otherConsumables   OtherConsumable[] @relation("UserAddedConsumable")
+  role               Role              @relation(fields: [roleId], references: [id])
+  inkLogs            InkLog[]          @relation("UserInkLogs")
+  inkApprovals       InkRequest[]      @relation("UserApprovedInk")
+  inkRejections      InkRequest[]      @relation("UserRejectedInk")
+  inkRequests        InkRequest[]      @relation("UserRequestedInk")
+  inkStocksAdded     InkStock[]        @relation("UserAddedInk")
+  inkStocksTaken     InkStock[]        @relation("UserTookInk")
+  inkStocksUpdated   InkStock[]        @relation("UserUpdatedInk")
+  ordersCutting      Order[]           @relation("OrderCutting")
+  ordersDesigned     Order[]           @relation("OrderDesigner")
+  ordersDTF          Order[]           @relation("OrderDTF")
+  ordersManaged      Order[]           @relation("OrderManager")
+  ordersOperated     Order[]           @relation("OrderOperator")
+  ordersHandled      Order[]           @relation("OrderPenyerahan")
+  ordersPress        Order[]           @relation("OrderPress")
+  ordersPrint        Order[]           @relation("OrderPrint")
+  ordersCreated      Order[]           @relation("UserCreatedOrders")
+  paperLogs          PaperLog[]
+  paperApprovals     PaperRequest[]    @relation("UserApprovedPaper")
+  paperRejections    PaperRequest[]    @relation("UserRejectedPaper")
+  paperRequests      PaperRequest[]    @relation("UserRequestedPaper")
+  paperStocksAdded   PaperStock[]      @relation("UserAddedPaper")
+  paperStocksTaken   PaperStock[]      @relation("UserTookPaper")
+  paperStocksUpdated PaperStock[]      @relation("UserUpdatedPaper")
 }
 
 model Role {
@@ -76,41 +89,40 @@ model customer {
   nama         String        @db.VarChar(255)
   telp         String?       @db.VarChar(255)
   chatMessages ChatMessage[]
-  orders       Order[]       @relation("CustomerOrders")
   inventories  inventory[]   @relation("InventoryCustomer")
-  asalBahanFor Order[]       @relation("AsalBahanCustomer") // new, clear name for asal_bahan_rel
+  asalBahanFor Order[]       @relation("AsalBahanCustomer")
+  orders       Order[]       @relation("CustomerOrders")
 
   @@map("customer")
 }
 
 model inventory {
-  id            BigInt    @id @default(autoincrement())
-  asal_bahan    BigInt?   @map("asal_bahan")
-  nama_bahan    String?   @db.VarChar(255)
-  lebar_bahan   String?   @db.VarChar(255)
-  berat_bahan   String?   @db.VarChar(255)
-  est_pjg_bahan String?   @db.VarChar(255)
-  tanggal       DateTime? @db.Date
-  foto          String?   @db.VarChar(255)
-  roll          String?   @db.VarChar(255)
-  keterangan    String?
-
+  id             BigInt    @id @default(autoincrement())
+  nama_bahan     String?   @db.VarChar(255)
+  lebar_bahan    String?   @db.VarChar(255)
+  berat_bahan    String?   @db.VarChar(255)
+  est_pjg_bahan  String?   @db.VarChar(255)
+  tanggal        DateTime? @db.Date
+  foto           String?   @db.VarChar(255)
+  roll           String?   @db.VarChar(255)
+  keterangan     String?
+  asal_bahan     BigInt?   @map("asal_bahan")
   asal_bahan_rel customer? @relation("InventoryCustomer", fields: [asal_bahan], references: [id])
 }
 
 model ChatMessage {
   id                String   @id @default(cuid())
-  customerId        BigInt
   content           String
   isIncoming        Boolean  @default(true)
   timestamp         DateTime @default(now())
   status            String?
   messageType       String   @default("text")
   mediaUrl          String?
-  whatsappMessageId String?
-  metadata          String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  metadata          String?
+  whatsappMessageId String?
+  customerId        BigInt
   customer          customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
@@ -175,6 +187,16 @@ model Order {
   approve_mng      String?   @db.VarChar(255)
   approval_barang  String?   @db.VarChar(255)
   approval_opr     String?   @db.VarChar(255)
+  opr_id           String?
+  userId           String?   @map("userId")
+  print_id         String?
+  press_id         String?
+  cutting_id       String?
+  dtf_id           String?
+  penyerahan_id    String?
+  designer_id      String?
+  manager_id       String?
+  customerId       BigInt?   @map("customer_id")
   rip              String?   @db.VarChar(255)
   produk           String?   @db.VarChar(255)
   path             String?   @db.VarChar(255)
@@ -275,34 +297,213 @@ model Order {
   tambah_produk    String?   @db.VarChar(255)
   created_at       DateTime? @db.Timestamp(6)
   updated_at       DateTime? @db.Timestamp(6)
-
-  customerId    BigInt? @map("customer_id")
-  asal_bahan_id BigInt? @map("asal_bahan") // rename in the schema if this changes the DB column
-
-  customer       customer? @relation("CustomerOrders", fields: [customerId], references: [id])
-  asal_bahan_rel customer? @relation("AsalBahanCustomer", fields: [asal_bahan_id], references: [id])
-
-  userId        String?
-  createdById   String?
-  manager_id    String?
-  designer_id   String?
-  penyerahan_id String?
-  dtf_id        String?
-  cutting_id    String?
-  press_id      String?
-  print_id      String?
-  opr_id        String?
-
-  user       User? @relation("UserCreatedOrders", fields: [userId], references: [id])
-  createdBy  User? @relation("OrderCreatedBy", fields: [createdById], references: [id])
-  manager    User? @relation("OrderManager", fields: [manager_id], references: [id])
-  designer   User? @relation("OrderDesigner", fields: [designer_id], references: [id])
-  penyerahan User? @relation("OrderPenyerahan", fields: [penyerahan_id], references: [id])
-  dtf        User? @relation("OrderDTF", fields: [dtf_id], references: [id])
-  cutting    User? @relation("OrderCutting", fields: [cutting_id], references: [id])
-  press      User? @relation("OrderPress", fields: [press_id], references: [id])
-  print      User? @relation("OrderPrint", fields: [print_id], references: [id])
-  operator   User? @relation("OrderOperator", fields: [opr_id], references: [id])
+  asal_bahan_id    BigInt?   @map("asal_bahan")
+  jns_produk_id    Int?
+  tgl_print        DateTime? @db.Date
+  tgl_cutting      DateTime? @db.Date
+  tgl_dtf          DateTime? @db.Date
+  tgl_press        DateTime? @db.Date
+  waktu_rip        DateTime? @db.Time(6)
+  cutting_done     DateTime? @db.Date
+  dtf_done         DateTime? @db.Date
+  press_done       DateTime? @db.Date
+  print_done       DateTime? @db.Date
+  asal_bahan_rel   customer? @relation("AsalBahanCustomer", fields: [asal_bahan_id], references: [id])
+  customer         customer? @relation("CustomerOrders", fields: [customerId], references: [id])
+  cutting          User?     @relation("OrderCutting", fields: [cutting_id], references: [id])
+  designer         User?     @relation("OrderDesigner", fields: [designer_id], references: [id])
+  dtf              User?     @relation("OrderDTF", fields: [dtf_id], references: [id])
+  produk_rel       Produk?   @relation("ProdukOrders", fields: [jns_produk_id], references: [id])
+  manager          User?     @relation("OrderManager", fields: [manager_id], references: [id])
+  operator         User?     @relation("OrderOperator", fields: [opr_id], references: [id])
+  penyerahan       User?     @relation("OrderPenyerahan", fields: [penyerahan_id], references: [id])
+  press            User?     @relation("OrderPress", fields: [press_id], references: [id])
+  print            User?     @relation("OrderPrint", fields: [print_id], references: [id])
+  user             User?     @relation("UserCreatedOrders", fields: [userId], references: [id])
 
   @@map("orders")
+}
+
+model Produk {
+  id          Int      @id @default(autoincrement())
+  nama_produk String?  @db.VarChar(255)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  orders      Order[]  @relation("ProdukOrders")
+}
+
+model PaperStock {
+  id              String                @id @default(cuid())
+  name            String
+  type            String
+  manufacturer    String?
+  width           Float
+  height          Float
+  length          Float?
+  gsm             Int
+  thickness       Float?
+  remainingLength Float?
+  addedByUserId   String
+  updatedByUserId String?
+  takenByUserId   String?
+  dateAdded       DateTime              @default(now())
+  dateUpdated     DateTime?
+  dateTaken       DateTime?
+  approved        Boolean               @default(false)
+  notes           String?
+  qrCode          String?               @unique
+  paperRequestId  String?               @unique
+  availability    InventoryAvailability @default(YES)
+  paperLogs       PaperLog[]
+  addedByUser     User                  @relation("UserAddedPaper", fields: [addedByUserId], references: [id])
+  paperRequest    PaperRequest?         @relation(fields: [paperRequestId], references: [id])
+  takenByUser     User?                 @relation("UserTookPaper", fields: [takenByUserId], references: [id])
+  updatedByUser   User?                 @relation("UserUpdatedPaper", fields: [updatedByUserId], references: [id])
+
+  @@map("paper_stocks")
+}
+
+model PaperRequest {
+  id             String      @id @default(cuid())
+  requested_by   String
+  gsm            String
+  width          String
+  length         String
+  user_notes     String?
+  status         String      @default("PENDING")
+  approved_by    String?
+  rejected_by    String?
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+  paper_stock_id String?     @unique
+  paper_type     String      @default("Sublimation Paper")
+  logs           PaperLog[]
+  approver       User?       @relation("UserApprovedPaper", fields: [approved_by], references: [id])
+  rejecter       User?       @relation("UserRejectedPaper", fields: [rejected_by], references: [id])
+  requester      User        @relation("UserRequestedPaper", fields: [requested_by], references: [id])
+  paper_stock    PaperStock?
+
+  @@map("paper_requests")
+}
+
+model PaperLog {
+  id             String        @id @default(cuid())
+  action         String
+  performed_by   String
+  notes          String?
+  created_at     DateTime      @default(now())
+  paper_stock_id String?
+  request_id     String?
+  paper_stock    PaperStock?   @relation(fields: [paper_stock_id], references: [id])
+  user           User          @relation(fields: [performed_by], references: [id])
+  request        PaperRequest? @relation(fields: [request_id], references: [id])
+
+  @@map("paper_logs")
+}
+
+model InkStock {
+  id              String                @id @default(cuid())
+  barcode_id      String                @unique
+  name            String
+  color           String
+  type            String
+  quantity        Float
+  unit            String
+  supplier        String?
+  added_by        String
+  updatedByUserId String?
+  takenByUserId   String?
+  dateAdded       DateTime              @default(now())
+  dateUpdated     DateTime?
+  dateTaken       DateTime?
+  notes           String?
+  approved        Boolean               @default(false)
+  availability    InventoryAvailability @default(YES)
+  inkRequestId    String?               @unique
+  inkLogs         InkLog[]
+  addedByUser     User                  @relation("UserAddedInk", fields: [added_by], references: [id])
+  inkRequest      InkRequest?           @relation(fields: [inkRequestId], references: [id])
+  takenByUser     User?                 @relation("UserTookInk", fields: [takenByUserId], references: [id])
+  updatedByUser   User?                 @relation("UserUpdatedInk", fields: [updatedByUserId], references: [id])
+
+  @@map("ink_stocks")
+}
+
+model InkRequest {
+  id           String    @id @default(cuid())
+  requested_by String
+  ink_type     String
+  color        String
+  quantity     Float
+  unit         String
+  user_notes   String?
+  status       String    @default("PENDING")
+  approved_by  String?
+  rejected_by  String?
+  ink_stock_id String?   @unique
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  logs         InkLog[]
+  approver     User?     @relation("UserApprovedInk", fields: [approved_by], references: [id])
+  rejecter     User?     @relation("UserRejectedInk", fields: [rejected_by], references: [id])
+  requester    User      @relation("UserRequestedInk", fields: [requested_by], references: [id])
+  ink_stock    InkStock?
+
+  @@map("ink_requests")
+}
+
+model InkLog {
+  id           String      @id @default(cuid())
+  action       String
+  performed_by String
+  notes        String?
+  ink_stock_id String?
+  request_id   String?
+  created_at   DateTime    @default(now())
+  ink_stock    InkStock?   @relation(fields: [ink_stock_id], references: [id])
+  user         User        @relation("UserInkLogs", fields: [performed_by], references: [id])
+  request      InkRequest? @relation(fields: [request_id], references: [id])
+
+  @@map("ink_logs")
+}
+
+model OtherConsumable {
+  id           String                @id @default(cuid())
+  name         String
+  type         String?
+  quantity     String?
+  unit         String?
+  supplier     String?
+  added_by     String
+  notes        String?
+  availability InventoryAvailability @default(YES)
+  created_at   DateTime              @default(now())
+  updated_at   DateTime              @updatedAt
+  user         User                  @relation("UserAddedConsumable", fields: [added_by], references: [id])
+}
+
+model Asset {
+  id            String    @id @default(cuid())
+  name          String
+  type          String?
+  serial_number String?
+  purchase_date DateTime?
+  supplier      String?
+  value         Decimal?
+  status        String?
+  location      String?
+  notes         String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+}
+
+enum PaperRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InventoryAvailability {
+  YES
+  NO
 }

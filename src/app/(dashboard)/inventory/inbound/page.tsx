@@ -9,7 +9,8 @@ import { z } from "zod"
 import { toast } from "sonner"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import { Uploader } from 'react-uploader';
+import { Uploader, UploadButton } from 'react-uploader';
+import { Camera } from 'react-native-vision-camera';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -110,6 +111,7 @@ const formSchema = z.object({
   est_pjg_bahan: z.string().optional(),
   tanggal: z.date().optional(),
   foto: z.string().optional(),
+  images: z.array(z.instanceof(File)).optional(),
   roll: z.string().optional(),
   keterangan: z.string().optional(),
 })
@@ -128,6 +130,7 @@ const pageSizeOptions = [10, 20, 50, 100];
 // InboundFormDialog component
 // Import the InboundForm component
 import { InboundForm } from "@/components/inventory/inbound-form"
+import { CustomerFormDialogNew } from "@/components/marketing/customer-form-dialog-new"
 
 export default function InventoryInboundPage() {
   const router = useRouter()
@@ -137,19 +140,39 @@ export default function InventoryInboundPage() {
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [sortConfig, setSortConfig] = useState<{key: string; direction: 'asc' | 'desc'}>({key: '', direction: 'asc'})
   
   // Handle form submission
   const handleFormSubmit = async (data: FormValues) => {
     try {
       const formData = new FormData();
-      formData.append('nama_bahan', data.nama_bahan);
-      formData.append('asal_bahan', data.asal_bahan || '');
       
-      // Append file uploads
-      const fileInput = document.getElementById('images') as HTMLInputElement;
-      if (fileInput.files) {
-        Array.from(fileInput.files).forEach(file => {
-          formData.append('files', file);
+      // Format data to uppercase as required
+      formData.append('nama_bahan', data.nama_bahan.toUpperCase());
+      formData.append('asal_bahan', data.asal_bahan || '');
+      formData.append('lebar_bahan', data.lebar_bahan?.toUpperCase() || '');
+      formData.append('berat_bahan', data.berat_bahan?.toUpperCase() || '');
+      formData.append('est_pjg_bahan', data.est_pjg_bahan?.toUpperCase() || '');
+      formData.append('roll', data.roll?.toUpperCase() || '');
+      formData.append('keterangan', data.keterangan?.toUpperCase() || '');
+      
+      if (data.tanggal) {
+        formData.append('tanggal', data.tanggal.toISOString());
+      }
+      
+      // Handle images from the InboundForm component
+      if (data.images && Array.isArray(data.images)) {
+        data.images.forEach((imageData: any) => {
+          // Convert base64 to blob if needed
+          if (imageData.fileUrl && imageData.fileUrl.startsWith('data:')) {
+            const blob = dataURLtoBlob(imageData.fileUrl);
+            formData.append('files', blob, imageData.fileName);
+          } else if (imageData.fileUrl) {
+            // For URLs that are already uploaded
+            formData.append('foto', imageData.fileUrl);
+          }
         });
       }
       
@@ -162,10 +185,14 @@ export default function InventoryInboundPage() {
         throw new Error("Failed to create inventory item")
       }
       
+      // Show success toast notification
       toast.success("Inventory item added successfully")
       
       // Close the dialog
       setIsAddDialogOpen(false)
+      
+      // Reset search query to ensure new item appears in the list
+      setSearchQuery("");
       
       // Refresh the inventory list
       fetchInventory(1, pageSize);
@@ -173,6 +200,19 @@ export default function InventoryInboundPage() {
       console.error("Error creating inventory item:", error)
       toast.error("Failed to add inventory item")
     }
+  }
+  
+  // Helper function to convert data URL to Blob
+  const dataURLtoBlob = (dataURL: string): Blob => {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
   }
   
   // Pagination state
@@ -205,20 +245,27 @@ export default function InventoryInboundPage() {
     fetchCustomers()
   }, [])
   
-  // Fetch inventory items
+  // Fetch inventory items with search support
   const fetchInventory = async (page = 1, pageSize = 10) => {
     try {
-      setIsLoading(true)
-      const response = await fetch(`/api/inventory/inbound?page=${page}&pageSize=${pageSize}`)
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        search: searchQuery.trim()
+      });
+
+      const response = await fetch(`/api/inventory/inbound?${params.toString()}`);
+if (!response.ok) {
+  const errorData = await response.json();
+  throw new Error(errorData.error || 'Failed to fetch inventory');
+}
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch inventory")
-      }
-      
-      const data = await response.json()
-      setItems(data.items)
-      setFilteredItems(data.items)
-      setPagination(data.pagination)
+      const data = await response.json();
+      setItems(data.items);
+      setFilteredItems(data.items);
+      setPagination(data.pagination);
+      setPagination(data.pagination);
     } catch (error) {
       console.error("Error fetching inventory:", error)
       toast.error("Failed to load inventory items")
@@ -228,25 +275,40 @@ export default function InventoryInboundPage() {
   }
   
   useEffect(() => {
-    fetchInventory(pagination.page, pageSize)
-  }, [pagination.page, pageSize])
-  
-  // Handle search
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
+  }, [searchQuery])
+
   useEffect(() => {
-    if (searchQuery) {
-      const lowercaseQuery = searchQuery.toLowerCase()
-      const filtered = items.filter(item => 
-        (item.nama_bahan && item.nama_bahan.toLowerCase().includes(lowercaseQuery)) ||
-        (item.customer_name && item.customer_name.toLowerCase().includes(lowercaseQuery)) ||
-        (item.roll && item.roll.toLowerCase().includes(lowercaseQuery)) ||
-        (item.keterangan && item.keterangan.toLowerCase().includes(lowercaseQuery))
-      )
-      setFilteredItems(filtered)
-    } else {
-      setFilteredItems(items)
-    }
-  }, [searchQuery, items])
+    fetchInventory(pagination.page, pageSize, searchQuery)
+  }, [pagination.page, pageSize, searchQuery])
   
+  // Handle sort
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({key, direction})
+
+    const sortedItems = [...filteredItems].sort((a, b) => {
+      const aValue = a[key as keyof InventoryItem] || ''
+      const bValue = b[key as keyof InventoryItem] || ''
+      
+      if (aValue < bValue) return direction === 'asc' ? -1 : 1
+      if (aValue > bValue) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+    
+    setFilteredItems(sortedItems)
+  }
+
+  // Add client-side filtering effect
+  
+
+  // Update the search input handlers
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A"
     try {
@@ -258,21 +320,21 @@ export default function InventoryInboundPage() {
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
-    // Don't allow navigation to invalid pages
-    if (newPage < 1 || newPage > pagination.pageCount) return;
-    
-    // Clear search when changing pages
-    if (searchQuery) setSearchQuery("");
-    
-    // Fetch the new page
-    fetchInventory(newPage, pageSize);
+    setPagination(prev => ({
+      ...prev,
+      page: newPage,
+      total: filteredItems.length
+    }));
   }
   
   // Handle page size change
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
-    // Reset to first page when changing page size
-    fetchInventory(1, newSize);
+    setPagination(prev => ({
+      ...prev,
+      pageSize: newSize,
+      pageCount: Math.ceil(filteredItems.length / newSize)
+    }));
   }
 
   return (
@@ -302,20 +364,30 @@ export default function InventoryInboundPage() {
       <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search inventory items..."
-                className="pl-10 bg-background/50 border-border/50 focus-visible:ring-primary/70"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="relative flex-1 flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search inventory items..."
+                  className="pl-10 bg-background/50 border-border/50 focus-visible:ring-primary/70"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button 
+                variant="default" 
+                className="bg-primary/90 hover:bg-primary text-primary-foreground"
+                onClick={() => fetchInventory(1, pageSize, searchQuery)}
+              >
+                <Search className="h-4 w-4 mr-2" /> Search
+              </Button>
             </div>
             <Button 
               variant="outline" 
               className="w-full md:w-auto bg-background/50 border-border/50 hover:bg-background/70"
               onClick={() => {
                 setSearchQuery("");
+                fetchInventory(1, pageSize, "");
               }}
             >
               Clear Filters
@@ -346,14 +418,85 @@ export default function InventoryInboundPage() {
                 <Table>
                   <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
-                      <TableHead className="w-[20%]">Fabric Name</TableHead>
-                      <TableHead className="w-[15%]">Source/Customer</TableHead>
-                      <TableHead className="w-[10%]">Width</TableHead>
-                      <TableHead className="w-[10%]">Weight</TableHead>
-                      <TableHead className="w-[10%]">Est. Length</TableHead>
-                      <TableHead className="w-[10%]">Roll</TableHead>
-                      <TableHead className="w-[10%]">Date</TableHead>
+                      <TableHead 
+                        className="w-[20%] cursor-pointer hover:bg-muted/50" 
+                        onClick={() => handleSort('nama_bahan')}
+                      >
+                        Fabric Name
+                        {sortConfig.key === 'nama_bahan' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead 
+                        className="w-[15%] cursor-pointer hover:bg-muted/50" 
+                        onClick={() => handleSort('customer_name')}
+                      >
+                        Source/Customer
+                        {sortConfig.key === 'customer_name' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead 
+                        className="w-[10%] cursor-pointer hover:bg-muted/50" 
+                        onClick={() => handleSort('lebar_bahan')}
+                      >
+                        Width
+                        {sortConfig.key === 'lebar_bahan' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead 
+                        className="w-[10%] cursor-pointer hover:bg-muted/50" 
+                        onClick={() => handleSort('berat_bahan')}
+                      >
+                        Weight
+                        {sortConfig.key === 'berat_bahan' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead 
+                        className="w-[10%] cursor-pointer hover:bg-muted/50" 
+                        onClick={() => handleSort('est_pjg_bahan')}
+                      >
+                        Est. Length
+                        {sortConfig.key === 'est_pjg_bahan' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead 
+                        className="w-[10%] cursor-pointer hover:bg-muted/50" 
+                        onClick={() => handleSort('roll')}
+                      >
+                        Roll
+                        {sortConfig.key === 'roll' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
+                      <TableHead 
+                        className="w-[10%] cursor-pointer hover:bg-muted/50" 
+                        onClick={() => handleSort('tanggal')}
+                      >
+                        Date
+                        {sortConfig.key === 'tanggal' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
                       <TableHead className="w-[15%]">Notes</TableHead>
+                      <TableHead className="w-[10%]">Capture</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -380,6 +523,15 @@ export default function InventoryInboundPage() {
                           <TableCell className="py-3">{formatDate(item.tanggal)}</TableCell>
                           <TableCell className="max-w-xs truncate py-3">
                             {item.keterangan || "N/A"}
+                          </TableCell>
+                          <TableCell className="py-3">
+                            {item.foto ? (
+                              <img 
+                                src={item.foto} 
+                                alt="Fabric capture" 
+                                className="h-10 w-10 object-cover rounded"
+                              />
+                            ) : "N/A"}
                           </TableCell>
                         </TableRow>
                       ))

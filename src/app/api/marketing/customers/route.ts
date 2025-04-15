@@ -2,106 +2,200 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // GET /api/marketing/customers - Get all customers
-export async function GET(req: NextRequest) {
-  try {
-    // Use raw SQL query for legacy customers
-    const legacyCustomers = await prisma.$queryRaw`SELECT * FROM customer ORDER BY nama ASC`;
-    
-    // Get new model customers
-    const newCustomers = await prisma.customer.findMany({
-      orderBy: {
-        nama: 'asc'
-      },
-      select: {
-        id: true,
-        nama: true,
-        telp: true
-      }
-    });
-
-    const mappedCustomers = newCustomers.map(customer => ({
-      id: customer.id,
-      name: customer.nama,
-      phone: customer.telp
-    }));
-    
-    // Map the legacy customers
-    const mappedLegacyCustomers = Array.isArray(legacyCustomers) 
-      ? legacyCustomers.map(customer => ({
-          id: String(customer.id),
-          name: customer.nama,
-          phone: customer.telp,
-          email: null,
-          address: null,
-          status: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isLegacy: true
-        }))
-      : [];
-    
-    // Format the new customers to match the legacy format
-    const formattedNewCustomers = newCustomers.map(customer => ({
-      id: customer.id,
-      name: customer.name,
-      phone: customer.phone || null,
-      email: customer.email || null,
-      address: customer.address || null,
-      status: null,
-      createdAt: customer.createdAt,
-      updatedAt: customer.updatedAt,
-      isLegacy: false
-    }));
-    
-    // Combine both sets of customers
-    const allCustomers = [...mappedLegacyCustomers, ...formattedNewCustomers];
-    
-    return NextResponse.json(mappedCustomers);
-  } catch (error) {
-    console.error('Error fetching customers:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch customers' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST /api/marketing/customers - Create a new customer
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    
-    const { name, phone, email, address } = body
-    
-    // Create customer using new Customer model
-    const customer = await prisma.Customer.create({
-      data: {
-        name,
-        phone,
-        email,
-        address
-      }
-    });
-    
-    // Format response
-    const formattedCustomer = {
-      id: customer.id,
-      name: customer.name,
-      phone: customer.phone,
-      email: customer.email,
-      address: customer.address,
-      status: null,
-      createdAt: customer.createdAt,
-      updatedAt: customer.updatedAt,
-      isLegacy: false
+    const body = await req.json();
+    const { nama, telp } = body;
+
+    if (!nama) {
+      return NextResponse.json(
+        { error: 'Name is required' },
+        { status: 400 }
+      );
     }
-    
-    return NextResponse.json(formattedCustomer, { status: 201 })
+
+    // Check for duplicate nama
+    const existingNama = await prisma.customer.findFirst({
+      where: { nama }
+    });
+
+    if (existingNama) {
+      return NextResponse.json(
+        { error: 'Customer with this name already exists' },
+        { status: 400 }
+      );
+    }
+
+    // Check for duplicate telp if provided
+    if (telp) {
+      const formattedTelp = telp.replace(/^(0|62)/, '');
+      const existingTelp = await prisma.customer.findFirst({
+        where: { telp: formattedTelp }
+      });
+
+      if (existingTelp) {
+        return NextResponse.json(
+          { error: 'Customer with this phone number already exists' },
+          { status: 400 }
+        );
+      }
+
+      const customer = await prisma.customer.create({
+        data: {
+          nama,
+          telp: formattedTelp,
+        }
+      });
+
+      return NextResponse.json({
+        id: customer.id.toString(),
+        nama: customer.nama,
+        telp: customer.telp,
+      }, { status: 201 });
+    } else {
+      const customer = await prisma.customer.create({
+        data: {
+          nama,
+          telp: null,
+        }
+      });
+
+      return NextResponse.json({
+        id: customer.id.toString(),
+        nama: customer.nama,
+        telp: customer.telp,
+      }, { status: 201 });
+    }
   } catch (error) {
-    console.error('Error creating customer:', error)
+    console.error('Error:', error);
     return NextResponse.json(
       { error: 'Failed to create customer' },
       { status: 500 }
-    )
+    );
+  }
+}
+
+// GET /api/marketing/customers - Get all customers
+export async function GET(req: NextRequest) {
+  try {
+    const customers = await prisma.customer.findMany({
+      select: {
+        id: true,
+        nama: true,
+        telp: true,
+      },
+      orderBy: {
+        nama: 'asc'
+      }
+    });
+
+    return NextResponse.json(customers.map(customer => ({
+      id: customer.id.toString(),
+      nama: customer.nama,
+      telp: customer.telp,
+    })));
+  } catch (error) {
+    console.error('Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch customers' },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/marketing/customers/:id - Get a specific customer
+export async function GETById(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = Number(params.id)
+
+    const customer = await prisma.customer.findUnique({
+      where: { id }
+    });
+
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Customer not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      id: customer.id.toString(),
+      nama: customer.nama,
+      telp: customer.telp,
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch customer' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/marketing/customers/[id] - Update a customer
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = Number(params.id)
+    const body = await req.json();
+    const { nama, telp } = body;
+
+    // Check if customer exists first
+    const existingCustomer = await prisma.customer.findUnique({
+      where: { id }
+    });
+
+    if (!existingCustomer) {
+      return NextResponse.json(
+        { error: 'Customer not found' },
+        { status: 404 }
+      );
+    }
+
+    const customer = await prisma.customer.update({
+      where: { id },
+      data: { 
+        nama,
+        telp: telp ? telp.replace(/^(0|62)/, '') : null,
+      }
+    });
+
+    return NextResponse.json({
+      id: customer.id.toString(),
+      nama: customer.nama,
+      telp: customer.telp,
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update customer' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/marketing/customers/:id - Delete a customer
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = Number(params.id)
+
+    await prisma.customer.delete({ where: { id } });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error('Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete customer' },
+      { status: 500 }
+    );
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Customer } from '@prisma/client'
+import { customer } from '@prisma/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/use-toast'
@@ -30,24 +30,21 @@ const formSchema = z.object({
     },
     { message: 'Please enter a valid phone number' }
   ),
-  email: z.string().email({ message: 'Please enter a valid email' }).optional().or(z.literal('')),
-  address: z.string().optional(),
-  status: z.string().optional(),
-  tags: z.string().optional(),
+
 })
 
 type FormValues = z.infer<typeof formSchema>
 
 interface CustomerFormDialogProps {
   open: boolean
-  customer: Customer | null
+  customer: customer | null
   onClose: (refresh: boolean) => void
   isWhatsAppContact?: boolean
 }
 
 export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppContact = false }: CustomerFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [activeTab, setActiveTab] = useState("basic")
+
   
   const isEditing = !!customer
   
@@ -68,38 +65,21 @@ export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppConta
     defaultValues: {
       nama: '',
       telp: '',
-      email: '',
-      address: '',
-      status: 'UNVERIFIED',
-      tags: '',
     },
   })
   
-  // Reset form when dialog opens or customer changes
+  // Reset form with customer data when dialog opens or customer changes
   useEffect(() => {
-    if (open) {
-      if (customer) {
-        // Format phone number for display
-        const phoneForDisplay = customer.telp || ''
-        
-        form.reset({
-          nama: customer.nama,
-          telp: phoneForDisplay,
-          email: customer.email || '',
-          address: customer.address || '',
-          status: customer.status || 'UNVERIFIED',
-          tags: '',
-        })
-      } else {
-        form.reset({
-          nama: '',
-          telp: '',
-          email: '',
-          address: '',
-          status: 'UNVERIFIED',
-          tags: '',
-        })
-      }
+    if (open && customer) {
+      form.reset({
+        nama: customer.nama || '',
+        telp: customer.telp || '',
+      })
+    } else if (open) {
+      form.reset({
+        nama: '',
+        telp: '',
+      })
     }
   }, [open, customer, form])
   
@@ -189,20 +169,14 @@ export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppConta
         <div className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                  <TabsTrigger value="additional">Additional Info</TabsTrigger>
-                </TabsList>
-                <TabsContent value="basic" className="space-y-4">
-                  <FormField
+              <FormField
                     control={form.control}
                     name="nama"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter customer name" {...field} />
+                          <Input placeholder={isEditing ? customer.nama || 'Enter customer name' : 'Enter customer name'} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -215,77 +189,12 @@ export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppConta
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter phone number" {...field} />
+                          <Input placeholder={isEditing ? customer.telp || 'Enter phone number' : 'Enter phone number'} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </TabsContent>
-                <TabsContent value="additional" className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter email address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter customer address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="UNVERIFIED">Unverified</SelectItem>
-                            <SelectItem value="ACTIVE">Active</SelectItem>
-                            <SelectItem value="INACTIVE">Inactive</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tags</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter tags (comma separated)" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-              </Tabs>
 
               <div
                 className={cn(

@@ -107,6 +107,16 @@ const navItems: NavItem[] = [
         href: "/inventory/outbound",
         icon: <Clipboard className="h-4 w-4" />,
       },
+      {
+        title: "Consumables",
+        href: "/inventory/consumables",
+        icon: <Package className="h-4 w-4" />,
+      },
+      {
+        title: "Assets",
+        href: "/inventory/assets",
+        icon: <Package className="h-4 w-4" />,
+      },
     ],
   },
   {
