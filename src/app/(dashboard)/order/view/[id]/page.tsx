@@ -16,6 +16,12 @@ interface OrderWithCustomer {
   created_at?: Date | string | null;
   produk?: string | null;
   asal_bahan?: string | null;
+  asal_bahan_id?: number | bigint | null;
+  asal_bahan_rel?: {
+    id: number | bigint;
+    nama: string;
+    telp?: string | null;
+  } | null;
   nama_kain?: string | null;
   jumlah_kain?: string | null;
   lebar_kertas?: string | null;
@@ -50,6 +56,18 @@ interface OrderWithCustomer {
     telp?: string | null;
   } | null;
   targetSelesai?: Date | string | null;
+  user_id?: { 
+    name: string;
+  } | null;
+  designer_id?: {
+    name: string;
+  } | null;
+  opr_id?: {
+    name: string;
+  } | null;
+  manager_id?: {
+    name: string;
+  } | null;
 }
 
 // Main component
@@ -69,17 +87,92 @@ export default function ViewOrderPage() {
     const fetchOrder = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/orders/${orderId}`);
+        setError(null);
         
-        if (!response.ok) {
-          throw new Error("Failed to fetch order");
+        console.log(`Attempting to fetch order with ID: ${orderId}`);
+        
+        // Check if the ID is in the format of a UUID, numeric ID, or SPK
+        // UUID pattern: 8-4-4-4-12 characters separated by hyphens
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+        // Check if it's a pure numeric ID
+        const isNumericId = /^\d+$/.test(orderId) && orderId.length <= 6; // Typical database IDs are shorter
+        
+        let response;
+        let failedAttempts = [];
+        
+        // Try multiple approaches to fetch the order
+        
+        // Attempt 1: Direct order ID endpoint
+        try {
+          console.log(`Attempt 1: Fetching by direct ID: ${orderId}`);
+          const directResponse = await fetch(`/api/orders/${orderId}`);
+          
+          if (directResponse.ok) {
+            console.log('Direct ID fetch successful');
+            response = directResponse;
+          } else {
+            const errorText = await directResponse.text();
+            failedAttempts.push({method: 'direct ID', status: directResponse.status, error: errorText});
+            console.log(`Direct ID fetch failed: ${directResponse.status}`, errorText);
+          }
+        } catch (err) {
+          failedAttempts.push({method: 'direct ID', error: String(err)});
+          console.error('Error in direct ID fetch:', err);
         }
         
+        // Attempt 2: Numeric ID endpoint (if numeric and first attempt failed)
+        if (!response && isNumericId) {
+          try {
+            console.log(`Attempt 2: Fetching as numeric ID: ${orderId}`);
+            const numericResponse = await fetch(`/api/orders/id?id=${encodeURIComponent(orderId)}`);
+            
+            if (numericResponse.ok) {
+              console.log('Numeric ID fetch successful');
+              response = numericResponse;
+            } else {
+              const errorText = await numericResponse.text();
+              failedAttempts.push({method: 'numeric ID', status: numericResponse.status, error: errorText});
+              console.log(`Numeric ID fetch failed: ${numericResponse.status}`, errorText);
+            }
+          } catch (err) {
+            failedAttempts.push({method: 'numeric ID', error: String(err)});
+            console.error('Error in numeric ID fetch:', err);
+          }
+        }
+        
+        // Attempt 3: SPK endpoint (if first two attempts failed)
+        if (!response) {
+          try {
+            console.log(`Attempt 3: Fetching by SPK: ${orderId}`);
+            const spkResponse = await fetch(`/api/orders/spk?spk=${encodeURIComponent(orderId)}`);
+            
+            if (spkResponse.ok) {
+              console.log('SPK fetch successful');
+              response = spkResponse;
+            } else {
+              const errorText = await spkResponse.text();
+              failedAttempts.push({method: 'SPK', status: spkResponse.status, error: errorText});
+              console.log(`SPK fetch failed: ${spkResponse.status}`, errorText);
+            }
+          } catch (err) {
+            failedAttempts.push({method: 'SPK', error: String(err)});
+            console.error('Error in SPK fetch:', err);
+          }
+        }
+        
+        // If all attempts failed, throw a comprehensive error
+        if (!response) {
+          console.error('All fetch attempts failed:', failedAttempts);
+          throw new Error(`Failed to fetch order after multiple attempts. Please check if the order ID "${orderId}" is correct.`);
+        }
+        
+        // Process the successful response
         const data = await response.json();
+        console.log("Successfully fetched order data");
         setOrder(data);
       } catch (err) {
         console.error("Error fetching order:", err);
-        setError("Failed to load order details");
+        setError(err instanceof Error ? err.message : "Failed to load order details");
       } finally {
         setLoading(false);
       }
@@ -142,22 +235,76 @@ export default function ViewOrderPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 text-center">
-        <p className="text-lg">Loading order details...</p>
+      <div className="container mx-auto py-8">
+        <div className="flex flex-col items-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 w-full max-w-2xl">
+            <h2 className="text-xl font-bold text-blue-700 mb-4">Loading Order...</h2>
+            <p className="text-gray-700 mb-6">
+              Please wait while we fetch the order details.
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+              <div className="bg-blue-600 h-2.5 rounded-full w-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!order && !error) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex flex-col items-center">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 w-full max-w-2xl">
+            <h2 className="text-xl font-bold text-amber-700 mb-4">Order Not Found</h2>
+            <p className="text-gray-700 mb-6">
+              We couldn't find the order with ID: {orderId}
+            </p>
+            <p className="text-gray-600 mb-6">
+              The order may have been deleted or you might not have permission to view it.
+            </p>
+            <div className="flex space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Go Back
+              </Button>
+              <Button onClick={() => router.push("/order")}>
+                Return to Orders List
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (error || !order) {
+  if (error) {
     return (
       <div className="container mx-auto py-8">
-        <div className="mb-6 flex items-center">
-          <Button variant="outline" onClick={() => router.back()} className="mr-2">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
-          </Button>
-        </div>
-        <div className="bg-red-50 text-red-700 p-4 rounded-md">
-          <p className="text-lg">{error || "Order not found"}</p>
+        <div className="flex flex-col items-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 w-full max-w-2xl">
+            <h2 className="text-xl font-bold text-red-700 mb-4">Error Loading Order</h2>
+            <p className="text-gray-700 mb-6">{error}</p>
+            <p className="text-gray-600 mb-6">
+              The order may have been deleted or you might not have permission to view it. 
+              Please check the order ID and try again.
+            </p>
+            <div className="flex space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Go Back
+              </Button>
+              <Button onClick={() => router.push("/order")}>
+                Return to Orders List
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -235,7 +382,7 @@ export default function ViewOrderPage() {
       </tr>
     </thead>
     <tbody className="text-sm">
-      <tr><td className="border p-1.5">1. Asal Bahan</td><td className="border p-1.5">{order.asal_bahan || "N/A"}</td><td rowSpan={8} className="border p-1.5 align-top">
+      <tr><td className="border p-1.5">1. Asal Bahan</td><td className="border p-1.5">{order.asal_bahan_rel?.nama || order.asal_bahan || "N/A"}</td><td rowSpan={8} className="border p-1.5 align-top">
         {order.catatan_design && (
           <>
             <span className="text-xs font-medium">Catatan Designer:</span>
@@ -244,7 +391,7 @@ export default function ViewOrderPage() {
         )}
       </td></tr>
       <tr><td className="border p-1.5">2. Nama Kain</td><td className="border p-1.5">{order.nama_kain || "N/A"}</td></tr>
-      <tr><td className="border p-1.5">3. Jumlah Kain</td><td className="border p-1.5">{order.jumlah_kain || "N/A"}</td></tr>
+      <tr><td className="border p-1.5">3. Jumlah Kain</td><td className="border p-1.5">-</td></tr>
       <tr><td className="border p-1.5">4. Lebar Kertas</td><td className="border p-1.5">{order.lebar_kertas || "N/A"}</td></tr>
       <tr><td className="border p-1.5">5. Aplikasi Produk</td><td className="border p-1.5">{order.nama_produk || order.produk || "N/A"}</td></tr>
       <tr><td className="border p-1.5">6. Quantity Produksi</td><td className="border p-1.5">{order.qty || "N/A"}</td></tr>
@@ -266,6 +413,7 @@ export default function ViewOrderPage() {
     <tr>
       <td rowSpan={2} className="border p-1.5 text-center">
         <p className="text-base font-medium">{order.customer?.nama || "N/A"}</p>
+        <p className="text-base font-bold text-red-600">{order.prioritas === "YES"? "PRIORITAS" : order.prioritas || "N/A"}</p>
       </td>
       <td className="border p-1.5 font-medium">Marketing</td>
     </tr>

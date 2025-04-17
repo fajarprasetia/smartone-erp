@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { yardToMeter } from "@/app/(dashboard)/order/add/utils/order-form-utils";
 
 // Helper function to handle BigInt serialization in JSON responses
 function serializeData(data: any): any {
@@ -18,55 +21,85 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("pageSize") || "10");
     const search = url.searchParams.get("search") || "";
+    const status = url.searchParams.get("status") || "";
+    const exclude = url.searchParams.get("exclude") || "";
+    
+    // Get sorting parameters
+    const sortField = url.searchParams.get("sortField") || "created_at";
+    const sortOrder = url.searchParams.get("sortOrder") || "desc";
     
     // Calculate skip value for pagination (0 for page 1, pageSize for page 2, etc.)
     const skip = (page - 1) * pageSize;
     
     // Prepare filter conditions
-    const whereCondition = search
-      ? {
-          OR: [
-            { spk: { contains: search, mode: "insensitive" } },
-            { no_project: { contains: search, mode: "insensitive" } },
-            { produk: { contains: search, mode: "insensitive" } },
-            { nama_kain: { contains: search, mode: "insensitive" } },
-            { status: { contains: search, mode: "insensitive" } },
-            { statusm: { contains: search, mode: "insensitive" } },
-            { catatan: { contains: search, mode: "insensitive" } },
-            { marketing: { contains: search, mode: "insensitive" } },
-            { customer: { nama: { contains: search, mode: "insensitive" } } },
-            { customer: { telp: { contains: search } } },
-          ],
-        }
-      : {};
+    let whereCondition: any = {};
+
+    // Add search condition if search is provided
+    if (search) {
+      whereCondition.OR = [
+        { spk: { contains: search, mode: "insensitive" } },
+        { no_project: { contains: search, mode: "insensitive" } },
+        { produk: { contains: search, mode: "insensitive" } },
+        { nama_kain: { contains: search, mode: "insensitive" } },
+        { status: { contains: search, mode: "insensitive" } },
+        { statusm: { contains: search, mode: "insensitive" } },
+        { catatan: { contains: search, mode: "insensitive" } },
+        { marketing: { contains: search, mode: "insensitive" } },
+        { customer: { nama: { contains: search, mode: "insensitive" } } },
+        { customer: { telp: { contains: search } } },
+      ];
+    }
+
+    // Add status filter if provided
+    if (status) {
+      whereCondition.status = status;
+    }
+
+    // Add exclude filter if provided
+    if (exclude) {
+      whereCondition.NOT = whereCondition.NOT || [];
+      whereCondition.NOT.push({ status: exclude });
+    }
 
     // Get total count for pagination
-    const totalCount = await prisma.Order.count({
+    const totalCount = await db.order.count({
       where: whereCondition,
     });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalCount / pageSize);
 
+    // Prepare orderBy object dynamically
+    const orderBy: Record<string, string> = {};
+    
+    // Handle special case for date fields to ensure proper sorting
+    if (sortField === "tanggal" || sortField === "created_at") {
+      // For date fields, use the field directly for sorting
+      orderBy[sortField] = sortOrder;
+    } else {
+      // For other fields, use the standard sorting
+      orderBy[sortField] = sortOrder;
+    }
+
     // Fetch orders with pagination and include customer data
-    const orders = await prisma.Order.findMany({
+    const orders = await db.order.findMany({
       where: whereCondition,
       include: {
         customer: true,
       },
       skip,
       take: pageSize,
-      orderBy: { tanggal: "desc" },
+      orderBy,
     });
 
     // For orders with customer_id but no customer relation, fetch from lowercase customer model
-    const processedOrders = await Promise.all(orders.map(async order => {
+    const processedOrders = await Promise.all(orders.map(async (order: any) => {
       let customerData = order.customer;
       
       // If no customer data from relation but has customer_id, try to fetch from lowercase customer model
       if (!customerData && order.customer_id) {
         try {
-          const lowercaseCustomer = await prisma.$queryRaw`
+          const lowercaseCustomer = await db.$queryRaw`
             SELECT id, nama, telp FROM customer WHERE id = ${order.customer_id}
           `;
           
@@ -82,10 +115,73 @@ export async function GET(req: NextRequest) {
         }
       }
       
+      // Fetch marketing user data if marketing field contains a user ID
+      let marketingUser = null;
+      if (order.marketing) {
+        try {
+          // Try to interpret the marketing field as a user ID
+          const user = await db.user.findUnique({
+            where: { id: order.marketing },
+            select: { id: true, name: true, email: true }
+          });
+          
+          if (user) {
+            marketingUser = {
+              id: user.id,
+              name: user.name,
+              email: user.email
+            };
+          } else {
+            // Fallback: treat marketing as a plain string if not a valid user ID
+            marketingUser = { name: order.marketing };
+          }
+        } catch (error) {
+          console.error('Error fetching marketing user:', error);
+          // Fallback to using the marketing field as a name
+          marketingUser = { name: order.marketing };
+        }
+      }
+      
+      // Fetch fabric origin (asal_bahan) customer data
+      let originCustomer = null;
+      if (order.asal_bahan_id || order.asal_bahan) {
+        try {
+          // Special case: If asal_bahan is "27", use the order's customer_id instead
+          let originCustomerId;
+          
+          if (order.asal_bahan === "27" || order.asal_bahan_id === "27") {
+            // Use the order's customer_id if asal_bahan is "27"
+            originCustomerId = order.customer_id || order.customerId;
+          } else {
+            // Normal case: use asal_bahan_id or asal_bahan directly
+            originCustomerId = order.asal_bahan_id || order.asal_bahan;
+          }
+          
+          if (originCustomerId) {
+            const originData = await db.$queryRaw`
+              SELECT id, nama FROM customer WHERE id = ${originCustomerId}
+            `;
+            
+            if (Array.isArray(originData) && originData.length > 0) {
+              originCustomer = {
+                id: originData[0].id.toString(),
+                nama: originData[0].nama
+              };
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching origin customer:', error);
+        }
+      }
+      
       return {
         ...order,
-        // Create marketingInfo object from the marketing string field
-        marketingInfo: order.marketing ? { name: order.marketing } : null,
+        // Include marketing user data
+        marketingUser,
+        // Keep the old marketingInfo for backward compatibility
+        marketingInfo: marketingUser || (order.marketing ? { name: order.marketing } : null),
+        // Include fabric origin customer data
+        originCustomer,
         // Override customer with fetched data if available
         customer: customerData
       };
@@ -114,61 +210,144 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-
-    // Check for required fields
-    const requiredFields = ["customer_id", "tanggal", "produk", "status"];
-    const missingFields = requiredFields.filter(field => !body[field]);
-
-    if (missingFields.length > 0) {
-      return new NextResponse(
-        JSON.stringify({
-          error: "Missing required fields",
-          missingFields,
-        }),
-        { status: 400 }
+    // Get current user session
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    // Create new order
-    const newOrder = await prisma.Order.create({
-      data: {
-        spk: body.spk || "",
-        no_project: body.no_project || "",
-        tanggal: new Date(body.tanggal),
-        est_order: body.target_selesai ? new Date(body.target_selesai) : null,
-        customer_id: body.customer_id,
-        marketing: body.marketing || "", // Store marketing as string
-        produk: body.produk,
-        asal_bahan_id: body.asal_bahan_id || null,
-        panjang: body.panjang || 0,
-        qty: body.qty || "",
-        harga_satuan: body.harga || "",
-        status: body.status,
-        catatan: body.catatan || "",
-        created_at: new Date(),
-        updated_at: new Date(),
+    // Parse request body
+    const data = await req.json();
+    console.log("[API] Creating order with data:", data);
+
+    // Generate project number (SO-XXXXXXXX format)
+    const latestOrder = await db.order.findFirst({
+      orderBy: {
+        no_project: 'desc'
       },
-      include: {
-        customer: true,
-      },
+      select: {
+        no_project: true
+      }
     });
 
-    // Process order to include marketing info for consistency with GET endpoint
-    const processedOrder = {
-      ...newOrder,
-      marketingInfo: newOrder.marketing ? { name: newOrder.marketing } : null,
-    };
+    let nextProjectNumber = 1;
+    if (latestOrder?.no_project) {
+      const match = latestOrder.no_project.match(/SO-(\d+)/);
+      if (match && match[1]) {
+        nextProjectNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+    const projectNumber = `SO-${nextProjectNumber.toString().padStart(8, '0')}`;
 
-    return NextResponse.json(serializeData(processedOrder));
+    // Convert quantity from yards to meters if needed
+    const quantity = data.unit === "yard" 
+      ? yardToMeter(parseFloat(data.jumlah || "0")).toString()
+      : data.jumlah;
+
+    // Process additional costs
+    const additionalCosts = data.additionalCosts || [];
+    // Prepare additional costs mappings
+    const additionalCostFields: Record<string, any> = {};
+    
+    additionalCosts.forEach((cost: { item?: string; pricePerUnit?: string; unitQuantity?: string; total?: string }, index: number) => {
+      if (index === 0) {
+        additionalCostFields.tambah_cutting = cost.item || "";
+        additionalCostFields.satuan_cutting = cost.pricePerUnit || "";
+        additionalCostFields.qty_cutting = cost.unitQuantity || "";
+        additionalCostFields.total_cutting = cost.total || "";
+      } else if (index < 6) { // Up to 5 additional costs
+        additionalCostFields[`tambah_cutting${index}`] = cost.item || "";
+        additionalCostFields[`satuan_cutting${index}`] = cost.pricePerUnit || "";
+        additionalCostFields[`qty_cutting${index}`] = cost.unitQuantity || "";
+        additionalCostFields[`total_cutting${index}`] = cost.total || "";
+      }
+    });
+
+    // Map matching color value
+    const matchingColorValue = data.matchingColor === "YES" ? "ADA" : "TIDAK ADA";
+
+    // Determine product type
+    const productType = data.jenisProduk.DTF ? "DTF" : "SUBLIM";
+
+    // Map discount value
+    let discount = "0";
+    if (data.discountType === "fixed" && data.discountValue) {
+      discount = data.discountValue;
+    } else if (data.discountType === "percentage" && data.discountValue) {
+      // Store percentage value as is
+      discount = `${data.discountValue}%`;
+    }
+
+    // Create order in database
+    const order = await db.order.create({
+      data: {
+        customerId: BigInt(data.customerId),
+        spk: data.spk,
+        marketing: data.marketing,
+        statusprod: data.statusProduksi, // NEW or REPEAT
+        kategori: data.kategori,
+        est_order: data.targetSelesai, // Target completion date
+        // Use the asalBahanId if provided (this is the processed ID from the client)
+        ...(data.asalBahanId ? 
+          { asal_bahan_id: /^\d+$/.test(data.asalBahanId) ? BigInt(data.asalBahanId) : null } :
+          // Otherwise use the old logic to process asalBahan
+          (/^\d+$/.test(data.asalBahan) 
+            ? { asal_bahan_id: BigInt(data.asalBahan) } // If it's a numeric ID
+            : { asal_bahan: data.asalBahan })), // If it's a string like "CUSTOMER" or "SMARTONE"
+        nama_kain: data.namaBahan || "",
+        jumlah_kain: data.selectedFabric?.length || "", // Estimated length from inventory
+        lebar_kain: data.lebarKain || "", // Fabric width
+        nama_produk: data.aplikasiProduk || "", // Product application
+        gramasi: data.gsmKertas || "", // Paper GSM
+        lebar_kertas: data.lebarKertas || "", // Paper width
+        lebar_file: data.fileWidth || "", // File width
+        warna_acuan: matchingColorValue, // YES -> ADA, NO -> TIDAK ADA
+        produk: Array.from(Object.entries(data.jenisProduk))
+          .filter(([_, selected]) => selected)
+          .map(([type]) => type)
+          .join(", "), // Selected product types as comma-separated string
+        tipe_produk: productType, // DTF or SUBLIM based on selection
+        path: data.fileDesain || "", // Design file URL
+        qty: quantity, // Quantity in meters
+        panjang_order: quantity, // Same as qty
+        harga_satuan: data.harga || "", // Unit price
+        // Additional costs
+        ...additionalCostFields,
+        // Store tax percentage in tambah_bahan field if tax is applied
+        tambah_bahan: data.tax ? `Tax: ${data.taxPercentage}%` : null,
+        // Discount
+        diskon: discount,
+        nominal: data.totalPrice || "", // Total price
+        catatan: data.notes || "", // Notes
+        statusm: "DESIGN", // Default status for marketing
+        status: "PENDING", // Default status for production
+        userId: session.user.id, // User who created the order
+        keterangan: "BELUM DIINVOICEKAN", // Default invoice status
+        created_at: new Date(), // Current timestamp
+        prioritas: data.priority ? "YES" : "NO", // Priority status
+        no_project: projectNumber, // Generated project number
+      }
+    });
+
+    console.log(`[API] Created order with ID: ${order.id}`);
+
+    return NextResponse.json({
+      success: true,
+      message: "Order created successfully",
+      orderId: order.id,
+      projectNumber
+    });
   } catch (error: any) {
     console.error("Error creating order:", error);
-    return new NextResponse(
-      JSON.stringify({ 
-        error: "Internal Server Error", 
-        message: error.message,
-        details: String(error) 
-      }),
+    
+    return NextResponse.json(
+      {
+        error: "Failed to create order",
+        details: error.message || "Unknown error occurred"
+      },
       { status: 500 }
     );
   }

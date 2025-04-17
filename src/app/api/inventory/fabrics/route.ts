@@ -8,25 +8,27 @@ const serializeData = (data: any): any => {
   ));
 };
 
-// GET /api/inventory/fabrics - Get fabric names by customer ID
+// GET /api/inventory/fabrics - Get fabric names by source ID (customer or SMARTONE)
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const customerId = searchParams.get('customerId');
+    const sourceId = searchParams.get('source');
     
-    if (!customerId) {
-      return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 });
+    if (!sourceId) {
+      return NextResponse.json({ error: 'Source ID is required' }, { status: 400 });
     }
     
-    // Find all inventory items for the specified customer
+    // Find all inventory items for the specified source (customer ID)
     const fabrics = await prisma.inventory.findMany({
       where: {
-        asal_bahan: BigInt(customerId)
+        asal_bahan: BigInt(sourceId)
       },
       select: {
         id: true,
         nama_bahan: true,
-        est_pjg_bahan: true
+        est_pjg_bahan: true,
+        lebar_bahan: true,
+        berat_bahan: true
       },
       orderBy: {
         nama_bahan: 'asc'
@@ -37,7 +39,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(serializeData(fabrics.map(fabric => ({
       id: fabric.id,
       name: fabric.nama_bahan,
-      length: fabric.est_pjg_bahan
+      length: fabric.est_pjg_bahan,
+      width: fabric.lebar_bahan,
+      weight: fabric.berat_bahan
     }))));
   } catch (error) {
     console.error('Error fetching fabrics:', error);

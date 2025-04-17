@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { db } from "@/lib/db";
 
 // Schema for order update validation
 const orderUpdateSchema = z.object({
@@ -8,7 +8,7 @@ const orderUpdateSchema = z.object({
   no_project: z.string().optional(),
   tanggal: z.date().optional(),
   target_selesai: z.date().optional(),
-  customer_id: z.coerce.number(),
+  customer_id: z.coerce.string(),
   marketing: z.string().optional(),
   produk: z.string().min(1, { message: "Product is required" }),
   asal_bahan: z.string().optional(),
@@ -17,6 +17,9 @@ const orderUpdateSchema = z.object({
   harga: z.string().optional(),
   status: z.string(),
   catatan: z.string().optional(),
+  tax: z.boolean().optional(),
+  taxPercentage: z.string().optional(),
+  priority: z.boolean().optional(),
 });
 
 // Helper function to handle BigInt serialization in JSON responses
@@ -34,124 +37,104 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const orderId = await params.id;
-    console.log(`Fetching order with ID: ${orderId}`);
+    const orderId = params.id;
+    console.log(`[API] Fetching order with ID: ${orderId}`);
 
-    // Simple check to verify DB connection
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      console.log("Database connection is working");
-    } catch (dbConnectionError) {
-      console.error("Database connection issue:", dbConnectionError);
-      return new NextResponse(
-        JSON.stringify({ error: "Database connection issue" }),
-        { status: 500 }
+    if (!orderId) {
+      return NextResponse.json(
+        { error: "Order ID is required" },
+        { status: 400 }
       );
     }
 
-    // Try with raw query first to debug schema issues
-    try {
-      // Note the capitalized "Order" table name
-      const rawOrder = await prisma.$queryRaw`
-        SELECT * FROM "order" WHERE id = ${orderId} LIMIT 1
-      `;
-      
-      console.log("Raw order query result:", JSON.stringify(rawOrder, null, 2));
-      
-      // If raw query succeeds but returns empty array
-      if (Array.isArray(rawOrder) && rawOrder.length === 0) {
-        console.log("Order not found in database");
-        return new NextResponse(
-          JSON.stringify({ error: "Order not found" }),
-          { status: 404 }
-        );
-      }
-    } catch (rawQueryError) {
-      console.error("Raw query error:", rawQueryError);
-      // Continue execution, as this is just for debugging
-    }
-
-    // Fetch the order by ID with proper error handling
-    let order;
-    try {
-      // Use capitalized "Order" to match your Prisma schema
-      order = await prisma.order.findUnique({
-        where: { id: orderId },
-        include: {
-          customer: true
+    // Fetch the order by ID
+    const order = await db.order.findUnique({
+      where: {
+        id: orderId,
+      },
+      include: {
+        customer: true,
+        asal_bahan_rel: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         },
-      });
-    } catch (prismaError: any) {
-      console.error("Prisma error details:", prismaError);
-      
-      // Check for common Prisma errors
-      if (prismaError.message?.includes("Unknown field")) {
-        return new NextResponse(
-          JSON.stringify({ 
-            error: "Database schema error", 
-            details: prismaError.message,
-            suggestion: "The database schema might be different than what the code expects"
-          }),
-          { status: 500 }
-        );
-      }
-      
-      throw prismaError; // Rethrow for the outer catch block
-    }
+        designer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        operator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        manager: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
 
     if (!order) {
-      console.log("Order not found:", orderId);
-      return new NextResponse(
-        JSON.stringify({ error: "Order not found" }),
+      console.log(`[API] Order with ID ${orderId} not found`);
+      return NextResponse.json(
+        { error: "Order not found" },
         { status: 404 }
       );
     }
 
-    console.log("Order found:", order.id);
+    console.log(`[API] Successfully found order with ID: ${orderId}`);
 
-    // Process the fields and relationships
-    const processedOrder = {
-      ...order,
-      marketingInfo: order.marketing ? { name: order.marketing } : null
-    };
-
-    // Fallback customer data fetch
-    let customerData = order.customer;
-    if (!customerData && order.customer_id) {
+    // Process marketing field to determine if it's a user ID or plain string
+    let marketingInfo = null;
+    
+    if (order.marketing) {
       try {
-        const lowercaseCustomer = await prisma.$queryRaw`
-          SELECT id::text as id, nama, telp 
-          FROM customer 
-          WHERE id = ${order.customer_id}
-        `;
+        // Try to interpret the marketing field as a user ID
+        const user = await db.user.findUnique({
+          where: { id: order.marketing },
+          select: { id: true, name: true, email: true }
+        });
         
-        if (Array.isArray(lowercaseCustomer) && lowercaseCustomer.length > 0) {
-          customerData = {
-            id: lowercaseCustomer[0].id,
-            nama: lowercaseCustomer[0].nama,
-            telp: lowercaseCustomer[0].telp
+        if (user) {
+          marketingInfo = {
+            id: user.id,
+            name: user.name,
+            email: user.email
           };
+        } else {
+          // Fallback: treat marketing as a plain string if not a valid user ID
+          marketingInfo = { name: order.marketing };
         }
       } catch (error) {
-        console.error('Error fetching customer:', error);
+        console.error('Error fetching marketing user:', error);
+        // Fallback to using the marketing field as a name
+        marketingInfo = { name: order.marketing };
       }
     }
 
-    processedOrder.customer = customerData;
-
-    return NextResponse.json(serializeData(processedOrder));
+    // Format and return the order with all fields properly serialized
+    return NextResponse.json(serializeData({
+      ...order,
+      marketingInfo,
+      // Add any additional formatted fields here
+    }));
   } catch (error: any) {
-    console.error("Error fetching order:", error);
-    console.error("Error stack:", error.stack);
+    console.error("Error fetching order by ID:", error);
     
-    // Return more detailed error info
-    return new NextResponse(
-      JSON.stringify({ 
-        error: "Internal Server Error", 
-        message: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-        details: String(error) 
-      }),
+    return NextResponse.json(
+      { 
+        error: "Failed to fetch order",
+        details: error.message || "Unknown error occurred"
+      },
       { status: 500 }
     );
   }
@@ -163,17 +146,20 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const orderId = await params.id;
+    const orderId = params.id;
     const body = await req.json();
+
+    console.log(`[API] Updating order with ID: ${orderId}`);
 
     // Validate input
     const validationResult = orderUpdateSchema.safeParse(body);
     if (!validationResult.success) {
-      return new NextResponse(
-        JSON.stringify({
+      console.log(`[API] Validation failed:`, validationResult.error.format());
+      return NextResponse.json(
+        {
           error: "Validation failed",
           details: validationResult.error.format(),
-        }),
+        },
         { status: 400 }
       );
     }
@@ -181,120 +167,152 @@ export async function PUT(
     const validatedData = validationResult.data;
 
     // Check if order exists
-    const existingOrder = await prisma.Order.findUnique({
+    const existingOrder = await db.order.findUnique({
       where: { id: orderId },
-      include: {
-        customer: true
-      },
     });
 
     if (!existingOrder) {
-      return new NextResponse(
-        JSON.stringify({ error: "Order not found" }),
+      console.log(`[API] Order with ID ${orderId} not found`);
+      return NextResponse.json(
+        { error: "Order not found" },
         { status: 404 }
       );
     }
 
     // Check if customer exists
-    let customerExists = false;
-    if (validatedData.customer_id) {
-      const customer = await prisma.customer.findUnique({
-        where: { 
-          id: String(validatedData.customer_id)
-        }
-      });
-      
-      customerExists = !!customer;
-    }
-
-    if (!customerExists) {
-      return new NextResponse(
-        JSON.stringify({ error: "Customer not found" }),
+    const customer = await db.customer.findUnique({
+      where: { 
+        id: validatedData.customer_id 
+      }
+    });
+    
+    if (!customer) {
+      console.log(`[API] Customer with ID ${validatedData.customer_id} not found`);
+      return NextResponse.json(
+        { error: "Customer not found" },
         { status: 400 }
       );
     }
 
-    // Update the order - note that marketing is a string field, not a relation
-    const updatedOrder = await prisma.Order.update({
-      where: { id: orderId },
-      data: {
+    console.log(`[API] Updating order...`);
+    
+    try {
+      // Create update data object with only the fields we want to update
+      const updateData: any = {
         spk: validatedData.spk,
         no_project: validatedData.no_project,
         tanggal: validatedData.tanggal,
-        // Use target_selesai or est_order depending on your schema 
         est_order: validatedData.target_selesai,
-        customer_id: validatedData.customer_id,
-        marketing: validatedData.marketing, // Store as string
+        marketing: validatedData.marketing,
         produk: validatedData.produk,
-        asal_bahan: validatedData.asal_bahan,
         qty: validatedData.qty,
         harga_satuan: validatedData.harga,
         status: validatedData.status,
         catatan: validatedData.catatan,
         updated_at: new Date(),
-      },
-      include: {
-        customer: true
-      },
-    });
+      };
+      
+      // Handle priority field
+      if (validatedData.priority !== undefined) {
+        updateData.prioritas = validatedData.priority ? "YES" : "NO";
+      }
+      
+      // Handle tax data - store tax percentage in tambah_bahan field
+      if (validatedData.tax !== undefined) {
+        if (validatedData.tax && validatedData.taxPercentage) {
+          updateData.tambah_bahan = `Tax: ${validatedData.taxPercentage}%`;
+        } else {
+          updateData.tambah_bahan = null;
+        }
+      }
+      
+      // Only set customer_id if it's valid and needed
+      if (validatedData.customer_id) {
+        updateData.customer_id = validatedData.customer_id;
+      }
+      
+      // Only set asal_bahan if it's provided
+      if (validatedData.asal_bahan) {
+        updateData.asal_bahan = validatedData.asal_bahan;
+      }
 
-    // Process the marketing field which is a string, not a relation
-    const processedOrder = {
-      ...updatedOrder,
-      marketingInfo: updatedOrder.marketing ? { name: updatedOrder.marketing } : null
-    };
-
-    return NextResponse.json(serializeData(processedOrder));
+      // Update the order
+      const updatedOrder = await db.order.update({
+        where: { id: orderId },
+        data: updateData,
+        include: {
+          customer: true,
+          asal_bahan_rel: true,
+        },
+      });
+      
+      console.log(`[API] Order updated successfully`);
+      return NextResponse.json(serializeData(updatedOrder));
+    } catch (dbError: any) {
+      console.error("[API] Database error updating order:", dbError);
+      return NextResponse.json(
+        { 
+          error: "Database error updating order",
+          details: dbError.message || "Unknown database error"
+        },
+        { status: 500 }
+      );
+    }
   } catch (error: any) {
-    console.error("Error updating order:", error);
-    return new NextResponse(
-      JSON.stringify({ 
-        error: "Internal Server Error", 
-        message: error.message,
-        details: String(error) 
-      }),
+    console.error("[API] Error updating order:", error);
+    return NextResponse.json(
+      { 
+        error: "Failed to update order",
+        details: error.message || "Unknown error occurred"
+      },
       { status: 500 }
     );
   }
 }
 
-// DELETE: Delete order by ID
+// DELETE: Delete an order by ID
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const orderId = await params.id;
+    const orderId = params.id;
+    console.log(`[API] Deleting order with ID: ${orderId}`);
+
+    if (!orderId) {
+      return NextResponse.json(
+        { error: "Order ID is required" },
+        { status: 400 }
+      );
+    }
 
     // Check if order exists
-    const existingOrder = await prisma.Order.findUnique({
+    const existingOrder = await db.order.findUnique({
       where: { id: orderId },
-      include: {
-        customer: true
-      },
     });
 
     if (!existingOrder) {
-      return new NextResponse(
-        JSON.stringify({ error: "Order not found" }),
+      console.log(`[API] Order with ID ${orderId} not found for deletion`);
+      return NextResponse.json(
+        { error: "Order not found" },
         { status: 404 }
       );
     }
 
     // Delete the order
-    await prisma.Order.delete({
+    await db.order.delete({
       where: { id: orderId },
     });
 
+    console.log(`[API] Order with ID ${orderId} deleted successfully`);
     return NextResponse.json({ message: "Order deleted successfully" });
   } catch (error: any) {
-    console.error("Error deleting order:", error);
-    return new NextResponse(
-      JSON.stringify({ 
-        error: "Internal Server Error", 
-        message: error.message,
-        details: String(error) 
-      }),
+    console.error("[API] Error deleting order:", error);
+    return NextResponse.json(
+      { 
+        error: "Failed to delete order",
+        details: error.message || "Unknown error occurred"
+      },
       { status: 500 }
     );
   }

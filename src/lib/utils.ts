@@ -1,4 +1,4 @@
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -44,4 +44,17 @@ export function formatTime(date: Date): string {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);
+}
+
+export function BigInt(value: string | number | null | undefined): bigint | undefined {
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+  
+  try {
+    return globalThis.BigInt(value);
+  } catch (error) {
+    console.error(`Error converting value to BigInt: ${value}`, error);
+    return undefined;
+  }
 }
