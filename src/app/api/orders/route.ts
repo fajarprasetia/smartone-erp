@@ -270,7 +270,33 @@ export async function POST(req: NextRequest) {
     const matchingColorValue = data.matchingColor === "YES" ? "ADA" : "TIDAK ADA";
 
     // Determine product type
-    const productType = data.jenisProduk.DTF ? "DTF" : "SUBLIM";
+    let productType = "SUBLIM"; // Default value
+    if (data.tipe_produk) {
+      // Use directly provided tipe_produk value if available
+      console.log("[API] Using explicit tipe_produk:", data.tipe_produk);
+      productType = data.tipe_produk;
+    } else if (data.jenisProduk?.DTF) {
+      productType = "DTF";
+    } else if (data.jenisProduk) {
+      // Check other product types in order of priority
+      if (data.jenisProduk.SUBLIM) {
+        productType = "SUBLIM";
+      } else if (data.jenisProduk.PRINT) {
+        productType = "PRINT";
+      } else if (data.jenisProduk.CUTTING) {
+        productType = "CUTTING";
+      } else if (data.jenisProduk.PRESS) {
+        productType = "PRESS";
+      } else {
+        // If none of the specific types match, use the first true value
+        const firstSelectedType = Object.entries(data.jenisProduk)
+          .find(([_, selected]) => selected);
+        if (firstSelectedType) {
+          productType = firstSelectedType[0];
+        }
+      }
+    }
+    console.log("[API] Product type determined as:", productType, "from jenisProduk:", JSON.stringify(data.jenisProduk));
 
     // Map discount value
     let discount = "0";
@@ -280,56 +306,101 @@ export async function POST(req: NextRequest) {
       // Store percentage value as is
       discount = `${data.discountValue}%`;
     }
+    console.log("[API] Discount set to:", discount, "from type:", data.discountType, "value:", data.discountValue);
+
+    // Process customerId
+    console.log("[API] Processing Customer ID:", data.customerId, "Type:", typeof data.customerId);
+    let customerIdValue = null;
+    try {
+      if (data.customerId) {
+        customerIdValue = BigInt(data.customerId);
+        console.log("[API] Converted Customer ID to BigInt:", customerIdValue.toString());
+      }
+    } catch (error) {
+      console.error("[API] Error converting customerId to BigInt:", error);
+    }
+
+    // Process asalBahanId
+    console.log("[API] Processing Asal Bahan - ID:", data.asalBahanId, "Name:", data.asalBahan);
+    
+    // Prepare order data
+    let orderData: any = {
+      // Use the processed customerIdValue
+      customerId: customerIdValue,
+      spk: data.spk,
+      marketing: data.marketing,
+      statusprod: data.statusProduksi, // NEW or REPEAT
+      kategori: data.kategori,
+      est_order: data.targetSelesai, // Target completion date
+      nama_kain: data.namaBahan || "",
+      jumlah_kain: data.selectedFabric?.length || "", // Estimated length from inventory
+      lebar_kain: data.lebarKain || "", // Fabric width
+      nama_produk: data.aplikasiProduk || "", // Product application
+      gramasi: data.gsmKertas || "", // Paper GSM
+      lebar_kertas: data.lebarKertas || "", // Paper width
+      lebar_file: data.fileWidth || "", // File width
+      warna_acuan: matchingColorValue, // YES -> ADA, NO -> TIDAK ADA
+      produk: Array.from(Object.entries(data.jenisProduk || {}))
+        .filter(([_, selected]) => selected)
+        .map(([type]) => type)
+        .join(", "), // Selected product types as comma-separated string
+      tipe_produk: productType, // Store the determined product type
+      path: data.fileDesain || "", // Design file URL
+      qty: quantity, // Quantity in meters
+      panjang_order: quantity, // Same as qty
+      harga_satuan: data.harga || "", // Unit price
+      // Additional costs
+      ...additionalCostFields,
+      // Store tax percentage in tambah_bahan field if tax is applied
+      tambah_bahan: data.tax ? `Tax: ${data.taxPercentage}%` : null,
+      // Discount
+      diskon: discount,
+      nominal: data.totalPrice || "", // Total price
+      catatan: data.notes || "", // Notes
+      statusm: "DESIGN", // Default status for marketing
+      status: "PENDING", // Default status for production
+      userId: session.user.id, // User who created the order
+      keterangan: "BELUM DIINVOICEKAN", // Default invoice status
+      created_at: new Date(), // Current timestamp
+      prioritas: data.priority ? "YES" : "NO", // Priority status
+      no_project: projectNumber, // Generated project number
+    };
+
+    // Handle asalBahanId based on the data
+    if (data.asalBahanId) {
+      try {
+        if (/^\d+$/.test(data.asalBahanId)) {
+          orderData.asal_bahan_id = BigInt(data.asalBahanId);
+          console.log("[API] Set asal_bahan_id to BigInt:", orderData.asal_bahan_id.toString());
+        } else {
+          console.log("[API] asalBahanId is not numeric, setting as null");
+          orderData.asal_bahan = data.asalBahanId;
+        }
+      } catch (error) {
+        console.error("[API] Error converting asalBahanId to BigInt:", error);
+      }
+    } else if (data.asalBahan) {
+      try {
+        if (/^\d+$/.test(data.asalBahan)) {
+          orderData.asal_bahan_id = BigInt(data.asalBahan);
+          console.log("[API] Used asalBahan as asal_bahan_id:", orderData.asal_bahan_id.toString());
+        } else {
+          orderData.asal_bahan = data.asalBahan;
+          console.log("[API] Set asal_bahan to string value:", data.asalBahan);
+        }
+      } catch (error) {
+        console.error("[API] Error processing asalBahan:", error);
+        orderData.asal_bahan = data.asalBahan;
+      }
+    }
+
+    console.log("[API] Final order data for creation:", JSON.stringify(orderData, (key, value) => 
+      typeof value === "bigint" ? value.toString() : value
+    ));
 
     // Create order in database
     const order = await db.order.create({
-      data: {
-        customerId: BigInt(data.customerId),
-        spk: data.spk,
-        marketing: data.marketing,
-        statusprod: data.statusProduksi, // NEW or REPEAT
-        kategori: data.kategori,
-        est_order: data.targetSelesai, // Target completion date
-        // Use the asalBahanId if provided (this is the processed ID from the client)
-        ...(data.asalBahanId ? 
-          { asal_bahan_id: /^\d+$/.test(data.asalBahanId) ? BigInt(data.asalBahanId) : null } :
-          // Otherwise use the old logic to process asalBahan
-          (/^\d+$/.test(data.asalBahan) 
-            ? { asal_bahan_id: BigInt(data.asalBahan) } // If it's a numeric ID
-            : { asal_bahan: data.asalBahan })), // If it's a string like "CUSTOMER" or "SMARTONE"
-        nama_kain: data.namaBahan || "",
-        jumlah_kain: data.selectedFabric?.length || "", // Estimated length from inventory
-        lebar_kain: data.lebarKain || "", // Fabric width
-        nama_produk: data.aplikasiProduk || "", // Product application
-        gramasi: data.gsmKertas || "", // Paper GSM
-        lebar_kertas: data.lebarKertas || "", // Paper width
-        lebar_file: data.fileWidth || "", // File width
-        warna_acuan: matchingColorValue, // YES -> ADA, NO -> TIDAK ADA
-        produk: Array.from(Object.entries(data.jenisProduk))
-          .filter(([_, selected]) => selected)
-          .map(([type]) => type)
-          .join(", "), // Selected product types as comma-separated string
-        tipe_produk: productType, // DTF or SUBLIM based on selection
-        path: data.fileDesain || "", // Design file URL
-        qty: quantity, // Quantity in meters
-        panjang_order: quantity, // Same as qty
-        harga_satuan: data.harga || "", // Unit price
-        // Additional costs
-        ...additionalCostFields,
-        // Store tax percentage in tambah_bahan field if tax is applied
-        tambah_bahan: data.tax ? `Tax: ${data.taxPercentage}%` : null,
-        // Discount
-        diskon: discount,
-        nominal: data.totalPrice || "", // Total price
-        catatan: data.notes || "", // Notes
-        statusm: "DESIGN", // Default status for marketing
-        status: "PENDING", // Default status for production
-        userId: session.user.id, // User who created the order
-        keterangan: "BELUM DIINVOICEKAN", // Default invoice status
-        created_at: new Date(), // Current timestamp
-        prioritas: data.priority ? "YES" : "NO", // Priority status
-        no_project: projectNumber, // Generated project number
-      }
+      data: orderData
     });
 
     console.log(`[API] Created order with ID: ${order.id}`);

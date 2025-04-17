@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
-import { useForm } from "react-hook-form"
+import { useForm, Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
@@ -14,13 +14,13 @@ import {
   orderFormSchema,
   defaultValues
 } from "../schemas/order-form-schema"
-import { formatProductTypes, yardToMeter, calculateItemTotal, calculateTotalPrice, updateNotesWithProductTypes } from "../utils/order-form-utils"
+import { formatProductTypes, yardToMeter, calculateTotalPrice, updateNotesWithProductTypes } from "../utils/order-form-utils"
 
 export function useOrderData() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [customers, setCustomers] = useState<Customer[]>([])
-  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false)
+  const [, ] = useState(false)
   const [marketingUsers, setMarketingUsers] = useState<MarketingUser[]>([])
   const [isCustomerOpen, setIsCustomerOpen] = useState(false)
   const [isMarketingOpen, setIsMarketingOpen] = useState(false)
@@ -39,19 +39,38 @@ export function useOrderData() {
   const [paperWidthOptions, setPaperWidthOptions] = useState<string[]>([])
   const [isLoadingPaperGsm, setIsLoadingPaperGsm] = useState(false)
   const [isLoadingPaperWidth, setIsLoadingPaperWidth] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
   
   const session = useSession()
   
+  // Use react-hook-form with zod validation
+  const resolver: Resolver<OrderFormValues> = async (values, context, options) => {
+    // Perform the validation
+    const result = await zodResolver(orderFormSchema)(values, context, options);
+    
+    // If we have validation errors, return them
+    if (result.errors) {
+      return result;
+    }
+    
+    // Apply any business logic transformations to the values here
+    // For example, calculating totals, formatting fields, etc.
+    
+    // Return the validated values
+    return {
+      values: result.values,
+      errors: result.errors
+    };
+  };
+  
   const form = useForm<OrderFormValues>({
-    resolver: zodResolver(orderFormSchema),
+    resolver,
     defaultValues,
   })
   
   // Watch values from the form
   const watchedProductTypes = form.watch("jenisProduk")
   const watchedDtfPass = form.watch("dtfPass")
-  const watchedFabricOrigin = form.watch("asalBahan")
-  const watchedCustomerId = form.watch("customerId")
   const watchedHarga = form.watch("harga")
   const watchedJumlah = form.watch("jumlah")
   const watchedDiscountType = form.watch("discountType")
@@ -424,40 +443,43 @@ export function useOrderData() {
   }, [form.watch("kategori"), form])
   
   // This function handles the product type checkbox changes
-  const handleProductTypeChange = (type: keyof OrderFormValues["jenisProduk"], checked: boolean) => {
-    // Update the product type checkbox
-    form.setValue(`jenisProduk.${type}`, checked)
-    
-    // Special handling for DTF
-    if (type === "DTF" && checked) {
-      // If DTF is being checked, set a default DTF pass if not already set
-      if (!form.getValues("dtfPass")) {
-        form.setValue("dtfPass", "4 PASS")
+  const handleProductTypeChange = useCallback(
+    (type: keyof OrderFormValues["jenisProduk"], checked: boolean) => {
+      // Update the product type checkbox
+      form.setValue(`jenisProduk.${type}`, checked)
+      
+      // Special handling for DTF
+      if (type === "DTF" && checked) {
+        // If DTF is being checked, set a default DTF pass if not already set
+        if (!form.getValues("dtfPass")) {
+          form.setValue("dtfPass", "4 PASS")
+        }
+        
+        // When DTF is selected, uncheck other product types
+        form.setValue("jenisProduk.PRINT", false)
+        form.setValue("jenisProduk.PRESS", false)
+        form.setValue("jenisProduk.CUTTING", false)
+        form.setValue("jenisProduk.SEWING", false)
+      } else if (checked) {
+        // If any other product type is checked, uncheck DTF
+        form.setValue("jenisProduk.DTF", false)
+        
+        // Clear DTF pass if DTF is unchecked
+        if (type !== "DTF") {
+          form.setValue("dtfPass", undefined)
+        }
       }
       
-      // When DTF is selected, uncheck other product types
-      form.setValue("jenisProduk.PRINT", false)
-      form.setValue("jenisProduk.PRESS", false)
-      form.setValue("jenisProduk.CUTTING", false)
-      form.setValue("jenisProduk.SEWING", false)
-    } else if (checked) {
-      // If any other product type is checked, uncheck DTF
-      form.setValue("jenisProduk.DTF", false)
-      
-      // Clear DTF pass if DTF is unchecked
-      if (type !== "DTF") {
-        form.setValue("dtfPass", undefined)
-      }
-    }
-    
-    // Update the notes field with the selected product types
-    const updatedNotes = updateNotesWithProductTypes(
-      form.getValues("notes") || "",
-      form.getValues("jenisProduk"),
-      form.getValues("dtfPass")
-    )
-    form.setValue("notes", updatedNotes)
-  }
+      // Update the notes field with the selected product types
+      const updatedNotes = updateNotesWithProductTypes(
+        form.getValues("notes") || "",
+        form.getValues("jenisProduk"),
+        form.getValues("dtfPass")
+      )
+      form.setValue("notes", updatedNotes)
+    },
+    [form.setValue, form.getValues, form, updateNotesWithProductTypes]
+  )
   
   // Handle DTF pass changes
   const handleDTFPassChange = (pass: "4 PASS" | "6 PASS") => {
@@ -472,91 +494,302 @@ export function useOrderData() {
     form.setValue("notes", updatedNotes)
   }
   
+  // Utility function to prepare form data for API submission
+  const prepareFormDataForSubmission = (formData: OrderFormValues): Record<string, unknown> => {
+    // Format additional costs for submission
+    const validAdditionalCosts = (formData.additionalCosts || [])
+      .filter(cost => Boolean(cost.item) || Boolean(cost.pricePerUnit) || Boolean(cost.unitQuantity) || Boolean(cost.total));
+    
+    const productTypes = formatProductTypes(formData.jenisProduk, formData.dtfPass);
+    
+    // Helper function to safely format date fields
+    const formatDateField = (value: Date | string | null | undefined): string | null => {
+      if (!value) return null;
+      
+      try {
+        // If it's already a Date object, format it
+        if (value instanceof Date && !isNaN(value.getTime())) {
+          return value.toISOString();
+        }
+        
+        // If it's a string that might represent a date, try to parse and format it
+        if (typeof value === 'string') {
+          const parsedDate = new Date(value);
+          if (!isNaN(parsedDate.getTime())) {
+            return parsedDate.toISOString();
+          }
+        }
+        
+        // If we couldn't format it as a date, return null
+        return null;
+      } catch (err) {
+        console.error("Error formatting date:", err);
+        return null;
+      }
+    };
+    
+    // Helper function to safely format numeric IDs
+    const formatNumericId = (id: string | undefined): string | undefined => {
+      if (!id) return undefined;
+      
+      // Ensure the ID is a properly formatted numeric string
+      if (/^\d+$/.test(id)) {
+        return id; // It's already a numeric string
+      }
+      
+      try {
+        // Try to convert to a valid number
+        const numericId = parseInt(id, 10);
+        if (!isNaN(numericId)) {
+          return String(numericId);
+        }
+      } catch (err) {
+        console.error("Error formatting numeric ID:", err);
+      }
+      
+      return id; // Return original if we can't format
+    };
+    
+    // Format targetSelesai if it exists
+    const formattedTargetDate = formData.targetSelesai ? formatDateField(formData.targetSelesai) : undefined;
+    console.log("Formatted target date:", formattedTargetDate);
+    
+    // Handle tax information in the right format
+    // Instead of sending tax and taxPercentage as separate fields,
+    // we'll handle them in the API by setting tambah_bahan field
+    const isTaxEnabled = formData.tax === true;
+    const taxPercentage = isTaxEnabled ? (formData.taxPercentage || "11") : null;
+    
+    // Create a compatible object with both camelCase for TypeScript and snake_case for API
+    const formDataForSubmission: Record<string, unknown> = {
+      ...formData, // Keep all original fields for type compatibility
+      targetSelesai: formattedTargetDate, // Override with formatted date
+      
+      // Add relations using Prisma's connect syntax
+      customer: formData.customerId ? {
+        connect: { 
+          id: formatNumericId(formData.customerId) 
+        }
+      } : undefined,
+      
+      // Handle asal_bahan_rel correctly based on its value
+      asal_bahan_rel: formData.asalBahan === "CUSTOMER" ? 
+        {
+          connect: { 
+            id: formatNumericId(formData.customerId) 
+          }
+        } : 
+        (formData.asalBahan === "SMARTONE" ? 
+          {
+            connect: { 
+              id: formatNumericId(customers.find(c => c.nama.toUpperCase() === "SMARTONE")?.id) 
+            }
+          } : 
+          undefined),
+      
+      // Set tipe_produk string value if neither CUSTOMER nor SMARTONE
+      tipe_produk: formData.asalBahan !== "CUSTOMER" && formData.asalBahan !== "SMARTONE" ? 
+                  formData.asalBahan : undefined,
+      
+      // Include other fields needed for API processing
+      additionalCosts: validAdditionalCosts,
+      productTypes,
+      
+      // Set tambah_bahan field directly with tax information if tax is enabled
+      tambah_bahan: isTaxEnabled ? `Tax: ${taxPercentage}%` : undefined,
+    };
+    
+    // Remove fields that don't exist in the database schema
+    delete formDataForSubmission.tax;
+    delete formDataForSubmission.taxPercentage;
+
+    console.log("Formatted data for form:", formDataForSubmission);
+
+    return formDataForSubmission;
+  };
+  
   // Handle form submission
   const onSubmit = async (data: OrderFormValues) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      // Format additional costs for submission
-      const validAdditionalCosts = (data.additionalCosts || [])
-        .filter(cost => cost.item && cost.pricePerUnit && cost.unitQuantity && cost.total)
-      
-      const productTypes = formatProductTypes(data.jenisProduk, data.dtfPass)
-      
       // Log tax information for debugging
       console.log('Tax information:', { 
         taxEnabled: data.tax, 
         taxPercentage: data.taxPercentage 
-      })
+      });
       
       // Log priority information for debugging
       console.log('Priority information:', {
         isPriority: data.priority
-      })
+      });
       
       // Prepare the form data with needed transformations
-      const formData = {
-        ...data,
-        additionalCosts: validAdditionalCosts,
-        productTypes,
-        selectedFabric,
-        asalBahanId: data.asalBahan === "CUSTOMER" ? data.customerId : 
-                    (data.asalBahan === "SMARTONE" ? 
-                      customers.find(c => c.nama.toUpperCase() === "SMARTONE")?.id : 
-                      data.asalBahan),
-        tax: data.tax,
-        taxPercentage: data.tax ? (data.taxPercentage || "11") : "0"
+      const formData = prepareFormDataForSubmission(data);
+      
+      let requestUrl;
+      let requestMethod;
+      
+      // If we have an orderId, we're in edit mode and should PUT
+      if (orderId) {
+        requestUrl = `/api/orders/${orderId}`;
+        requestMethod = 'PUT';
+        console.log(`Updating order ${orderId}`);
+      } else {
+        // Otherwise, we're in create mode and should POST
+        requestUrl = '/api/orders';
+        requestMethod = 'POST';
+        console.log('Creating new order');
       }
       
-      console.log('Submitting order data:', formData)
+      console.log(`API Request: ${requestMethod} ${requestUrl}`);
+      console.log('Form data being sent:', JSON.stringify(formData, null, 2));
       
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.details || errorData.error || 'Failed to create order')
-      }
-      
-      const responseData = await response.json()
-      
-      // Show a prominent success toast with order details
-      toast.success(
-        `✅ Order created successfully! \nSPK: ${data.spk} \nProject: ${responseData.projectNumber}`,
-        {
-          duration: 5000, // Show for 5 seconds
-          position: 'top-center',
-          style: { fontWeight: 'bold' }
+      try {
+        const response = await fetch(requestUrl, {
+          method: requestMethod,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+        
+        // Log the response status
+        console.log(`Response status: ${response.status} ${response.statusText}`);
+        
+        // Try to get the response text first 
+        const responseText = await response.text();
+        console.log('Raw response text:', responseText);
+        
+        // Try to parse as JSON if not empty
+        let responseData: Record<string, unknown> = {};
+        if (responseText) {
+          try {
+            responseData = JSON.parse(responseText);
+            console.log('Response data:', responseData);
+          } catch (parseError: unknown) {
+            console.error('Failed to parse response as JSON:', parseError);
+            console.log('Raw response:', responseText);
+          }
+        } else {
+          console.log('Empty response received');
         }
-      )
+        
+        // Check if the response was successful
+        if (!response.ok) {
+          // Extract error details for different status codes
+          if (response.status === 400) {
+            // Validation error - try to extract detailed errors
+            const validationErrors = responseData.details || responseData.error || 'Validation failed';
+            
+            console.error('Validation errors:', validationErrors);
+            
+            // Format validation errors for display
+            let errorMessage: string;
+            
+            if (typeof validationErrors === 'string') {
+              errorMessage = validationErrors;
+            } else if (typeof validationErrors === 'object') {
+              // Try to format object errors into a readable string
+              errorMessage = 'Validation failed:\n' + 
+                Object.entries(validationErrors as Record<string, unknown>)
+                  .map(([field, error]) => `- ${field}: ${error}`)
+                  .join('\n');
+            } else {
+              errorMessage = 'Invalid request data';
+            }
+            
+            throw new Error(errorMessage);
+          } else if (response.status === 401) {
+            throw new Error('Unauthorized - Please log in again');
+          } else if (response.status === 404) {
+            throw new Error('Resource not found');
+          } else if (response.status === 500) {
+            // For server errors, provide more details from the response if available
+            let serverErrorMessage = 'Server error - Please try again later';
+            if (responseData.details) {
+              serverErrorMessage = `Server error: ${responseData.details}`;
+            } else if (responseData.error) {
+              serverErrorMessage = `Server error: ${responseData.error}`;
+            }
+            throw new Error(serverErrorMessage);
+          } else {
+            throw new Error(`Request failed with status ${response.status} ${response.statusText}`);
+          }
+        }
+        
+        // Success!
+        const successMessage = orderId 
+          ? `✅ Order updated successfully! \nSPK: ${data.spk}`
+          : `✅ Order created successfully! \nSPK: ${data.spk}`;
+        
+        // Show success toast
+        toast.success(
+          successMessage + (responseData.projectNumber ? `\nProject: ${responseData.projectNumber}` : ''),
+          {
+            duration: 5000, // Show for 5 seconds
+            position: 'top-center',
+            style: { fontWeight: 'bold' }
+          }
+        );
+        
+        // Reset form for create mode only
+        if (!orderId) {
+          form.reset(defaultValues);
+        }
+        
+        // Redirect to the order list page after successful submission
+        setTimeout(() => {
+          router.push('/order');
+        }, 1500); // Give time for the toast to be seen
+        
+        return responseData;
+      } catch (apiError: unknown) {
+        console.error('API call error:', apiError);
+        const errorMessage = apiError instanceof Error 
+          ? apiError.message 
+          : 'An unexpected error occurred while communicating with the server';
+        
+        // Show error toast
+        const actionWord = orderId ? 'update' : 'create';
+        toast.error(
+          `Failed to ${actionWord} order\n${errorMessage}`,
+          {
+            duration: 5000,
+            position: 'top-center'
+          }
+        );
+        
+        return null;
+      }
+    } catch (error: unknown) {
+      console.error("Form submission error:", error);
       
-      // Reset form
-      form.reset(defaultValues)
+      // Format error message for display
+      let displayErrorMessage: string;
       
-      // Redirect to the order list page after successful submission
-      setTimeout(() => {
-        router.push('/order')
-      }, 1500) // Give time for the toast to be seen
+      if (error instanceof Error) {
+        displayErrorMessage = error.message;
+      } else if (typeof error === 'string') {
+        displayErrorMessage = error;
+      } else {
+        displayErrorMessage = "Unknown error occurred";
+      }
       
-      return responseData
-    } catch (error) {
-      console.error('Error submitting order:', error)
+      // Show error toast
+      const actionWord = orderId ? 'update' : 'create';
       toast.error(
-        `❌ Failed to submit order\n${error instanceof Error ? error.message : "Unknown error occurred"}`,
+        `Failed to ${actionWord} order\n${displayErrorMessage}`,
         {
           duration: 5000,
           position: 'top-center'
         }
-      )
-      return null
+      );
+      
+      return null;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   
   // Function to handle fetching repeat order info
   const handleFetchRepeatOrderInfo = async (spkNumber: string) => {
@@ -568,9 +801,6 @@ export function useOrderData() {
     setLoading(true)
     try {
       console.log(`Setting repeat order SPK: ${spkNumber}`)
-      
-      // Only update the repeatOrderSpk field and notes
-      const currentValues = form.getValues()
       
       // Set the SPK number and update notes
       form.setValue("repeatOrderSpk", spkNumber)
@@ -649,8 +879,71 @@ export function useOrderData() {
   /**
    * Sets initial data for editing an existing order
    */
-  const setInitialData = useCallback((data: any) => {
+  const setInitialData = useCallback((data: OrderFormValues & { 
+    id?: string | number;
+    produk?: string;
+    asal_bahan_id?: string;
+    asal_bahan?: string;
+    warna_acuan?: string;
+    tambah_cutting?: string;
+    satuan_cutting?: string;
+    qty_cutting?: string;
+    total_cutting?: string;
+    tambah_cutting1?: string;
+    satuan_cutting1?: string;
+    qty_cutting1?: string;
+    total_cutting1?: string;
+    tambah_cutting2?: string;
+    satuan_cutting2?: string;
+    qty_cutting2?: string;
+    total_cutting2?: string;
+    tambah_cutting3?: string;
+    satuan_cutting3?: string;
+    qty_cutting3?: string;
+    total_cutting3?: string;
+    tambah_cutting4?: string;
+    satuan_cutting4?: string;
+    qty_cutting4?: string;
+    total_cutting4?: string;
+    tambah_cutting5?: string;
+    satuan_cutting5?: string;
+    qty_cutting5?: string;
+    total_cutting5?: string;
+    dtf_pass?: string;
+    tipe_produk?: string;
+    statusprod?: string;
+    diskon?: string | number;
+    tax?: string | boolean;
+    tax_percentage?: string | number;
+    tambah_bahan?: string;
+    customer_id?: string | number;
+    est_order?: string | Date;
+    target_selesai?: string | Date;
+    repeat_order_spk?: string;
+    repeatOrderSpk?: string;
+    nama_kain?: string;
+    nama_produk?: string;
+    gramasi?: string;
+    lebar_kertas?: string;
+    lebar_file?: string;
+    path?: string;
+    qty?: string | number;
+    satuan_bahan?: string;
+    harga_satuan?: string | number;
+    nominal?: string | number;
+    total_price?: string | number;
+    catatan?: string;
+    prioritas?: string;
+    priority?: boolean;
+    customer?: { id?: string | number };
+    marketingInfo?: { name?: string };
+  }) => {
+    if (!data) return;
+    
     console.log("Setting initial data:", data);
+    
+    // Store the order ID for edit operations
+    setOrderId(data.id ? data.id.toString() : null);
     
     // Helper function to determine if a string contains a product type
     const hasProductType = (tipe: string, productTypes?: string) => {
@@ -724,9 +1017,20 @@ export function useOrderData() {
     }
 
     // Extract dtf_pass based on the product types
-    const dtfPass = data.dtf_pass || 
-                   (hasProductType("DTF", data.tipe_produk) ? "4 PASS" : undefined);
-                   
+    let dtfPass: "4 PASS" | "6 PASS" | undefined = undefined;
+    if (data.dtf_pass) {
+      // Ensure that we only assign valid values to dtfPass
+      const pass = data.dtf_pass.toString().trim().toUpperCase();
+      if (pass === "4 PASS") {
+        dtfPass = "4 PASS";
+      } else if (pass === "6 PASS") {
+        dtfPass = "6 PASS";
+      }
+    } else if (hasProductType("DTF", data.tipe_produk)) {
+      // Default to 4 PASS if DTF is selected but no pass is specified
+      dtfPass = "4 PASS";
+    }
+    
     // Ensure proper status value
     const statusProduksi = data.statusprod === "REPEAT" ? "REPEAT" : "NEW";
     
@@ -754,8 +1058,8 @@ export function useOrderData() {
     }
     
     // Extract tax percentage from tambah_bahan field if it exists
-    let taxEnabled = data.tax === "YES" || data.tax === true;
-    let taxPercentage = data.tax_percentage?.toString() || "11";
+    let taxEnabled = false;
+    let taxPercentage = "11"; // Default tax percentage
     
     // Check if tax information is stored in tambah_bahan field
     if (data.tambah_bahan && data.tambah_bahan.toString().includes("Tax:")) {
@@ -903,7 +1207,20 @@ export function useOrderData() {
       }
     }
     
-  }, [form, customers, marketingUsers, fabricNames, setIsCustomerOpen, setIsMarketingOpen, setIsFabricNameOpen, setSelectedFabric, updateNotesWithProductTypes]);
+  }, [
+    form,
+    customers,
+    marketingUsers,
+    fabricNames,
+    setIsCustomerOpen,
+    setIsMarketingOpen,
+    setIsFabricNameOpen,
+    setSelectedFabric,
+    updateNotesWithProductTypes,
+    form.reset,
+    form.setValue,
+    form.getValues
+  ]);
   
   return {
     form,
@@ -941,6 +1258,7 @@ export function useOrderData() {
     paperWidthOptions,
     isLoadingPaperGsm,
     isLoadingPaperWidth,
-    setInitialData
+    setInitialData,
+    orderId
   }
 } 
