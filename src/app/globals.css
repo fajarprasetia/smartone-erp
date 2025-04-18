@@ -11,14 +11,14 @@
     --background: 250 70% 40%;
     --foreground: 0 0% 0%;
 
-    --card: 270 70% 40%;
-    --card-foreground: 0 0% 0%;
+    --card: transparent;
+    --card-foreground: transparent;
 
     --popover: 270 70% 40%;
     --popover-foreground: 0 0% 0%;
 
-    --primary: 270 100% 60%;
-    --primary-foreground: 0 0% 0%;
+    --primary: transparent;
+    --primary-foreground: transparent;
 
     --secondary: 270 30% 50%;
     --secondary-foreground: 0 0% 0%;
@@ -49,7 +49,7 @@
     --popover: 270 50% 5%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 270 100% 50%;
+    --primary: 270 50% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 270 30% 15%;

@@ -21,9 +21,14 @@ export async function POST(req: Request) {
     // Get form data from request
     const formData = await req.formData();
     
+    // Check for folder parameter in URL
+    const url = new URL(req.url);
+    const folderParam = url.searchParams.get('folder');
+    const useFolder = folderParam === 'tfuploads' ? 'tfuploads' : 'uploads';
+    
     // Define upload path and URL prefix
-    let uploadDir = join(process.cwd(), "public", "uploads");
-    let urlPrefix = "/uploads"; // Default URL prefix for public/uploads directory
+    let uploadDir = join(process.cwd(), "public", useFolder);
+    let urlPrefix = `/${useFolder}`; // URL prefix based on folder name
     
     // Ensure the uploads directory exists
     if (!existsSync(uploadDir)) {
@@ -46,7 +51,7 @@ export async function POST(req: Request) {
         console.error("Error creating uploads directory:", mkdirError);
         
         // Try to use a fallback directory at the root level
-        const fallbackDir = join(process.cwd(), "uploads");
+        const fallbackDir = join(process.cwd(), useFolder);
         try {
           console.log(`Attempting to use fallback directory: ${fallbackDir}`);
           await mkdir(fallbackDir, { recursive: true });
@@ -167,12 +172,57 @@ export async function POST(req: Request) {
       }
     }
     
+    // Process generic file (for payment receipts, etc.)
+    const genericFile = formData.get("file") as File | null;
+    let path: string | undefined;
+    
+    if (genericFile) {
+      try {
+        console.log(`Processing generic file: ${genericFile.name}, size: ${genericFile.size}`);
+        // Generate unique filename
+        const fileExtension = genericFile.name.split(".").pop() || 'jpg';
+        const fileName = `receipt_${uuidv4()}.${fileExtension}`;
+        
+        // Get file bytes
+        const bytes = await genericFile.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        
+        const filePath = join(uploadDir, fileName);
+        console.log(`Writing generic file to: ${filePath}`);
+        
+        // Write file to disk
+        try {
+          await writeFile(filePath, buffer);
+          
+          // Verify file was written
+          if (!existsSync(filePath)) {
+            throw new Error(`File verification failed: ${filePath} does not exist after write operation`);
+          }
+          
+          // Set path for the uploaded file
+          path = `${urlPrefix}/${fileName}`;
+          console.log(`Generic file path set to: ${path}`);
+        } catch (writeError) {
+          console.error(`Error writing file to disk: ${filePath}`, writeError);
+          throw new Error(`Failed to write file to disk: ${(writeError as Error).message}`);
+        }
+        
+      } catch (error) {
+        console.error("Error handling generic file upload:", error);
+        return new NextResponse(
+          JSON.stringify({ error: "Failed to upload file", details: (error as Error).message }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    
     // Return URLs of the uploaded files
     return new NextResponse(
       JSON.stringify({
         message: "Files uploaded successfully",
         captureUrl,
         captureNameUrl,
+        path, // Include the generic file path
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

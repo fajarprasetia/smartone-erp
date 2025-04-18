@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils"
 interface CaptureThumbnailsProps {
   capture?: string | null
   captureName?: string | null
+  tf_dp?: string | null
+  tf_pelunasan?: string | null
   altText?: string
   className?: string
 }
@@ -16,6 +18,8 @@ interface CaptureThumbnailsProps {
 export function CaptureThumbnails({
   capture,
   captureName,
+  tf_dp,
+  tf_pelunasan,
   altText = "Design",
   className
 }: CaptureThumbnailsProps) {
@@ -45,11 +49,13 @@ export function CaptureThumbnails({
   }, [activeImage])
 
   // Create image URLs with proper path
-  const captureUrl = capture ? `/uploads/${capture}` : null
-  const captureNameUrl = captureName ? `/uploads/${captureName}` : null
+  const captureUrl = capture ? (capture.startsWith('/') ? capture : `/uploads/${capture}`) : null
+  const captureNameUrl = captureName ? (captureName.startsWith('/') ? captureName : `/uploads/${captureName}`) : null
+  const dpReceiptUrl = tf_dp ? (tf_dp.startsWith('/') ? tf_dp : `/tfuploads/${tf_dp}`) : null
+  const settlementReceiptUrl = tf_pelunasan ? (tf_pelunasan.startsWith('/') ? tf_pelunasan : `/tfuploads/${tf_pelunasan}`) : null
   
   // Check if any thumbnails should be displayed
-  const hasThumbnails = captureUrl || captureNameUrl
+  const hasThumbnails = captureUrl || captureNameUrl || dpReceiptUrl || settlementReceiptUrl
   
   if (!hasThumbnails) {
     return <span className="text-muted-foreground">None</span>
@@ -62,6 +68,7 @@ export function CaptureThumbnails({
         <div 
           className="relative h-8 w-8 cursor-pointer rounded-sm border border-border/50 overflow-hidden hover:border-primary/50 transition-colors"
           onClick={() => openImage(captureUrl, "Design Preview")}
+          title="Design Preview"
         >
           <Image
             src={captureUrl}
@@ -81,10 +88,51 @@ export function CaptureThumbnails({
         <div 
           className="relative h-8 w-8 cursor-pointer rounded-sm border border-border/50 overflow-hidden hover:border-primary/50 transition-colors"
           onClick={() => openImage(captureNameUrl, "File Name Preview")}
+          title="File Name Preview"
         >
           <Image
             src={captureNameUrl}
             alt={`${altText} file name`}
+            width={32}
+            height={32}
+            className="object-contain"
+          />
+          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+            <MoveUpRight className="h-3 w-3 text-white drop-shadow-md" />
+          </div>
+        </div>
+      )}
+      
+      {/* DP Receipt thumbnail */}
+      {dpReceiptUrl && (
+        <div 
+          className="relative h-8 w-8 cursor-pointer rounded-sm border border-amber-300 border-2 overflow-hidden hover:border-amber-500 transition-colors"
+          onClick={() => openImage(dpReceiptUrl, "Down Payment Receipt")}
+          title="Down Payment Receipt"
+        >
+          <Image
+            src={dpReceiptUrl}
+            alt="DP Receipt"
+            width={32}
+            height={32}
+            className="object-contain"
+          />
+          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+            <MoveUpRight className="h-3 w-3 text-white drop-shadow-md" />
+          </div>
+        </div>
+      )}
+      
+      {/* Settlement Receipt thumbnail */}
+      {settlementReceiptUrl && (
+        <div 
+          className="relative h-8 w-8 cursor-pointer rounded-sm border border-green-300 border-2 overflow-hidden hover:border-green-500 transition-colors"
+          onClick={() => openImage(settlementReceiptUrl, "Settlement Receipt")}
+          title="Settlement Receipt"
+        >
+          <Image
+            src={settlementReceiptUrl}
+            alt="Settlement Receipt"
             width={32}
             height={32}
             className="object-contain"

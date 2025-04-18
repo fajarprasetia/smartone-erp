@@ -682,6 +682,7 @@ export function useOrderData() {
       // Process total price - convert to string to ensure database compatibility
       totalPrice: data.totalPrice ? String(data.totalPrice) : "",
       nominal: data.totalPrice ? String(data.totalPrice) : "", // Ensure nominal is sent as string
+      sisa: data.totalPrice ? String(data.totalPrice) : "", // Also set sisa equal to totalPrice
       // Include additional costs as individual fields rather than a JSON string
       ...additionalCostFields,
       // Process status fields - but only include if they have values

@@ -70,8 +70,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-6 relative z-0 overflow-hidden print:overflow-visible">
-          <div className="glass-card h-full p-6 rounded-xl border border-white/30 dark:border-white/10 overflow-auto print:overflow-visible">
+        <main className="flex-1 p-0.75 relative z-0 overflow-hidden print:overflow-visible">
+          <div className="glass-card h-full p-2 rounded-xl border border-white/10 dark:border-white/10 overflow-auto print:overflow-visible">
             {children}
           </div>
         </main>

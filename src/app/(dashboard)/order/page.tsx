@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { 
   Search, 
@@ -21,7 +21,10 @@ import {
   PlayCircle,
   CheckCircle,
   Truck,
-  XCircle
+  XCircle,
+  CreditCard,
+  DollarSign,
+  Ban
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -60,6 +63,13 @@ import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DialogModal } from "@/components/ui/dialog-modal"
 import { CaptureThumbnails } from "@/components/design/capture-thumbnails"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+import { formatCurrency } from "@/lib/utils"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 // Define the OrderItem interface based on requirements
 interface OrderItem {
@@ -104,6 +114,25 @@ interface OrderItem {
   catatan_design?: string | null
   capture?: string | null
   capture_name?: string | null
+  nominal?: number | null
+  dp?: number | null
+  sisa?: number | null
+  tgl_dp?: Date | null
+  tgl_lunas?: Date | null
+  jenis_pembayaran?: string | null
+  tf_dp?: string | null
+  tf_pelunasan?: string | null
+  catatan_tf?: string | null
+  biaya_tambahan?: string | null
+}
+
+// Payment Form Data interface
+interface PaymentFormData {
+  date: Date
+  paymentMethod: string
+  payment: number
+  notes: string
+  file?: File | null
 }
 
 // Pagination interface
@@ -421,19 +450,680 @@ const OrderSpkModal = ({ order, open, onOpenChange }: {
   );
 };
 
+// DP Payment Form
+const DpPaymentForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => void }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState<PaymentFormData>({
+    date: new Date(),
+    paymentMethod: "Transfer",
+    payment: order.nominal ? Math.ceil(order.nominal / 2) : 0,
+    notes: "",
+    file: null
+  })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.payment) {
+      toast.error("Please enter a payment amount")
+      return
+    }
+    
+    if (!formData.file && formData.paymentMethod === "Transfer") {
+      toast.error("Please upload a transfer receipt")
+      return
+    }
+    
+    try {
+      setIsLoading(true)
+      
+      // Create form data for file upload
+      const formUploadData = new FormData()
+      if (formData.file) {
+        formUploadData.append('file', formData.file)
+      }
+      
+      // Upload file if exists
+      let uploadedFilePath = null
+      if (formData.file) {
+        const uploadResp = await fetch('/api/upload?folder=tfuploads', {
+          method: 'POST',
+          body: formUploadData
+        })
+        
+        if (!uploadResp.ok) {
+          throw new Error('File upload failed')
+        }
+        
+        const uploadData = await uploadResp.json()
+        uploadedFilePath = uploadData.path
+      }
+      
+      // Update order with payment info using the DP API endpoint
+      const updateResp = await fetch(`/api/orders/payment/dp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          paymentDate: formData.date,
+          paymentMethod: formData.paymentMethod,
+          payment: formData.payment,
+          notes: formData.notes,
+          receiptPath: uploadedFilePath
+        })
+      })
+      
+      if (!updateResp.ok) {
+        const errorData = await updateResp.json()
+        throw new Error(errorData.error || 'Failed to update order payment')
+      }
+      
+      toast.success("Down payment recorded successfully")
+      setIsOpen(false)
+      onSuccess()
+    } catch (error) {
+      console.error("Error processing down payment:", error)
+      toast.error("Failed to process down payment")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({
+        ...formData,
+        file: e.target.files[0]
+      })
+    }
+  }
+  
+  const minDownPayment = order.nominal ? Math.ceil(order.nominal / 2) : 0
+  
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="ml-2"
+          disabled={!!order.dp || order.biaya_tambahan === "LUNAS" || order.biaya_tambahan === "NO DP"}
+        >
+          <CreditCard className="h-4 w-4 mr-2" /> DP
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[350px] p-4">
+        <form onSubmit={handleSubmit}>
+          <h3 className="font-medium text-lg mb-2">Record Down Payment</h3>
+          
+          <div className="space-y-1 mb-2">
+            <p className="text-sm text-muted-foreground">Total Order: <span className="font-semibold text-foreground">{formatCurrency(order.nominal || 0)}</span></p>
+            <p className="text-sm text-muted-foreground">Min. Downpayment: <span className="font-semibold text-foreground">{formatCurrency(minDownPayment)}</span></p>
+          </div>
+          
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="dp-date">Payment Date</Label>
+              <div className="border rounded-md p-2">
+                <Calendar
+                  mode="single"
+                  selected={formData.date}
+                  onSelect={(date) => date && setFormData({...formData, date})}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="dp-payment-method">Payment Method</Label>
+              <Select 
+                value={formData.paymentMethod} 
+                onValueChange={(value) => setFormData({...formData, paymentMethod: value})}
+              >
+                <SelectTrigger id="dp-payment-method">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Transfer">Transfer</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {formData.paymentMethod === "Transfer" && (
+              <div className="space-y-2">
+                <Label htmlFor="dp-receipt">Upload Receipt</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="dp-receipt"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                    className="hidden"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full justify-start"
+                  >
+                    {formData.file ? formData.file.name : "Select file"}
+                  </Button>
+                  {formData.file && (
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => setFormData({...formData, file: null})}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="dp-amount">Payment Amount</Label>
+              <Input
+                id="dp-amount"
+                type="number"
+                min={minDownPayment}
+                value={formData.payment || ""}
+                onChange={(e) => setFormData({...formData, payment: parseInt(e.target.value) || 0})}
+                placeholder="Enter payment amount"
+              />
+              {formData.payment < minDownPayment && (
+                <p className="text-xs text-red-500">Amount must be at least {formatCurrency(minDownPayment)}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="dp-notes">Notes</Label>
+              <Textarea
+                id="dp-notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Payment notes (optional)"
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading || (formData.payment < minDownPayment)}
+              >
+                {isLoading ? "Processing..." : "Confirm"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// Settle Payment Form
+const SettlePaymentForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => void }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [formData, setFormData] = useState<PaymentFormData>({
+    date: new Date(),
+    paymentMethod: "Transfer",
+    payment: order.sisa || 0,
+    notes: "",
+    file: null
+  })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.payment) {
+      toast.error("Please enter a payment amount")
+      return
+    }
+    
+    if (!formData.file && formData.paymentMethod === "Transfer") {
+      toast.error("Please upload a transfer receipt")
+      return
+    }
+    
+    // If payment is less than remaining, show confirmation
+    if (formData.payment < (order.sisa || 0)) {
+      setShowConfirmation(true)
+      return
+    }
+    
+    // Otherwise proceed with payment
+    await processPayment()
+  }
+  
+  const processPayment = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Create form data for file upload
+      const formUploadData = new FormData()
+      if (formData.file) {
+        formUploadData.append('file', formData.file)
+      }
+      
+      // Upload file if exists
+      let uploadedFilePath = null
+      if (formData.file) {
+        const uploadResp = await fetch('/api/upload?folder=tfuploads', {
+          method: 'POST',
+          body: formUploadData
+        })
+        
+        if (!uploadResp.ok) {
+          throw new Error('File upload failed')
+        }
+        
+        const uploadData = await uploadResp.json()
+        uploadedFilePath = uploadData.path
+      }
+      
+      // Update order with payment info using the settle API endpoint
+      const updateResp = await fetch(`/api/orders/payment/settle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          paymentDate: formData.date,
+          paymentMethod: formData.paymentMethod,
+          payment: formData.payment,
+          notes: formData.notes,
+          receiptPath: uploadedFilePath
+        })
+      })
+      
+      if (!updateResp.ok) {
+        const errorData = await updateResp.json()
+        throw new Error(errorData.error || 'Failed to update order payment')
+      }
+      
+      const responseData = await updateResp.json()
+      
+      toast.success(responseData.fullyPaid 
+        ? "Payment completed successfully" 
+        : "Partial payment recorded successfully"
+      )
+      setShowConfirmation(false)
+      setIsOpen(false)
+      onSuccess()
+    } catch (error) {
+      console.error("Error processing payment:", error)
+      toast.error("Failed to process payment")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false)
+  }
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({
+        ...formData,
+        file: e.target.files[0]
+      })
+    }
+  }
+  
+  const minDownPayment = order.nominal ? Math.ceil(order.nominal / 2) : 0
+  
+  return (
+    <Popover open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        setShowConfirmation(false)
+      }
+      setIsOpen(open)
+    }}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="default" 
+          size="sm"
+          disabled={order.sisa === 0 || order.biaya_tambahan === "LUNAS" || !order.dp}
+        >
+          <DollarSign className="h-4 w-4 mr-2" /> Settle
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[350px] p-4">
+        {showConfirmation ? (
+          <div className="space-y-4">
+            <h3 className="font-medium text-lg">Partial Payment Confirmation</h3>
+            <p>You're submitting a payment of {formatCurrency(formData.payment)} which is less than the remaining balance of {formatCurrency(order.sisa || 0)}.</p>
+            <p>This will leave a remaining balance of {formatCurrency((order.sisa || 0) - formData.payment)}.</p>
+            <p>Would you like to proceed?</p>
+            
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleCancelConfirmation}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={processPayment}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : "Confirm"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <h3 className="font-medium text-lg mb-2">Settle Payment</h3>
+            
+            <div className="space-y-1 mb-2">
+              <p className="text-sm text-muted-foreground">Total Order: <span className="font-semibold text-foreground">{formatCurrency(order.nominal || 0)}</span></p>
+              <p className="text-sm text-muted-foreground">Remaining Payment: <span className="font-semibold text-foreground">{formatCurrency(order.sisa || 0)}</span></p>
+              <p className="text-sm text-muted-foreground">Min. Downpayment: <span className="font-semibold text-foreground">{formatCurrency(minDownPayment)}</span></p>
+            </div>
+            
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="settle-date">Payment Date</Label>
+                <div className="border rounded-md p-2">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date}
+                    onSelect={(date) => date && setFormData({...formData, date})}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="settle-payment-method">Payment Method</Label>
+                <Select 
+                  value={formData.paymentMethod} 
+                  onValueChange={(value) => setFormData({...formData, paymentMethod: value})}
+                >
+                  <SelectTrigger id="settle-payment-method">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Transfer">Transfer</SelectItem>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {formData.paymentMethod === "Transfer" && (
+                <div className="space-y-2">
+                  <Label htmlFor="settle-receipt">Upload Receipt</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="settle-receipt"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      ref={fileInputRef}
+                      className="hidden"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full justify-start"
+                    >
+                      {formData.file ? formData.file.name : "Select file"}
+                    </Button>
+                    {formData.file && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setFormData({...formData, file: null})}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="settle-amount">Payment Amount</Label>
+                <Input
+                  id="settle-amount"
+                  type="number"
+                  min={1}
+                  max={order.sisa || 0}
+                  value={formData.payment || ""}
+                  onChange={(e) => setFormData({...formData, payment: parseInt(e.target.value) || 0})}
+                  placeholder="Enter payment amount"
+                />
+                {formData.payment < (order.sisa || 0) && (
+                  <p className="text-xs text-amber-500">This is a partial payment. Full payment is {formatCurrency(order.sisa || 0)}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="settle-notes">Notes</Label>
+                <Textarea
+                  id="settle-notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  placeholder="Payment notes (optional)"
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsOpen(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || formData.payment <= 0 || formData.payment > (order.sisa || 0)}
+                >
+                  {isLoading ? "Processing..." : "Confirm"}
+                </Button>
+              </div>
+            </div>
+          </form>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// No DP Form
+const NoDpForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => void }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Use the no-dp API endpoint
+      const updateResp = await fetch(`/api/orders/payment/no-dp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId: order.id
+        })
+      })
+      
+      if (!updateResp.ok) {
+        const errorData = await updateResp.json()
+        throw new Error(errorData.error || 'Failed to update order payment status')
+      }
+      
+      toast.success("Order marked as NO DP")
+      setIsOpen(false)
+      onSuccess()
+    } catch (error) {
+      console.error("Error updating NO DP status:", error)
+      toast.error("Failed to update payment status")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="ml-2"
+          disabled={!!order.dp || order.biaya_tambahan === "LUNAS" || order.biaya_tambahan === "NO DP"}
+        >
+          <Ban className="h-4 w-4 mr-2" /> NO DP
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[350px] p-4">
+        <div className="space-y-4">
+          <h3 className="font-medium text-lg">Confirm No Down Payment</h3>
+          <p>No down payment for this order, confirm?</p>
+          
+          <div className="flex justify-end space-x-2 pt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleConfirm}
+              disabled={isLoading}
+            >
+              {isLoading ? "Processing..." : "Confirm"}
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// Image Thumbnail component for displaying payment receipts
+const ImageThumbnail = ({ src, alt, onClick }: { src: string | null | undefined, alt: string, onClick?: () => void }) => {
+  if (!src) return null
+  
+  // Ensure the src URL is properly formatted with a leading slash if it's a relative path
+  const formattedSrc = src.startsWith('/') || src.startsWith('http') ? src : `/${src}`
+  
+  // Determine which prop to pass based on the alt text
+  if (alt.includes("DP")) {
+    return <CaptureThumbnails tf_dp={formattedSrc} altText={alt} />;
+  } else if (alt.includes("Settlement") || alt.includes("Pelunasan")) {
+    return <CaptureThumbnails tf_pelunasan={formattedSrc} altText={alt} />;
+  }
+  
+  // Fallback to old implementation for other cases
+  return (
+    <div 
+      className="relative w-12 h-12 overflow-hidden rounded border cursor-pointer hover:opacity-80"
+      onClick={onClick}
+    >
+      <Image 
+        src={formattedSrc}
+        alt={alt}
+        fill
+        className="object-cover"
+      />
+    </div>
+  )
+}
+
+// Receipt modal to show full-size image
+const ReceiptModal = ({ 
+  imageUrl, 
+  isOpen, 
+  onClose 
+}: { 
+  imageUrl: string | null, 
+  isOpen: boolean, 
+  onClose: () => void 
+}) => {
+  if (!isOpen || !imageUrl) return null
+  
+  // Ensure the imageUrl is properly formatted with a leading slash if it's a relative path
+  const formattedImageUrl = imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/') 
+    ? imageUrl 
+    : `/${imageUrl}`
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Payment Receipt</DialogTitle>
+        </DialogHeader>
+        <div className="relative w-full h-[60vh]">
+          <Image 
+            src={formattedImageUrl} 
+            alt="Payment receipt" 
+            fill 
+            className="object-contain"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function OrderPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [drafts, setDrafts] = useState<OrderItem[]>([])
+  const [payments, setPayments] = useState<OrderItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isDraftsLoading, setIsDraftsLoading] = useState(true)
+  const [isPaymentsLoading, setIsPaymentsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [draftsSearchQuery, setDraftsSearchQuery] = useState("")
+  const [paymentsSearchQuery, setPaymentsSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("orders")
+  
+  // Receipt modal state
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [activeReceiptUrl, setActiveReceiptUrl] = useState<string | null>(null)
   
   // Sorting state - Use created_at by default for reliable date sorting
   const [ordersSorting, setOrdersSorting] = useState<SortOption>({ field: "created_at", order: "desc" })
   const [draftsSorting, setDraftsSorting] = useState<SortOption>({ field: "created_at", order: "desc" })
+  const [paymentsSorting, setPaymentsSorting] = useState<SortOption>({ field: "created_at", order: "desc" })
   
   // Modal state for SPK details
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null)
@@ -450,8 +1140,14 @@ export default function OrderPage() {
     totalPages: 0,
     currentPage: 1
   })
+  const [paymentsPagination, setPaymentsPagination] = useState<Pagination>({
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: 1
+  })
   const [pageSize, setPageSize] = useState(10)
   const [draftsPageSize, setDraftsPageSize] = useState(10)
+  const [paymentsPageSize, setPaymentsPageSize] = useState(10)
   
   // Fetch orders
   const fetchOrders = async (page = 1, pageSize = 10, searchTerm = "", sorting: SortOption = ordersSorting) => {
@@ -525,6 +1221,42 @@ export default function OrderPage() {
     }
   }
   
+  // Fetch payments
+  const fetchPayments = async (page = 1, pageSize = 10, searchTerm = "", sorting: SortOption = paymentsSorting) => {
+    try {
+      setIsPaymentsLoading(true)
+      // Get orders that need payment processing
+      let url = `/api/orders?page=${page}&pageSize=${pageSize}&sortField=${sorting.field}&sortOrder=${sorting.order}&exclude=PENDING`
+      
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`
+      }
+      
+      const response = await fetch(url)
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch payment orders")
+      }
+      
+      const data = await response.json()
+      
+      setPayments(data.orders || [])
+      
+      // Update pagination with the server-provided counts
+      setPaymentsPagination({
+        totalCount: data.totalCount || 0,
+        totalPages: data.totalPages || 1,
+        currentPage: data.currentPage || 1
+      })
+      
+    } catch (error) {
+      console.error("Error fetching payment orders:", error)
+      toast.error("Failed to load payment orders")
+    } finally {
+      setIsPaymentsLoading(false)
+    }
+  }
+  
   // Reset to page 1 when search query changes
   useEffect(() => {
     setPagination(prev => ({
@@ -540,6 +1272,13 @@ export default function OrderPage() {
     }));
   }, [draftsSearchQuery])
   
+  useEffect(() => {
+    setPaymentsPagination(prev => ({
+      ...prev,
+      currentPage: 1
+    }));
+  }, [paymentsSearchQuery])
+  
   // Fetch orders when pagination, pageSize, searchQuery, or sorting changes
   useEffect(() => {
     fetchOrders(pagination.currentPage, pageSize, searchQuery, ordersSorting)
@@ -550,10 +1289,16 @@ export default function OrderPage() {
     fetchDrafts(draftsPagination.currentPage, draftsPageSize, draftsSearchQuery, draftsSorting)
   }, [draftsPagination.currentPage, draftsPageSize, draftsSearchQuery, draftsSorting])
   
+  // Fetch payments when pagination, pageSize, searchQuery, or sorting changes
+  useEffect(() => {
+    fetchPayments(paymentsPagination.currentPage, paymentsPageSize, paymentsSearchQuery, paymentsSorting)
+  }, [paymentsPagination.currentPage, paymentsPageSize, paymentsSearchQuery, paymentsSorting])
+  
   // Initial fetch on component mount
   useEffect(() => {
     fetchOrders(1, pageSize)
     fetchDrafts(1, draftsPageSize)
+    fetchPayments(1, paymentsPageSize)
   }, [])
   
   // Handle sorting changes for orders
@@ -567,6 +1312,14 @@ export default function OrderPage() {
   // Handle sorting changes for drafts
   const handleDraftsSort = (field: string) => {
     setDraftsSorting(prev => ({
+      field,
+      order: prev.field === field && prev.order === "desc" ? "asc" : "desc"
+    }))
+  }
+  
+  // Handle sorting changes for payments
+  const handlePaymentsSort = (field: string) => {
+    setPaymentsSorting(prev => ({
       field,
       order: prev.field === field && prev.order === "desc" ? "asc" : "desc"
     }))
@@ -618,6 +1371,13 @@ export default function OrderPage() {
     debouncedSearch(value, true) // Debounce the actual API call
   }
   
+  // Handle search input change for payments
+  const handlePaymentsSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setPaymentsSearchQuery(value) // Update the input field immediately for UI responsiveness
+    debouncedSearch(value, false) // Debounce the actual API call
+  }
+  
   // Format date
   const formatDate = (dateValue: Date | string | null | undefined) => {
     if (!dateValue) return "N/A"
@@ -641,6 +1401,13 @@ export default function OrderPage() {
     
     fetchDrafts(newPage, draftsPageSize, draftsSearchQuery, draftsSorting);
   }
+
+  // Handle page change for payments
+  const handlePaymentsPageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > paymentsPagination.totalPages) return;
+    
+    fetchPayments(newPage, paymentsPageSize, paymentsSearchQuery, paymentsSorting);
+  }
   
   // Handle page size change for orders
   const handlePageSizeChange = (newSize: number) => {
@@ -652,6 +1419,12 @@ export default function OrderPage() {
   const handleDraftsPageSizeChange = (newSize: number) => {
     setDraftsPageSize(newSize);
     fetchDrafts(1, newSize, draftsSearchQuery, draftsSorting);
+  }
+
+  // Handle page size change for payments
+  const handlePaymentsPageSizeChange = (newSize: number) => {
+    setPaymentsPageSize(newSize);
+    fetchPayments(1, newSize, paymentsSearchQuery, paymentsSorting);
   }
   
   // Handle view order
@@ -862,6 +1635,32 @@ export default function OrderPage() {
     }
   }
 
+  // Handle payment success
+  const handlePaymentSuccess = () => {
+    // Refetch all data after successful payment
+    fetchOrders(pagination.currentPage, pageSize, searchQuery, ordersSorting)
+    fetchDrafts(draftsPagination.currentPage, draftsPageSize, draftsSearchQuery, draftsSorting)
+    fetchPayments(paymentsPagination.currentPage, paymentsPageSize, paymentsSearchQuery, paymentsSorting)
+  }
+  
+  // Receipt modal handlers
+  const handleOpenReceiptModal = (imageUrl: string | null | undefined) => {
+    if (imageUrl) {
+      setActiveReceiptUrl(imageUrl)
+      setIsReceiptModalOpen(true)
+    }
+  }
+  
+  const handleCloseReceiptModal = () => {
+    setIsReceiptModalOpen(false)
+    setActiveReceiptUrl(null)
+  }
+  
+  // Add ReceiptModal component to the JSX
+  useEffect(() => {
+    // ... existing code ...
+  }, [activeReceiptUrl])
+
   return (
     <div className="container mx-auto space-y-4 h-full flex flex-col overflow-visible">
       {/* Page Header */}
@@ -891,10 +1690,12 @@ export default function OrderPage() {
         </div>
       </div>
       
-      <Tabs defaultValue="orders" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 mb-4 w-[200px]">
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="drafts">Pending</TabsTrigger>
+      {/* Tabs */}
+      <Tabs defaultValue="orders" onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
+          <TabsTrigger value="orders">Active Orders</TabsTrigger>
+          <TabsTrigger value="drafts">Pending Orders</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
         
         <TabsContent value="orders" className="space-y-4 mt-0">
@@ -1344,6 +2145,377 @@ export default function OrderPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="payments" className="space-y-4 mt-0">
+          {/* Search for Payments */}
+          <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
+            <div className="container px-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search payment orders by SPK, project, customer, product..."
+                    className="pl-10 bg-background/50 border-border/50 focus-visible:ring-primary/70"
+                    value={paymentsSearchQuery}
+                    onChange={handlePaymentsSearchChange}
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full md:w-auto bg-background/50 border-border/50 hover:bg-background/70"
+                  onClick={() => {
+                    setPaymentsSearchQuery("");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Payment Status Tabs */}
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid grid-cols-3 w-full md:w-[400px] mb-4">
+              <TabsTrigger value="all">All Payments</TabsTrigger>
+              <TabsTrigger value="settled">Settled</TabsTrigger>
+              <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all">
+              <Card className="flex-1 flex flex-col overflow-visible">
+                <CardHeader className="pb-2">
+                  <CardTitle>All Orders Payment Status</CardTitle>
+                  <CardDescription>
+                    View all orders requiring payment processing.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col overflow-visible">
+                  {isPaymentsLoading ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <div key={index} className="flex space-x-4 items-center">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-md border flex-1 flex flex-col">
+                      <div className="overflow-auto flex-1">
+                        <Table>
+                          <TableHeader className="sticky top-0 bg-background z-10">
+                            <TableRow>
+                              <SortableTableHead field="created_at" sorting={paymentsSorting} onSort={handlePaymentsSort}>Date</SortableTableHead>
+                              <SortableTableHead field="no_project" sorting={paymentsSorting} onSort={handlePaymentsSort}>No Project</SortableTableHead>
+                              <SortableTableHead field="spk" sorting={paymentsSorting} onSort={handlePaymentsSort}>SPK</SortableTableHead>
+                              <TableHead>Customer</TableHead>
+                              <SortableTableHead field="produk" sorting={paymentsSorting} onSort={handlePaymentsSort}>Product</SortableTableHead>
+                              <TableHead>Status</TableHead>
+                              <SortableTableHead field="nominal" sorting={paymentsSorting} onSort={handlePaymentsSort}>Total</SortableTableHead>
+                              <SortableTableHead field="dp" sorting={paymentsSorting} onSort={handlePaymentsSort}>Down Payment</SortableTableHead>
+                              <SortableTableHead field="sisa" sorting={paymentsSorting} onSort={handlePaymentsSort}>Remaining</SortableTableHead>
+                              <TableHead>Payment Status</TableHead>
+                              <TableHead>Receipts</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {payments.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={12} className="text-center py-6 text-muted-foreground">
+                                  {paymentsSearchQuery 
+                                    ? "No payment orders match your search criteria" 
+                                    : "No payment orders found"}
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              payments.map((order) => (
+                                <TableRow key={order.id} className="hover:bg-muted/50">
+                                  <TableCell>{formatDate(order.created_at || order.tanggal)}</TableCell>
+                                  <TableCell>{order.no_project || "N/A"}</TableCell>
+                                  <TableCell>
+                                    <span 
+                                      className="text-primary hover:text-primary/80 cursor-pointer hover:underline"
+                                      onClick={() => handleSpkClick(order)}
+                                    >
+                                      {order.spk || "N/A"}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>{order.customer?.nama || "N/A"}</TableCell>
+                                  <TableCell>{order.produk || "N/A"}</TableCell>
+                                  <TableCell>{getStatusBadge(order.status || order.statusm)}</TableCell>
+                                  <TableCell>{formatCurrency(order.nominal || 0)}</TableCell>
+                                  <TableCell>{formatCurrency(order.dp || 0)}</TableCell>
+                                  <TableCell>{formatCurrency(order.sisa || 0)}</TableCell>
+                                  <TableCell>
+                                    <Badge 
+                                      variant={
+                                        order.biaya_tambahan === "LUNAS" ? "default" :
+                                        order.biaya_tambahan === "DP" ? "secondary" :
+                                        order.biaya_tambahan === "NO DP" ? "outline" :
+                                        "outline"
+                                      }
+                                    >
+                                      {order.biaya_tambahan === "LUNAS" ? "Paid" :
+                                       order.biaya_tambahan === "DP" ? "Down Payment" :
+                                       order.biaya_tambahan === "NO DP" ? "No DP Required" :
+                                       "Unpaid"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <CaptureThumbnails
+                                      tf_dp={order.tf_dp}
+                                      tf_pelunasan={order.tf_pelunasan}
+                                      altText="Payment"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center space-x-1">
+                                      <NoDpForm order={order} onSuccess={handlePaymentSuccess} />
+                                      <DpPaymentForm order={order} onSuccess={handlePaymentSuccess} />
+                                      <SettlePaymentForm order={order} onSuccess={handlePaymentSuccess} />
+                                    </div>
+                                  </TableCell>
+                                
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      
+                      {/* Pagination Controls for Payments */}
+                      <div className="flex items-center justify-between px-4 py-3 border-t">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground">
+                            Showing <span className="font-medium">{payments.length}</span> of{" "}
+                            <span className="font-medium">{paymentsPagination.totalCount}</span> orders
+                          </p>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handlePaymentsPageChange(1)}
+                            disabled={paymentsPagination.currentPage === 1 || isPaymentsLoading}
+                          >
+                            <span className="sr-only">First page</span>
+                            <ChevronLeft className="h-4 w-4" />
+                            <ChevronLeft className="h-4 w-4 -ml-2" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handlePaymentsPageChange(paymentsPagination.currentPage - 1)}
+                            disabled={paymentsPagination.currentPage === 1 || isPaymentsLoading}
+                          >
+                            <span className="sr-only">Previous page</span>
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          
+                          <span className="text-sm font-medium">
+                            Page {paymentsPagination.currentPage} of {paymentsPagination.totalPages || 1}
+                          </span>
+                          
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handlePaymentsPageChange(paymentsPagination.currentPage + 1)}
+                            disabled={paymentsPagination.currentPage >= paymentsPagination.totalPages || isPaymentsLoading}
+                          >
+                            <span className="sr-only">Next page</span>
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handlePaymentsPageChange(paymentsPagination.totalPages)}
+                            disabled={paymentsPagination.currentPage >= paymentsPagination.totalPages || isPaymentsLoading}
+                          >
+                            <span className="sr-only">Last page</span>
+                            <ChevronRight className="h-4 w-4" />
+                            <ChevronRight className="h-4 w-4 -ml-2" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="settled">
+              <Card className="flex-1 flex flex-col overflow-visible">
+                <CardHeader className="pb-2">
+                  <CardTitle>Settled Orders</CardTitle>
+                  <CardDescription>
+                    Orders with completed payments.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col overflow-visible">
+                  {isPaymentsLoading ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <div key={index} className="flex space-x-4 items-center">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-md border flex-1 flex flex-col">
+                      <div className="overflow-auto flex-1">
+                        <Table>
+                          <TableHeader className="sticky top-0 bg-background z-10">
+                            <TableRow>
+                              <SortableTableHead field="created_at" sorting={paymentsSorting} onSort={handlePaymentsSort}>Date</SortableTableHead>
+                              <SortableTableHead field="no_project" sorting={paymentsSorting} onSort={handlePaymentsSort}>No Project</SortableTableHead>
+                              <SortableTableHead field="spk" sorting={paymentsSorting} onSort={handlePaymentsSort}>SPK</SortableTableHead>
+                              <TableHead>Customer</TableHead>
+                              <SortableTableHead field="produk" sorting={paymentsSorting} onSort={handlePaymentsSort}>Product</SortableTableHead>
+                              <TableHead>Status</TableHead>
+                              <SortableTableHead field="nominal" sorting={paymentsSorting} onSort={handlePaymentsSort}>Total</SortableTableHead>
+                              <SortableTableHead field="tgl_lunas" sorting={paymentsSorting} onSort={handlePaymentsSort}>Payment Date</SortableTableHead>
+                              <TableHead>Payment Method</TableHead>
+                              <TableHead>Receipts</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {payments.filter(order => order.biaya_tambahan === "LUNAS").length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={10} className="text-center py-6 text-muted-foreground">
+                                  {paymentsSearchQuery 
+                                    ? "No settled orders match your search criteria" 
+                                    : "No settled orders found"}
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              payments
+                                .filter(order => order.biaya_tambahan === "LUNAS")
+                                .map((order) => (
+                                  <TableRow key={order.id} className="hover:bg-muted/50">
+                                    <TableCell>{formatDate(order.created_at || order.tanggal)}</TableCell>
+                                    <TableCell>{order.no_project || "N/A"}</TableCell>
+                                    <TableCell>
+                                      <span 
+                                        className="text-primary hover:text-primary/80 cursor-pointer hover:underline"
+                                        onClick={() => handleSpkClick(order)}
+                                      >
+                                        {order.spk || "N/A"}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell>{order.customer?.nama || "N/A"}</TableCell>
+                                    <TableCell>{order.produk || "N/A"}</TableCell>
+                                    <TableCell>{getStatusBadge(order.status || order.statusm)}</TableCell>
+                                    <TableCell>{formatCurrency(order.nominal || 0)}</TableCell>
+                                    <TableCell>{formatDate(order.tgl_lunas)}</TableCell>
+                                    <TableCell>{order.jenis_pembayaran || "N/A"}</TableCell>
+                                    <TableCell>
+                                      <CaptureThumbnails
+                                        tf_dp={order.tf_dp}
+                                        tf_pelunasan={order.tf_pelunasan}
+                                        altText="Payment"
+                                      />
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="unpaid">
+              <Card className="flex-1 flex flex-col overflow-visible">
+                <CardHeader className="pb-2">
+                  <CardTitle>Unpaid Orders</CardTitle>
+                  <CardDescription>
+                    Orders that need payment processing.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col overflow-visible">
+                  {isPaymentsLoading ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <div key={index} className="flex space-x-4 items-center">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-md border flex-1 flex flex-col">
+                      <div className="overflow-auto flex-1">
+                        <Table>
+                          <TableHeader className="sticky top-0 bg-background z-10">
+                            <TableRow>
+                              <SortableTableHead field="created_at" sorting={paymentsSorting} onSort={handlePaymentsSort}>Date</SortableTableHead>
+                              <SortableTableHead field="no_project" sorting={paymentsSorting} onSort={handlePaymentsSort}>No Project</SortableTableHead>
+                              <SortableTableHead field="spk" sorting={paymentsSorting} onSort={handlePaymentsSort}>SPK</SortableTableHead>
+                              <TableHead>Customer</TableHead>
+                              <SortableTableHead field="produk" sorting={paymentsSorting} onSort={handlePaymentsSort}>Product</SortableTableHead>
+                              <TableHead>Status</TableHead>
+                              <SortableTableHead field="nominal" sorting={paymentsSorting} onSort={handlePaymentsSort}>Total</SortableTableHead>
+                              <TableHead>Receipts</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {payments.filter(order => order.biaya_tambahan !== "LUNAS" && order.biaya_tambahan !== "DP" && order.biaya_tambahan !== "NO DP").length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                                  {paymentsSearchQuery 
+                                    ? "No unpaid orders match your search criteria" 
+                                    : "No unpaid orders found"}
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              payments
+                                .filter(order => order.biaya_tambahan !== "LUNAS" && order.biaya_tambahan !== "DP" && order.biaya_tambahan !== "NO DP")
+                                .map((order) => (
+                                  <TableRow key={order.id} className="hover:bg-muted/50">
+                                    <TableCell>{formatDate(order.created_at || order.tanggal)}</TableCell>
+                                    <TableCell>{order.no_project || "N/A"}</TableCell>
+                                    <TableCell>
+                                      <span 
+                                        className="text-primary hover:text-primary/80 cursor-pointer hover:underline"
+                                        onClick={() => handleSpkClick(order)}
+                                      >
+                                        {order.spk || "N/A"}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell>{order.customer?.nama || "N/A"}</TableCell>
+                                    <TableCell>{order.produk || "N/A"}</TableCell>
+                                    <TableCell>{getStatusBadge(order.status || order.statusm)}</TableCell>
+                                    <TableCell>{formatCurrency(order.nominal || 0)}</TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center space-x-1">
+                                        <ImageThumbnail src={order.tf_dp} alt="DP Receipt" onClick={() => handleOpenReceiptModal(order.tf_dp)} />
+                                        <ImageThumbnail src={order.tf_pelunasan} alt="Settle Receipt" onClick={() => handleOpenReceiptModal(order.tf_pelunasan)} />
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center space-x-1">
+                                        <NoDpForm order={order} onSuccess={handlePaymentSuccess} />
+                                        <DpPaymentForm order={order} onSuccess={handlePaymentSuccess} />
+                                        <SettlePaymentForm order={order} onSuccess={handlePaymentSuccess} />
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
       </Tabs>
       
       {/* Order SPK Modal */}
@@ -1351,6 +2523,13 @@ export default function OrderPage() {
         order={selectedOrder} 
         open={isModalOpen} 
         onOpenChange={setIsModalOpen} 
+      />
+      
+      {/* Receipt Modal */}
+      <ReceiptModal 
+        imageUrl={activeReceiptUrl} 
+        isOpen={isReceiptModalOpen} 
+        onClose={handleCloseReceiptModal} 
       />
     </div>
   )
