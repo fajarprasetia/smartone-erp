@@ -16,7 +16,7 @@ export function PaperTab() {
   return (
     <div className="space-y-4">
       <Tabs defaultValue="available" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="bg-transparent grid w-full grid-cols-5">
           <TabsTrigger value="stocks">Stocks</TabsTrigger>
           <TabsTrigger value="available">Available</TabsTrigger>
           <TabsTrigger value="stocksout">Stocks Out</TabsTrigger>

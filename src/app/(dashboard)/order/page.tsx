@@ -1692,7 +1692,7 @@ export default function OrderPage() {
       
       {/* Tabs */}
       <Tabs defaultValue="orders" onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
+        <TabsList className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 grid grid-cols-3 w-full md:w-[400px]">
           <TabsTrigger value="orders">Active Orders</TabsTrigger>
           <TabsTrigger value="drafts">Pending Orders</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
@@ -1700,7 +1700,7 @@ export default function OrderPage() {
         
         <TabsContent value="orders" className="space-y-4 mt-0">
           {/* Search for Orders */}
-      <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
+      <div className="py-4 bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -1725,14 +1725,14 @@ export default function OrderPage() {
         </div>
       </div>
       
-      <Card className="flex-1 flex flex-col overflow-visible">
-        <CardHeader className="pb-2">
+      <Card className="bg-transparent flex-1 flex flex-col overflow-visible">
+        <CardHeader className="bg-transparent pb-2">
           <CardTitle>Orders</CardTitle>
           <CardDescription>
             Manage your customer orders and track their status.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col overflow-visible">
+        <CardContent className="bg-transparent flex-1 flex flex-col overflow-visible">
           {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -1745,7 +1745,7 @@ export default function OrderPage() {
             <div className="rounded-md border flex-1 flex flex-col">
               <div className="overflow-auto flex-1">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableHeader className="sticky top-0 bg-background/50 z-10">
                     <TableRow>
                           <SortableTableHead field="created_at" sorting={ordersSorting} onSort={handleOrdersSort}>Date</SortableTableHead>
                           <SortableTableHead field="no_project" sorting={ordersSorting} onSort={handleOrdersSort}>No Project</SortableTableHead>
@@ -1765,7 +1765,7 @@ export default function OrderPage() {
                   <TableBody>
                     {orders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={12} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={12} className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 text-center py-6 text-muted-foreground">
                           {searchQuery 
                             ? "No orders match your search criteria" 
                             : "No orders found. Add an order to get started!"}
@@ -1924,7 +1924,7 @@ export default function OrderPage() {
         
         <TabsContent value="drafts" className="space-y-4 mt-0">
           {/* Search for Drafts */}
-          <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
+          <div className="py-4 bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
             <div className="container px-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
@@ -1949,7 +1949,7 @@ export default function OrderPage() {
             </div>
           </div>
           
-          <Card className="flex-1 flex flex-col overflow-visible">
+          <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
             <CardHeader className="pb-2">
               <CardTitle>Pending Orders</CardTitle>
               <CardDescription>
@@ -1969,7 +1969,7 @@ export default function OrderPage() {
                 <div className="rounded-md border flex-1 flex flex-col">
                   <div className="overflow-auto flex-1">
                     <Table>
-                      <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableHeader className="sticky top-0 bg-background/50 z-10">
                         <TableRow>
                           <SortableTableHead field="created_at" sorting={draftsSorting} onSort={handleDraftsSort}>Date</SortableTableHead>
                           <SortableTableHead field="no_project" sorting={draftsSorting} onSort={handleDraftsSort}>No Project</SortableTableHead>
@@ -2147,8 +2147,16 @@ export default function OrderPage() {
         </TabsContent>
 
         <TabsContent value="payments" className="space-y-4 mt-0">
+          {/* Payment Status Tabs */}
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 grid grid-cols-3 w-full md:w-[400px] mb-4">
+              <TabsTrigger value="all">All Payments</TabsTrigger>
+              <TabsTrigger value="settled">Settled</TabsTrigger>
+              <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
+            </TabsList>
+
           {/* Search for Payments */}
-          <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
+          <div className="py-4 bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
             <div className="container px-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
@@ -2162,7 +2170,7 @@ export default function OrderPage() {
                 </div>
                 <Button 
                   variant="outline" 
-                  className="w-full md:w-auto bg-background/50 border-border/50 hover:bg-background/70"
+                  className="w-full md:w-auto bg-transparent border-border/50 hover:bg-background/70"
                   onClick={() => {
                     setPaymentsSearchQuery("");
                   }}
@@ -2173,16 +2181,9 @@ export default function OrderPage() {
             </div>
           </div>
           
-          {/* Payment Status Tabs */}
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid grid-cols-3 w-full md:w-[400px] mb-4">
-              <TabsTrigger value="all">All Payments</TabsTrigger>
-              <TabsTrigger value="settled">Settled</TabsTrigger>
-              <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
-            </TabsList>
-
+          
             <TabsContent value="all">
-              <Card className="flex-1 flex flex-col overflow-visible">
+              <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
                 <CardHeader className="pb-2">
                   <CardTitle>All Orders Payment Status</CardTitle>
                   <CardDescription>
@@ -2202,7 +2203,7 @@ export default function OrderPage() {
                     <div className="rounded-md border flex-1 flex flex-col">
                       <div className="overflow-auto flex-1">
                         <Table>
-                          <TableHeader className="sticky top-0 bg-background z-10">
+                          <TableHeader className="sticky top-0 bg-background/50 z-10">
                             <TableRow>
                               <SortableTableHead field="created_at" sorting={paymentsSorting} onSort={handlePaymentsSort}>Date</SortableTableHead>
                               <SortableTableHead field="no_project" sorting={paymentsSorting} onSort={handlePaymentsSort}>No Project</SortableTableHead>
@@ -2345,7 +2346,7 @@ export default function OrderPage() {
             </TabsContent>
 
             <TabsContent value="settled">
-              <Card className="flex-1 flex flex-col overflow-visible">
+              <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
                 <CardHeader className="pb-2">
                   <CardTitle>Settled Orders</CardTitle>
                   <CardDescription>
@@ -2365,7 +2366,7 @@ export default function OrderPage() {
                     <div className="rounded-md border flex-1 flex flex-col">
                       <div className="overflow-auto flex-1">
                         <Table>
-                          <TableHeader className="sticky top-0 bg-background z-10">
+                          <TableHeader className="sticky top-0 bg-background/50 z-10">
                             <TableRow>
                               <SortableTableHead field="created_at" sorting={paymentsSorting} onSort={handlePaymentsSort}>Date</SortableTableHead>
                               <SortableTableHead field="no_project" sorting={paymentsSorting} onSort={handlePaymentsSort}>No Project</SortableTableHead>
@@ -2429,7 +2430,7 @@ export default function OrderPage() {
             </TabsContent>
 
             <TabsContent value="unpaid">
-              <Card className="flex-1 flex flex-col overflow-visible">
+              <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
                 <CardHeader className="pb-2">
                   <CardTitle>Unpaid Orders</CardTitle>
                   <CardDescription>
@@ -2449,7 +2450,7 @@ export default function OrderPage() {
                     <div className="rounded-md border flex-1 flex flex-col">
                       <div className="overflow-auto flex-1">
                         <Table>
-                          <TableHeader className="sticky top-0 bg-background z-10">
+                          <TableHeader className="sticky top-0 bg-background/50 z-10">
                             <TableRow>
                               <SortableTableHead field="created_at" sorting={paymentsSorting} onSort={handlePaymentsSort}>Date</SortableTableHead>
                               <SortableTableHead field="no_project" sorting={paymentsSorting} onSort={handlePaymentsSort}>No Project</SortableTableHead>

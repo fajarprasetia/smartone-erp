@@ -152,7 +152,7 @@ export function OthersAvailableTab() {
   })
 
   return (
-    <Card>
+    <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Available Items</CardTitle>
@@ -268,4 +268,4 @@ export function OthersAvailableTab() {
       />
     </Card>
   )
-} 
+}

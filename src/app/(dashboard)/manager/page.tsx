@@ -13,11 +13,11 @@ export default async function ManagerPage() {
         <h2 className="text-3xl font-bold tracking-tight">Manager Approvals</h2>
       </div>
       
-      <Tabs defaultValue="pending">
-        <TabList>
-          <TabTrigger value="pending">Pending Approvals</TabTrigger>
-          <TabTrigger value="approved">Approved</TabTrigger>
-          <TabTrigger value="rejects">Rejects</TabTrigger>
+      <Tabs defaultValue="pending" className="w-full">
+        <TabList className="bg-transparent border-b border-border w-full">
+          <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="pending">Pending Approvals</TabTrigger>
+          <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="approved">Approved</TabTrigger>
+          <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="rejects">Rejects</TabTrigger>
         </TabList>
         
         <TabContent value="pending">
@@ -37,10 +37,10 @@ export default async function ManagerPage() {
         </TabContent>
 
         <TabContent value="rejects">
-          <Tabs defaultValue="pending-rejects">
-            <TabList>
-              <TabTrigger value="pending-rejects">Pending Approval</TabTrigger>
-              <TabTrigger value="approved-rejects">Approved</TabTrigger>
+          <Tabs defaultValue="pending-rejects" className="w-full">
+            <TabList className="bg-transparent border-b border-border w-full">
+              <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="pending-rejects">Pending Approval</TabTrigger>
+              <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="approved-rejects">Approved</TabTrigger>
             </TabList>
             
             <TabContent value="pending-rejects">

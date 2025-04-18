@@ -246,13 +246,13 @@ export default function InventoryInboundPage() {
   }, [])
   
   // Fetch inventory items with search support
-  const fetchInventory = async (page = 1, pageSize = 10) => {
+  const fetchInventory = async (page = 1, pageSize = 10, search = "") => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: pageSize.toString(),
-        search: searchQuery.trim()
+        search: search.trim()
       });
 
       const response = await fetch(`/api/inventory/inbound?${params.toString()}`);
@@ -361,7 +361,7 @@ if (!response.ok) {
       </div>
       
       {/* Search and Filter */}
-      <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
+      <div className="py-4 bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1 flex gap-2">
@@ -369,7 +369,7 @@ if (!response.ok) {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search inventory items..."
-                  className="pl-10 bg-background/50 border-border/50 focus-visible:ring-primary/70"
+                  className="pl-10 bg-transparent border-border/50 focus-visible:ring-primary/70"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -384,7 +384,7 @@ if (!response.ok) {
             </div>
             <Button 
               variant="outline" 
-              className="w-full md:w-auto bg-background/50 border-border/50 hover:bg-background/70"
+              className="w-full md:w-auto bg-transparent border-border/50 hover:bg-background/10"
               onClick={() => {
                 setSearchQuery("");
                 fetchInventory(1, pageSize, "");
@@ -396,14 +396,14 @@ if (!response.ok) {
         </div>
       </div>
       
-      <Card className="flex-1 flex flex-col overflow-visible">
-        <CardHeader className="pb-2">
+      <Card className="flex-1 flex flex-col overflow-visible bg-transparent border-border/30 backdrop-blur-md backdrop-saturate-150">
+        <CardHeader className="pb-2 bg-transparent">
           <CardTitle>Inventory Items</CardTitle>
           <CardDescription>
             Manage your fabric inventory and track inbound items.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col overflow-visible">
+        <CardContent className="flex-1 flex flex-col overflow-visible bg-transparent">
           {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -413,10 +413,10 @@ if (!response.ok) {
               ))}
             </div>
           ) : (
-            <div className="rounded-md border flex-1 flex flex-col">
+            <div className="rounded-md border border-border/30 flex-1 flex flex-col">
               <div className="overflow-auto flex-1">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableHeader className="sticky top-0 bg-transparent z-10">
                     <TableRow>
                       <TableHead 
                         className="w-[20%] cursor-pointer hover:bg-muted/50" 
@@ -502,7 +502,7 @@ if (!response.ok) {
                   <TableBody>
                     {filteredItems.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-6 text-muted-foreground bg-transparent">
                           {searchQuery 
                             ? "No items match your search criteria" 
                             : "No inventory items found. Add an item to get started!"}
@@ -512,16 +512,16 @@ if (!response.ok) {
                       filteredItems.map((item) => (
                         <TableRow 
                           key={item.id} 
-                          className="hover:bg-muted/50 h-14"
+                          className="hover:bg-background/10 h-14 bg-transparent"
                         >
-                          <TableCell className="font-medium py-3">{item.nama_bahan || "N/A"}</TableCell>
-                          <TableCell className="py-3">{item.customer_name || "N/A"}</TableCell>
-                          <TableCell className="py-3">{item.lebar_bahan || "N/A"}</TableCell>
-                          <TableCell className="py-3">{item.berat_bahan || "N/A"}</TableCell>
-                          <TableCell className="py-3">{item.est_pjg_bahan || "N/A"}</TableCell>
-                          <TableCell className="py-3">{item.roll || "N/A"}</TableCell>
-                          <TableCell className="py-3">{formatDate(item.tanggal)}</TableCell>
-                          <TableCell className="max-w-xs truncate py-3">
+                          <TableCell className="font-medium py-3 bg-transparent">{item.nama_bahan || "N/A"}</TableCell>
+                          <TableCell className="py-3 bg-transparent">{item.customer_name || "N/A"}</TableCell>
+                          <TableCell className="py-3 bg-transparent">{item.lebar_bahan || "N/A"}</TableCell>
+                          <TableCell className="py-3 bg-transparent">{item.berat_bahan || "N/A"}</TableCell>
+                          <TableCell className="py-3 bg-transparent">{item.est_pjg_bahan || "N/A"}</TableCell>
+                          <TableCell className="py-3 bg-transparent">{item.roll || "N/A"}</TableCell>
+                          <TableCell className="py-3 bg-transparent">{formatDate(item.tanggal)}</TableCell>
+                          <TableCell className="max-w-xs truncate py-3 bg-transparent">
                             {item.keterangan || "N/A"}
                           </TableCell>
                           <TableCell className="py-3">
@@ -541,7 +541,7 @@ if (!response.ok) {
               </div>
               
               {/* Pagination Controls */}
-              <div className="flex items-center justify-between px-4 py-3 border-t">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border/30 bg-transparent">
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-muted-foreground">
                     Showing <span className="font-medium">{filteredItems.length}</span> of{" "}
@@ -552,10 +552,10 @@ if (!response.ok) {
                     value={String(pageSize)}
                     onValueChange={(value) => handlePageSizeChange(parseInt(value))}
                   >
-                    <SelectTrigger className="h-8 w-[80px]">
+                    <SelectTrigger className="h-8 w-[80px] bg-transparent border-border/50 hover:bg-background/10">
                       <SelectValue placeholder={pageSize} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background/90 backdrop-blur-md backdrop-saturate-150 border-border/30">
                       {pageSizeOptions.map((size) => (
                         <SelectItem key={size} value={String(size)}>
                           {size}
@@ -571,6 +571,7 @@ if (!response.ok) {
                     size="icon"
                     onClick={() => handlePageChange(1)}
                     disabled={pagination.page === 1 || isLoading}
+                    className="bg-transparent border-border/50 hover:bg-background/10"
                   >
                     <span className="sr-only">First page</span>
                     <ChevronLeft className="h-4 w-4" />
@@ -581,6 +582,7 @@ if (!response.ok) {
                     size="icon"
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page === 1 || isLoading}
+                    className="bg-transparent border-border/50 hover:bg-background/10"
                   >
                     <span className="sr-only">Previous page</span>
                     <ChevronLeft className="h-4 w-4" />
@@ -595,6 +597,7 @@ if (!response.ok) {
                     size="icon"
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page >= pagination.pageCount || isLoading}
+                    className="bg-transparent border-border/50 hover:bg-background/10"
                   >
                     <span className="sr-only">Next page</span>
                     <ChevronRight className="h-4 w-4" />
@@ -604,6 +607,7 @@ if (!response.ok) {
                     size="icon"
                     onClick={() => handlePageChange(pagination.pageCount)}
                     disabled={pagination.page >= pagination.pageCount || isLoading}
+                    className="bg-transparent border-border/50 hover:bg-background/10"
                   >
                     <span className="sr-only">Last page</span>
                     <ChevronRight className="h-4 w-4" />

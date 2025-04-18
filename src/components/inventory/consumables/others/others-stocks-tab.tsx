@@ -10,7 +10,7 @@ export function OthersStocksTab() {
   const [activeCategory, setActiveCategory] = useState("spareparts")
 
   return (
-    <Card>
+    <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Other Consumables Stock Management</CardTitle>
@@ -48,4 +48,4 @@ export function OthersStocksTab() {
       </CardContent>
     </Card>
   )
-} 
+}

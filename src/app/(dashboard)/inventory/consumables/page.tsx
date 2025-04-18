@@ -18,19 +18,19 @@ export default function ConsumablesPage() {
         <h1 className="text-2xl font-bold tracking-tight">Consumables Management</h1>
       </div>
       
-      <Card>
-        <CardHeader>
+      <Card className="bg-transparent border-border/30 backdrop-blur-md backdrop-saturate-150">
+        <CardHeader className="bg-transparent">
           <CardTitle>Consumables Inventory</CardTitle>
           <CardDescription>
             Manage paper, ink, and other consumable materials
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-transparent">
           <Tabs defaultValue="paper" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="paper">Paper</TabsTrigger>
-              <TabsTrigger value="ink">Ink</TabsTrigger>
-              <TabsTrigger value="others">Others</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-transparent border-border/30">
+              <TabsTrigger value="paper" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none">Paper</TabsTrigger>
+              <TabsTrigger value="ink" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none">Ink</TabsTrigger>
+              <TabsTrigger value="others" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none">Others</TabsTrigger>
             </TabsList>
             
             <TabsContent value="paper" className="mt-4">

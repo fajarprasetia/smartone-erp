@@ -794,7 +794,7 @@ export default function DesignPage() {
         onValueChange={(value) => setActiveTab(value as "design" | "process")}
         className="w-full"
       >
-        <TabsList className="grid grid-cols-2 max-w-[400px] mb-4">
+        <TabsList className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6grid grid-cols-2 max-w-[400px] mb-4">
           <TabsTrigger value="design">Design Orders</TabsTrigger>
           <TabsTrigger value="process">In Process</TabsTrigger>
         </TabsList>
@@ -802,7 +802,7 @@ export default function DesignPage() {
         {/* Design Orders Tab Content */}
         <TabsContent value="design" className="space-y-4">
           {/* Search box for Design Orders */}
-      <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
+      <div className="py-4 bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -829,7 +829,7 @@ export default function DesignPage() {
       </div>
       
           {/* Design Orders Table */}
-      <Card className="flex-1 flex flex-col overflow-visible">
+      <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
         <CardHeader className="pb-2">
           <CardTitle>Design Orders</CardTitle>
           <CardDescription>
@@ -849,7 +849,7 @@ export default function DesignPage() {
             <div className="rounded-md border flex-1 flex flex-col">
               <div className="overflow-auto flex-1">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableHeader className="sticky top-0 bg-background/50 z-10">
                     <TableRow>
                       <SortableTableHead field="created_at" sorting={ordersSorting} onSort={handleOrdersSort}>Date</SortableTableHead>
                       <SortableTableHead field="spk" sorting={ordersSorting} onSort={handleOrdersSort}>SPK</SortableTableHead>
@@ -1024,7 +1024,7 @@ export default function DesignPage() {
         {/* In Process Tab Content */}
         <TabsContent value="process" className="space-y-4">
           {/* Search box for In Process */}
-          <div className="py-4 bg-background/80 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
+          <div className="py-4 bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6">
             <div className="container px-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
@@ -1051,7 +1051,7 @@ export default function DesignPage() {
           </div>
           
           {/* In Process Table */}
-          <Card className="flex-1 flex flex-col overflow-visible">
+          <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
             <CardHeader className="pb-2">
               <CardTitle>In-Process Designs</CardTitle>
               <CardDescription>
@@ -1071,7 +1071,7 @@ export default function DesignPage() {
                 <div className="rounded-md border flex-1 flex flex-col">
                   <div className="overflow-auto flex-1">
                     <Table>
-                      <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableHeader className="sticky top-0 bg-background/50 z-10">
                         <TableRow>
                           <SortableTableHead field="created_at" sorting={processOrdersSorting} onSort={handleProcessOrdersSort}>Date</SortableTableHead>
                           <SortableTableHead field="spk" sorting={processOrdersSorting} onSort={handleProcessOrdersSort}>SPK</SortableTableHead>

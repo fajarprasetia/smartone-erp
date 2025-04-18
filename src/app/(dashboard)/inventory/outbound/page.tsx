@@ -181,7 +181,7 @@ export default function InventoryOutboundPage() {
       const filtered = orders.filter(order => 
         (order.spk && order.spk.toLowerCase().includes(lowercaseQuery)) ||
         (order.produk && order.produk.toLowerCase().includes(lowercaseQuery)) ||
-        (order.customer?.nama && order.customer.nama.toLowerCase().includes(lowercaseQuery))
+        (order.customer?.name && order.customer.name.toLowerCase().includes(lowercaseQuery))
       )
       setFilteredOrders(filtered)
     } else {
@@ -259,24 +259,24 @@ export default function InventoryOutboundPage() {
           <Input
             type="search"
             placeholder="Search by SPK, product, or customer..."
-            className="pl-8"
+            className="pl-8 bg-transparent border-border/50 focus-visible:ring-primary/70"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button variant="outline" size="icon" onClick={fetchOrders} title="Refresh">
+        <Button variant="outline" size="icon" onClick={fetchOrders} title="Refresh" className="bg-transparent border-border/50 hover:bg-background/10">
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
       
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="bg-transparent border-border/30 backdrop-blur-md backdrop-saturate-150">
+        <CardHeader className="pb-2 bg-transparent">
           <CardTitle>Ready for Handover</CardTitle>
           <CardDescription>
             Manage outbound orders that are approved and ready for handover.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-transparent">
           {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -286,9 +286,9 @@ export default function InventoryOutboundPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border border-border/30">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-transparent z-10">
                   <TableRow>
                     <TableHead>SPK</TableHead>
                     <TableHead>Date</TableHead>
@@ -302,7 +302,7 @@ export default function InventoryOutboundPage() {
                 <TableBody>
                   {filteredOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-6 text-muted-foreground bg-transparent">
                         {searchQuery 
                           ? "No orders match your search criteria" 
                           : "No outbound orders found."}
@@ -312,14 +312,15 @@ export default function InventoryOutboundPage() {
                     filteredOrders.map((order) => (
                       <TableRow 
                         key={order.id}
+                        className="bg-transparent hover:bg-background/10"
                       >
-                        <TableCell className="font-medium">{order.spk || "N/A"}</TableCell>
-                        <TableCell>{formatDate(order.tanggal)}</TableCell>
-                        <TableCell>{order.produk || "N/A"}</TableCell>
-                        <TableCell>
+                        <TableCell className="font-medium bg-transparent">{order.spk || "N/A"}</TableCell>
+                        <TableCell className="bg-transparent">{formatDate(order.tanggal)}</TableCell>
+                        <TableCell className="bg-transparent">{order.produk || "N/A"}</TableCell>
+                        <TableCell className="bg-transparent">
                           {order.customer?.name || "N/A"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="bg-transparent">
                           <Badge
                             className={
                               order.statusm === "DISERAHKAN"
@@ -330,7 +331,7 @@ export default function InventoryOutboundPage() {
                             {order.statusm || order.status || "Processing"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="bg-transparent">
                           <Badge
                             className={
                               order.approval_barang === "APPROVED"
@@ -343,11 +344,11 @@ export default function InventoryOutboundPage() {
                             {order.approval_barang || "Pending"}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right space-x-2">
+                        <TableCell className="text-right space-x-2 bg-transparent">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 dark:bg-green-800/30 dark:text-green-500 dark:hover:bg-green-800/40"
+                            className="bg-green-100/80 text-green-800 hover:bg-green-200 hover:text-green-900 dark:bg-green-800/30 dark:text-green-500 dark:hover:bg-green-800/40"
                             onClick={() => confirmAction(order.id, "handover")}
                             disabled={isLoading || processingOrder === order.id}
                           >
@@ -357,7 +358,7 @@ export default function InventoryOutboundPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900 dark:bg-red-800/30 dark:text-red-500 dark:hover:bg-red-800/40"
+                            className="bg-red-100/80 text-red-800 hover:bg-red-200 hover:text-red-900 dark:bg-red-800/30 dark:text-red-500 dark:hover:bg-red-800/40"
                             onClick={() => confirmAction(order.id, "reject_qc")}
                             disabled={isLoading || processingOrder === order.id}
                           >

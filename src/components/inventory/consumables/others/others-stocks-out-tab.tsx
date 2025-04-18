@@ -105,7 +105,7 @@ export function OthersStocksOutTab() {
   }
 
   return (
-    <Card>
+    <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Out of Stock Items</CardTitle>
@@ -204,4 +204,4 @@ export function OthersStocksOutTab() {
       </CardContent>
     </Card>
   )
-} 
+}

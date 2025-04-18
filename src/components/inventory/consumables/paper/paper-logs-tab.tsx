@@ -98,7 +98,7 @@ export function PaperLogsTab() {
   ]
 
   return (
-    <Card>
+    <Card className="bg-background/10 backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Paper Inventory Activity Log</CardTitle>
         <Button 
@@ -138,4 +138,4 @@ export function PaperLogsTab() {
       </CardContent>
     </Card>
   )
-} 
+}
