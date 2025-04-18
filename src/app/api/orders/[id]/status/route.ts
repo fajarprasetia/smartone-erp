@@ -6,12 +6,15 @@ import { z } from "zod";
 import { bigIntSerializer } from "@/lib/utils";
 
 // Schema for validating request body
-const processDesignSchema = z.object({
-  orderId: z.string().nonempty("Order ID is required"),
-  designerId: z.string().nonempty("Designer ID is required"),
+const updateOrderStatusSchema = z.object({
+  statusm: z.string().optional(),
+  status: z.string().optional(),
 });
 
-export async function POST(req: Request) {
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
@@ -23,24 +26,19 @@ export async function POST(req: Request) {
       );
     }
     
-    // Parse and validate request body
-    const body = await req.json();
-    const validation = processDesignSchema.safeParse(body);
+    // Get order ID from params
+    const orderId = params.id;
     
-    if (!validation.success) {
+    if (!orderId) {
       return new NextResponse(
-        JSON.stringify({ error: validation.error.errors }),
+        JSON.stringify({ error: "Order ID is required" }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    const { orderId, designerId } = validation.data;
-    
-    // Check if the order exists and has statusm = "DESIGN"
+    // Check if the order exists
     const existingOrder = await db.order.findUnique({
-      where: {
-        id: orderId,
-      },
+      where: { id: orderId },
     });
     
     if (!existingOrder) {
@@ -50,28 +48,41 @@ export async function POST(req: Request) {
       );
     }
     
-    if (existingOrder.statusm !== "DESIGN") {
+    // Parse and validate request body
+    const body = await req.json();
+    const validation = updateOrderStatusSchema.safeParse(body);
+    
+    if (!validation.success) {
       return new NextResponse(
-        JSON.stringify({ error: "Order is not in design stage" }),
+        JSON.stringify({ error: validation.error.errors }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    // Update the order with the designer ID and change statusm to "DESIGN PROCESS"
+    // Extract status fields
+    const { statusm, status } = validation.data;
+    
+    // Prepare update data
+    const updateData: { statusm?: string; status?: string } = {};
+    
+    if (statusm !== undefined) {
+      updateData.statusm = statusm;
+    }
+    
+    if (status !== undefined) {
+      updateData.status = status;
+    }
+    
+    // Update the order status
     const updatedOrder = await db.order.update({
-      where: {
-        id: orderId,
-      },
-      data: {
-        designer_id: designerId,
-        statusm: "DESIGN PROCESS"
-      },
+      where: { id: orderId },
+      data: updateData,
     });
     
-    // Serialize the response data to handle BigInt values
-    const serializedData = bigIntSerializer({ 
-      message: "Order assigned to designer successfully",
-      order: updatedOrder
+    // Serialize the data to handle BigInt values
+    const serializedData = bigIntSerializer({
+      message: "Order status updated successfully",
+      order: updatedOrder,
     });
     
     return new NextResponse(
@@ -80,9 +91,9 @@ export async function POST(req: Request) {
     );
     
   } catch (error) {
-    console.error("Error processing design order:", error);
+    console.error("Error updating order status:", error);
     return new NextResponse(
-      JSON.stringify({ error: "Failed to process design order" }),
+      JSON.stringify({ error: "Failed to update order status" }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

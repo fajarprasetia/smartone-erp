@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { bigIntSerializer } from "@/lib/utils";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 // Schema for order update validation
 const orderUpdateSchema = z.object({
@@ -53,6 +56,8 @@ const orderUpdateSchema = z.object({
   repeatOrderSpk: z.string().optional(), // For repeat orders
   namaBahan: z.string().optional(), // Fabric name from form
   nama_kain: z.string().optional(), // DB field name
+  jumlah_kain: z.string().optional(), // DB field name for fabric length
+  fabricLength: z.string().optional(), // Form field name for fabric length
   gsmKertas: z.string().optional(), // Paper GSM from form
   gramasi: z.string().optional(), // DB field name
   lebarKertas: z.string().optional(), // Paper width from form
@@ -74,16 +79,46 @@ const orderUpdateSchema = z.object({
   discountType: z.enum(["percentage", "fixed", "none"]).optional(),
   discountValue: z.string().optional(),
   tax: z.boolean().optional(),
-  taxPercentage: z.string().optional()
+  taxPercentage: z.string().optional(),
 });
 
 // Helper function to handle BigInt serialization in JSON responses
 function serializeData(data: any): any {
-  return JSON.parse(
-    JSON.stringify(data, (key, value) =>
-      typeof value === "bigint" ? value.toString() : value
-    )
-  );
+  // First use the bigIntSerializer
+  const bigIntSerialized = bigIntSerializer(data);
+  
+  // Then handle date serialization
+  return serializeDates(bigIntSerialized);
+}
+
+// Helper function to serialize dates properly
+function serializeDates(data: any): any {
+  if (!data) return data;
+  
+  // Is this a Date object?
+  if (data instanceof Date) {
+    if (isNaN(data.getTime())) {
+      return null; // Invalid date
+    }
+    return data.toISOString(); // Return ISO string format
+  }
+  
+  // Handle arrays
+  if (Array.isArray(data)) {
+    return data.map(item => serializeDates(item));
+  }
+  
+  // Handle objects recursively
+  if (typeof data === 'object') {
+    const result: any = {};
+    for (const key in data) {
+      result[key] = serializeDates(data[key]);
+    }
+    return result;
+  }
+  
+  // Return primitive values as is
+  return data;
 }
 
 // Helper function to safely parse date values
@@ -208,12 +243,29 @@ export async function GET(
       }
     }
 
-    // Format and return the order with all fields properly serialized
-    return NextResponse.json(serializeData({
+    // Ensure datetime fields are properly formatted
+    console.log("[API] Raw date values:", {
+      est_order: order.est_order,
+      est_order_type: typeof order.est_order,
+      created_at: order.created_at,
+      created_at_type: typeof order.created_at
+    });
+
+    // Create a copy with explicitly converted date fields
+    const processedOrder = {
       ...order,
-      marketingInfo,
-      // Add any additional formatted fields here
-    }));
+      est_order: order.est_order ? new Date(order.est_order).toISOString() : null,
+      created_at: order.created_at ? new Date(order.created_at).toISOString() : null,
+      marketingInfo
+    };
+
+    console.log("[API] Processed date values:", {
+      est_order: processedOrder.est_order,
+      created_at: processedOrder.created_at
+    });
+
+    // Format and return the order with all fields properly serialized
+    return NextResponse.json(serializeData(processedOrder));
   } catch (error: any) {
     console.error("Error fetching order by ID:", error);
     
@@ -379,6 +431,56 @@ export async function PUT(
         updateData.nama_produk = validatedData.aplikasiProduk || validatedData.nama_produk;
       }
       
+      // Check if this is a DTF order
+      let isDtfOrder = false;
+      
+      // Check if the product has 'DTF' in its produk field
+      if (validatedData.produk && validatedData.produk.includes('DTF')) {
+        isDtfOrder = true;
+        console.log('[API] DTF product detected from produk field');
+      }
+      
+      // Also check jenisProduk if available
+      if (validatedData.jenisProduk && validatedData.jenisProduk.DTF === true) {
+        isDtfOrder = true;
+        console.log('[API] DTF product detected from jenisProduk field');
+      }
+      
+      // Check tipe_produk if available
+      if (validatedData.tipe_produk === 'DTF') {
+        isDtfOrder = true;
+        console.log('[API] DTF product detected from tipe_produk field');
+      }
+      
+      console.log(`[API] Is DTF order: ${isDtfOrder}`);
+      
+      // For DTF orders, clear fabric-related fields
+      if (isDtfOrder) {
+        updateData.nama_kain = "";
+        updateData.jumlah_kain = "";
+        updateData.lebar_kain = "";
+        
+        // Remove any fabric relation
+        if (updateData.asal_bahan_rel) {
+          delete updateData.asal_bahan_rel;
+        }
+        
+        console.log('[API] Cleared fabric-related fields for DTF order');
+      } else {
+        // Only process fabric fields for non-DTF orders
+        if (validatedData.namaBahan || validatedData.nama_kain) {
+          updateData.nama_kain = validatedData.namaBahan || validatedData.nama_kain;
+        }
+        
+        if (validatedData.fabricLength || validatedData.jumlah_kain) {
+          updateData.jumlah_kain = validatedData.fabricLength || validatedData.jumlah_kain;
+        }
+        
+        if (validatedData.lebarKain || validatedData.lebar_kain) {
+          updateData.lebar_kain = validatedData.lebarKain || validatedData.lebar_kain;
+        }
+      }
+      
       // Handle quantity and unit
       if (validatedData.qty || validatedData.jumlah) {
         updateData.qty = validatedData.qty || validatedData.jumlah;
@@ -457,10 +559,6 @@ export async function PUT(
         }
       }
 
-      if (validatedData.namaBahan || validatedData.nama_kain) {
-        updateData.nama_kain = validatedData.namaBahan || validatedData.nama_kain;
-      }
-      
       // Handle paper info
       if (validatedData.gsmKertas || validatedData.gramasi) {
         updateData.gramasi = validatedData.gsmKertas || validatedData.gramasi;
@@ -591,9 +689,9 @@ export async function PUT(
         delete updateData.tax_percentage;
       }
 
-      // Process asalBahanId field - now correctly handled through asal_bahan_rel
+      // Process asalBahanId field
       const asalBahanId = updateData.asalBahanId;
-      if (asalBahanId) {
+      if (asalBahanId && !isDtfOrder) {
         console.log(`Processing asalBahanId: ${asalBahanId}`);
         delete updateData.asalBahanId;
         delete updateData.asal_bahan_id; // Remove deprecated field
@@ -602,6 +700,11 @@ export async function PUT(
         if (/^\d+$/.test(asalBahanId)) {
           updateData.asal_bahan_rel = { connect: { id: asalBahanId } };
         }
+      } else if (isDtfOrder) {
+        // For DTF orders, remove any asalBahan data
+        delete updateData.asalBahanId;
+        delete updateData.asal_bahan_id;
+        console.log('[API] Removed asalBahan data for DTF order');
       }
 
       // Process tipe_produk field (comes from non-CUSTOMER, non-SMARTONE asalBahan values)
@@ -766,6 +869,82 @@ export async function DELETE(
     return NextResponse.json(
       { 
         error: "Failed to delete order",
+        details: error.message || "Unknown error occurred"
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH: Update partial data for design workflow
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const orderId = params.id;
+    console.log(`[API] PATCH request for order ID: ${orderId}`);
+
+    // Get current user session
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Parse request body
+    const data = await req.json();
+    console.log("[API] Design update data:", data);
+
+    // Check if order exists
+    const existingOrder = await db.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!existingOrder) {
+      console.log(`[API] Order with ID ${orderId} not found`);
+      return NextResponse.json(
+        { error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    // Prepare update data
+    const updateData: any = {
+      designer_id: session.user.id, // Set current user as designer
+    };
+    
+    // Validate and convert data types
+    if (data.lebar_file !== undefined) updateData.lebar_file = String(data.lebar_file);
+    if (data.warna_acuan !== undefined) updateData.warna_acuan = String(data.warna_acuan);
+    if (data.qty !== undefined) updateData.qty = String(data.qty);
+    if (data.catatan !== undefined) updateData.catatan = String(data.catatan);
+    if (data.statusm !== undefined) updateData.statusm = String(data.statusm);
+    
+    // Add capture file paths if they exist
+    if (data.capture !== undefined) updateData.capture = String(data.capture);
+    if (data.capture_name !== undefined) updateData.capture_name = String(data.capture_name);
+
+    // Update the order
+    const updatedOrder = await db.order.update({
+      where: { id: orderId },
+      data: updateData,
+      include: {
+        customer: true,
+        asal_bahan_rel: true,
+      },
+    });
+
+    console.log(`[API] Order updated successfully for design workflow`);
+    return NextResponse.json(serializeData(updatedOrder));
+  } catch (error: any) {
+    console.error("[API] Error processing design update:", error);
+    
+    return NextResponse.json(
+      { 
+        error: "Failed to update design",
         details: error.message || "Unknown error occurred"
       },
       { status: 500 }

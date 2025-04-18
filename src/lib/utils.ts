@@ -58,3 +58,30 @@ export function BigInt(value: string | number | null | undefined): bigint | unde
     return undefined;
   }
 }
+
+// Custom serializer for BigInt values
+export function bigIntSerializer(data: any): any {
+  if (data === null || data === undefined) {
+    return data;
+  }
+  
+  if (typeof data === 'bigint') {
+    return data.toString(); // Convert BigInt to string for serialization
+  }
+  
+  if (Array.isArray(data)) {
+    return data.map(item => bigIntSerializer(item));
+  }
+  
+  if (typeof data === 'object') {
+    const result: any = {};
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        result[key] = bigIntSerializer(data[key]);
+      }
+    }
+    return result;
+  }
+  
+  return data;
+}

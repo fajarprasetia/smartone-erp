@@ -1,18 +1,35 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log("[API] Fetching paper GSMs");
+    const { searchParams } = new URL(request.url);
+    const typeParam = searchParams.get("type");
+    
+    console.log(`[API] Fetching paper GSMs with type filter: ${typeParam}`);
+    
+    // Create where clause for filtering
+    const whereClause: any = {
+      remainingLength: {
+        gt: 0
+      }
+    };
+    
+    // Add type filter if specified
+    if (typeParam === "DTF Film") {
+      whereClause.type = "DTF Film";
+      console.log("[API] Filtering for DTF Film papers only");
+    } else if (typeParam === "regular") {
+      whereClause.type = { 
+        not: "DTF Film" 
+      };
+      console.log("[API] Filtering for regular papers (not DTF Film)");
+    }
     
     // Fetch GSMs with their remaining lengths from paper_stocks table
     const paperStocks = await db.paperStock.groupBy({
       by: ['gsm'],
-      where: {
-        remainingLength: {
-          gt: 0
-        }
-      },
+      where: whereClause,
       _sum: {
         remainingLength: true
       },

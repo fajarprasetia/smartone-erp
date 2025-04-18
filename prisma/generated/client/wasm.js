@@ -379,7 +379,18 @@ exports.Prisma.OrderScalarFieldEnum = {
   cutting_done: 'cutting_done',
   dtf_done: 'dtf_done',
   press_done: 'press_done',
-  print_done: 'print_done'
+  print_done: 'print_done',
+  holdReason: 'holdReason',
+  previousStatus: 'previousStatus'
+};
+
+exports.Prisma.OrderLogScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  userId: 'userId',
+  action: 'action',
+  notes: 'notes',
+  timestamp: 'timestamp'
 };
 
 exports.Prisma.ProdukScalarFieldEnum = {
@@ -604,6 +615,7 @@ exports.Prisma.ModelName = {
   WhatsAppConfig: 'WhatsAppConfig',
   FinancialTransaction: 'FinancialTransaction',
   Order: 'Order',
+  OrderLog: 'OrderLog',
   Produk: 'Produk',
   PaperStock: 'PaperStock',
   PaperRequest: 'PaperRequest',

@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const gsmParam = searchParams.get("gsm");
+    const typeParam = searchParams.get("type");
 
     if (!gsmParam) {
       return NextResponse.json(
@@ -22,16 +23,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[API] Fetching paper widths for GSM: ${gsm}`);
+    console.log(`[API] Fetching paper widths for GSM: ${gsm}, Type: ${typeParam || 'all'}`);
 
-    // Fetch paper widths with the numeric GSM value
+    // Create the where clause for filtering
+    const whereClause: any = {
+      gsm: gsm,
+      remainingLength: {
+        gt: 0
+      }
+    };
+    
+    // Add type filter if specified
+    if (typeParam === "DTF Film") {
+      whereClause.type = "DTF Film";
+      console.log("[API] Filtering for DTF Film papers only");
+    } else if (typeParam === "regular") {
+      whereClause.type = {
+        not: "DTF Film"
+      };
+      console.log("[API] Filtering for regular papers (not DTF Film)");
+    }
+
+    // Fetch paper widths with the numeric GSM value and type filter
     const paperStocks = await db.paperStock.findMany({
-      where: {
-        gsm: gsm,
-        remainingLength: {
-          gt: 0
-        }
-      },
+      where: whereClause,
       select: {
         width: true,
         remainingLength: true

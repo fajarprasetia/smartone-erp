@@ -28,17 +28,45 @@ export function useOrderSubmit({ setIsSubmitting, spkNumber }: UseOrderSubmitPro
           ))
         }))
       
+      // Map additional costs to specific fields expected by the API
+      const additionalCostFields: Record<string, string | number> = {};
+      validAdditionalCosts.forEach((cost, index) => {
+        if (index === 0) {
+          additionalCostFields.tambah_cutting = cost.description || "";
+          additionalCostFields.satuan_cutting = cost.pricePerUnit || 0;
+          additionalCostFields.qty_cutting = cost.unitQuantity || 0;
+          additionalCostFields.total_cutting = cost.total || 0;
+        } else if (index < 6) { // Up to 5 additional costs (1-5)
+          additionalCostFields[`tambah_cutting${index}`] = cost.description || "";
+          additionalCostFields[`satuan_cutting${index}`] = cost.pricePerUnit || 0;
+          additionalCostFields[`qty_cutting${index}`] = cost.unitQuantity || 0;
+          additionalCostFields[`total_cutting${index}`] = cost.total || 0;
+        }
+      });
+      
+      // Determine asalBahanId based on asalBahan value
+      let asalBahanId: string | undefined = undefined;
+      if (data.asalBahan === "SMARTONE") {
+        asalBahanId = "22"; // Fixed ID for SMARTONE
+        console.log("Setting asalBahanId to 22 for SMARTONE");
+      } else if (data.asalBahan === "CUSTOMER") {
+        asalBahanId = data.customerId; // Use customer's ID
+        console.log(`Setting asalBahanId to customer ID: ${data.customerId}`);
+      }
+      
       // Add the SPK number to the form data
       const orderData = {
         customerId: data.customerId,
         spk: spkNumber,
         jenisProduk: data.jenisProduk,
         dtfPass: data.dtfPass,
-        jumlah: parseFloat(data.jumlah || "0"),
+        jumlah: data.jumlah, // Keep as string
         unit: data.unit,
         asalBahan: data.asalBahan,
+        asalBahanId: asalBahanId, // Add asalBahanId
         namaBahan: data.namaBahan,
         aplikasiProduk: data.aplikasiProduk,
+        fabricLength: data.fabricLength,
         gsmKertas: data.gsmKertas,
         lebarKertas: data.lebarKertas,
         fileWidth: data.fileWidth,
@@ -49,18 +77,17 @@ export function useOrderSubmit({ setIsSubmitting, spkNumber }: UseOrderSubmitPro
         targetSelesai: data.targetSelesai,
         marketing: data.marketing,
         fileDesain: data.fileDesain || "",
-        harga: parseFloat(data.harga || "0"),
+        harga: data.harga || "", // Keep as string
+        harga_satuan: data.harga || "", // Add harga_satuan as string
         
         // Include discount data
         discountType: data.discountType,
-        discountValue: data.discountValue ? parseFloat(data.discountValue) : 0,
+        discountValue: data.discountValue || "", // Keep as string
         
         tax: data.tax,
-        taxPercentage: data.taxPercentage ? parseFloat(data.taxPercentage) : 0,
-        totalPrice: parseFloat(data.totalPrice || "0"),
-        additionalCosts: validAdditionalCosts.length > 0 
-          ? JSON.stringify(validAdditionalCosts)
-          : null,
+        taxPercentage: data.taxPercentage || "", // Keep as string
+        totalPrice: data.totalPrice || "", // Keep as string
+        nominal: data.totalPrice || "", // Add nominal field as string
         priority: data.priority,
       }
 
@@ -75,11 +102,13 @@ export function useOrderSubmit({ setIsSubmitting, spkNumber }: UseOrderSubmitPro
         quantity = yardToMeter(parseFloat(data.jumlah)).toFixed(2)
       }
       
-      // Process additional costs to store as JSON string
-      const processedAdditionalCosts = data.additionalCosts?.filter(
-        cost => cost.item && cost.pricePerUnit && cost.unitQuantity && cost.total
-      )
-      
+      // Convert additionalCostFields values to strings for database compatibility
+      Object.keys(additionalCostFields).forEach(key => {
+        if (typeof additionalCostFields[key] === 'number') {
+          additionalCostFields[key] = String(additionalCostFields[key]);
+        }
+      });
+
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
@@ -91,21 +120,25 @@ export function useOrderSubmit({ setIsSubmitting, spkNumber }: UseOrderSubmitPro
           jenisProduk: jenisProdukString,
           // Include new fields
           asalBahan: data.asalBahan,
+          asalBahanId: asalBahanId, // Include asalBahanId explicitly
           namaBahan: data.namaBahan,
+          fabricLength: data.fabricLength,
           tax: data.tax,
           taxPercentage: data.tax ? data.taxPercentage : null,
-          totalPrice: data.totalPrice,
-          // Include additional costs as JSON string
-          additionalCosts: JSON.stringify(processedAdditionalCosts || []),
-          // Use converted quantity if needed
+          totalPrice: data.totalPrice || "", // Ensure string
+          nominal: data.totalPrice || "", // Ensure string
+          // Instead of a JSON string for additional costs, include the individual fields
+          ...additionalCostFields,
+          // Use converted quantity if needed, but as string
           jumlah: quantity,
           // Include unit info
           unit: data.unit,
-          // Remove status field as it's no longer needed
-          status: "PENDING", // Default status for new orders
+          // Status field for new orders
+          status: "PENDING", 
           // Ensure dates are properly formatted for the API
           tanggal: new Date().toISOString(),
           targetSelesai: data.targetSelesai ? data.targetSelesai.toISOString() : null,
+          est_order: data.targetSelesai ? data.targetSelesai.toISOString() : null, // Add est_order for consistency
           matchingColor: data.matchingColor,
           priority: data.priority,
         }),

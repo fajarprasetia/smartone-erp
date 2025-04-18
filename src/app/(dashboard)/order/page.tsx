@@ -59,6 +59,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DialogModal } from "@/components/ui/dialog-modal"
+import { CaptureThumbnails } from "@/components/design/capture-thumbnails"
 
 // Define the OrderItem interface based on requirements
 interface OrderItem {
@@ -238,10 +239,6 @@ const OrderSpkModal = ({ order, open, onOpenChange }: {
                       ? `62${order.customer.telp.startsWith('8') ? order.customer.telp : order.customer.telp.replace(/^0+/, '')}`
                       : "N/A"
                   : "N/A"}
-
-
-This adds an extra check to verify that order.customer.telp is not null or undefined before applying the transformation. If it's null, "N/A" is displayed instead of "62NULL".
-Give it a try and let me know if you need any tweaks! 🚀
 
                 </p>
               </div>
@@ -959,6 +956,7 @@ export default function OrderPage() {
                           <SortableTableHead field="status" sorting={ordersSorting} onSort={handleOrdersSort}>Status</SortableTableHead>
                           <SortableTableHead field="qty" sorting={ordersSorting} onSort={handleOrdersSort}>Qty</SortableTableHead>
                       <TableHead>Note</TableHead>
+                      <TableHead>Capture</TableHead>
                           <SortableTableHead field="marketing" sorting={ordersSorting} onSort={handleOrdersSort}>Marketing</SortableTableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -996,6 +994,13 @@ export default function OrderPage() {
                           <TableCell>{getStatusBadge(order.status || order.statusm)}</TableCell>
                           <TableCell>{order.qty || "N/A"}</TableCell>
                           <TableCell className="max-w-[150px] truncate">{order.catatan || "N/A"}</TableCell>
+                          <TableCell>
+                            <CaptureThumbnails
+                              capture={order.capture}
+                              captureName={order.capture_name}
+                              altText={order.produk || "Design"}
+                            />
+                          </TableCell>
                           <TableCell>{order.marketingUser?.name || order.marketingInfo?.name || order.marketing || "N/A"}</TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
@@ -1175,6 +1180,7 @@ export default function OrderPage() {
                           <TableHead>Status</TableHead>
                           <SortableTableHead field="qty" sorting={draftsSorting} onSort={handleDraftsSort}>Qty</SortableTableHead>
                           <TableHead>Note</TableHead>
+                          <TableHead>Capture</TableHead>
                           <SortableTableHead field="marketing" sorting={draftsSorting} onSort={handleDraftsSort}>Marketing</SortableTableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -1212,6 +1218,13 @@ export default function OrderPage() {
                               <TableCell>{getStatusBadge(order.status || order.statusm)}</TableCell>
                               <TableCell>{order.qty || "N/A"}</TableCell>
                               <TableCell className="max-w-[150px] truncate">{order.catatan || "N/A"}</TableCell>
+                              <TableCell>
+                                <CaptureThumbnails
+                                  capture={order.capture}
+                                  captureName={order.capture_name}
+                                  altText={order.produk || "Design"}
+                                />
+                              </TableCell>
                               <TableCell>{order.marketingUser?.name || order.marketingInfo?.name || order.marketing || "N/A"}</TableCell>
                               <TableCell className="text-right">
                                 <DropdownMenu>

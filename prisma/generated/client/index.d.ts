@@ -74,6 +74,11 @@ export type FinancialTransaction = $Result.DefaultSelection<Prisma.$FinancialTra
  */
 export type Order = $Result.DefaultSelection<Prisma.$OrderPayload>
 /**
+ * Model OrderLog
+ * 
+ */
+export type OrderLog = $Result.DefaultSelection<Prisma.$OrderLogPayload>
+/**
  * Model Produk
  * 
  */
@@ -408,6 +413,16 @@ export class PrismaClient<
     * ```
     */
   get order(): Prisma.OrderDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.orderLog`: Exposes CRUD operations for the **OrderLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more OrderLogs
+    * const orderLogs = await prisma.orderLog.findMany()
+    * ```
+    */
+  get orderLog(): Prisma.OrderLogDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.produk`: Exposes CRUD operations for the **Produk** model.
@@ -980,6 +995,7 @@ export namespace Prisma {
     WhatsAppConfig: 'WhatsAppConfig',
     FinancialTransaction: 'FinancialTransaction',
     Order: 'Order',
+    OrderLog: 'OrderLog',
     Produk: 'Produk',
     PaperStock: 'PaperStock',
     PaperRequest: 'PaperRequest',
@@ -1010,7 +1026,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "role" | "permission" | "dashboardCard" | "product" | "customer" | "inventory" | "chatMessage" | "whatsAppTemplate" | "whatsAppConfig" | "financialTransaction" | "order" | "produk" | "paperStock" | "paperRequest" | "paperLog" | "inkStock" | "inkRequest" | "inkLog" | "otherConsumable" | "asset" | "othersItem" | "othersRequest" | "othersLog"
+      modelProps: "user" | "role" | "permission" | "dashboardCard" | "product" | "customer" | "inventory" | "chatMessage" | "whatsAppTemplate" | "whatsAppConfig" | "financialTransaction" | "order" | "orderLog" | "produk" | "paperStock" | "paperRequest" | "paperLog" | "inkStock" | "inkRequest" | "inkLog" | "otherConsumable" | "asset" | "othersItem" | "othersRequest" | "othersLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1899,6 +1915,80 @@ export namespace Prisma {
           count: {
             args: Prisma.OrderCountArgs<ExtArgs>
             result: $Utils.Optional<OrderCountAggregateOutputType> | number
+          }
+        }
+      }
+      OrderLog: {
+        payload: Prisma.$OrderLogPayload<ExtArgs>
+        fields: Prisma.OrderLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OrderLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OrderLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>
+          }
+          findFirst: {
+            args: Prisma.OrderLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OrderLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>
+          }
+          findMany: {
+            args: Prisma.OrderLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>[]
+          }
+          create: {
+            args: Prisma.OrderLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>
+          }
+          createMany: {
+            args: Prisma.OrderLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.OrderLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>[]
+          }
+          delete: {
+            args: Prisma.OrderLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>
+          }
+          update: {
+            args: Prisma.OrderLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.OrderLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OrderLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.OrderLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.OrderLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrderLogPayload>
+          }
+          aggregate: {
+            args: Prisma.OrderLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOrderLog>
+          }
+          groupBy: {
+            args: Prisma.OrderLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OrderLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.OrderLogCountArgs<ExtArgs>
+            result: $Utils.Optional<OrderLogCountAggregateOutputType> | number
           }
         }
       }
@@ -2886,6 +2976,7 @@ export namespace Prisma {
     whatsAppConfig?: WhatsAppConfigOmit
     financialTransaction?: FinancialTransactionOmit
     order?: OrderOmit
+    orderLog?: OrderLogOmit
     produk?: ProdukOmit
     paperStock?: PaperStockOmit
     paperRequest?: PaperRequestOmit
@@ -3000,6 +3091,7 @@ export namespace Prisma {
     inkStocksAdded: number
     inkStocksTaken: number
     inkStocksUpdated: number
+    orderLogs: number
     ordersCutting: number
     ordersDesigned: number
     ordersDTF: number
@@ -3009,6 +3101,12 @@ export namespace Prisma {
     ordersPress: number
     ordersPrint: number
     ordersCreated: number
+    othersItemsTaken: number
+    othersItemsAdded: number
+    othersLogs: number
+    othersApprovals: number
+    othersRejections: number
+    othersRequests: number
     paperLogs: number
     paperApprovals: number
     paperRejections: number
@@ -3016,12 +3114,6 @@ export namespace Prisma {
     paperStocksAdded: number
     paperStocksTaken: number
     paperStocksUpdated: number
-    othersItemsAdded: number
-    othersItemsTaken: number
-    othersLogs: number
-    othersRequests: number
-    othersApprovals: number
-    othersRejections: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3033,6 +3125,7 @@ export namespace Prisma {
     inkStocksAdded?: boolean | UserCountOutputTypeCountInkStocksAddedArgs
     inkStocksTaken?: boolean | UserCountOutputTypeCountInkStocksTakenArgs
     inkStocksUpdated?: boolean | UserCountOutputTypeCountInkStocksUpdatedArgs
+    orderLogs?: boolean | UserCountOutputTypeCountOrderLogsArgs
     ordersCutting?: boolean | UserCountOutputTypeCountOrdersCuttingArgs
     ordersDesigned?: boolean | UserCountOutputTypeCountOrdersDesignedArgs
     ordersDTF?: boolean | UserCountOutputTypeCountOrdersDTFArgs
@@ -3042,6 +3135,12 @@ export namespace Prisma {
     ordersPress?: boolean | UserCountOutputTypeCountOrdersPressArgs
     ordersPrint?: boolean | UserCountOutputTypeCountOrdersPrintArgs
     ordersCreated?: boolean | UserCountOutputTypeCountOrdersCreatedArgs
+    othersItemsTaken?: boolean | UserCountOutputTypeCountOthersItemsTakenArgs
+    othersItemsAdded?: boolean | UserCountOutputTypeCountOthersItemsAddedArgs
+    othersLogs?: boolean | UserCountOutputTypeCountOthersLogsArgs
+    othersApprovals?: boolean | UserCountOutputTypeCountOthersApprovalsArgs
+    othersRejections?: boolean | UserCountOutputTypeCountOthersRejectionsArgs
+    othersRequests?: boolean | UserCountOutputTypeCountOthersRequestsArgs
     paperLogs?: boolean | UserCountOutputTypeCountPaperLogsArgs
     paperApprovals?: boolean | UserCountOutputTypeCountPaperApprovalsArgs
     paperRejections?: boolean | UserCountOutputTypeCountPaperRejectionsArgs
@@ -3049,12 +3148,6 @@ export namespace Prisma {
     paperStocksAdded?: boolean | UserCountOutputTypeCountPaperStocksAddedArgs
     paperStocksTaken?: boolean | UserCountOutputTypeCountPaperStocksTakenArgs
     paperStocksUpdated?: boolean | UserCountOutputTypeCountPaperStocksUpdatedArgs
-    othersItemsAdded?: boolean | UserCountOutputTypeCountOthersItemsAddedArgs
-    othersItemsTaken?: boolean | UserCountOutputTypeCountOthersItemsTakenArgs
-    othersLogs?: boolean | UserCountOutputTypeCountOthersLogsArgs
-    othersRequests?: boolean | UserCountOutputTypeCountOthersRequestsArgs
-    othersApprovals?: boolean | UserCountOutputTypeCountOthersApprovalsArgs
-    othersRejections?: boolean | UserCountOutputTypeCountOthersRejectionsArgs
   }
 
   // Custom InputTypes
@@ -3127,6 +3220,13 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
+  export type UserCountOutputTypeCountOrderLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OrderLogWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
   export type UserCountOutputTypeCountOrdersCuttingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: OrderWhereInput
   }
@@ -3190,6 +3290,48 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
+  export type UserCountOutputTypeCountOthersItemsTakenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OthersItemWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountOthersItemsAddedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OthersItemWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountOthersLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OthersLogWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountOthersApprovalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OthersRequestWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountOthersRejectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OthersRequestWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountOthersRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OthersRequestWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
   export type UserCountOutputTypeCountPaperLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PaperLogWhereInput
   }
@@ -3234,48 +3376,6 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountPaperStocksUpdatedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PaperStockWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountOthersItemsAddedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: OthersItemWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountOthersItemsTakenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: OthersItemWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountOthersLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: OthersLogWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountOthersRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: OthersRequestWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountOthersApprovalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: OthersRequestWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountOthersRejectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: OthersRequestWhereInput
   }
 
 
@@ -3445,6 +3545,37 @@ export namespace Prisma {
    */
   export type CustomerCountOutputTypeCountOrdersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: OrderWhereInput
+  }
+
+
+  /**
+   * Count Type OrderCountOutputType
+   */
+
+  export type OrderCountOutputType = {
+    logs: number
+  }
+
+  export type OrderCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    logs?: boolean | OrderCountOutputTypeCountLogsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * OrderCountOutputType without action
+   */
+  export type OrderCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderCountOutputType
+     */
+    select?: OrderCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * OrderCountOutputType without action
+   */
+  export type OrderCountOutputTypeCountLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OrderLogWhereInput
   }
 
 
@@ -3850,6 +3981,7 @@ export namespace Prisma {
     inkStocksAdded?: boolean | User$inkStocksAddedArgs<ExtArgs>
     inkStocksTaken?: boolean | User$inkStocksTakenArgs<ExtArgs>
     inkStocksUpdated?: boolean | User$inkStocksUpdatedArgs<ExtArgs>
+    orderLogs?: boolean | User$orderLogsArgs<ExtArgs>
     ordersCutting?: boolean | User$ordersCuttingArgs<ExtArgs>
     ordersDesigned?: boolean | User$ordersDesignedArgs<ExtArgs>
     ordersDTF?: boolean | User$ordersDTFArgs<ExtArgs>
@@ -3859,6 +3991,12 @@ export namespace Prisma {
     ordersPress?: boolean | User$ordersPressArgs<ExtArgs>
     ordersPrint?: boolean | User$ordersPrintArgs<ExtArgs>
     ordersCreated?: boolean | User$ordersCreatedArgs<ExtArgs>
+    othersItemsTaken?: boolean | User$othersItemsTakenArgs<ExtArgs>
+    othersItemsAdded?: boolean | User$othersItemsAddedArgs<ExtArgs>
+    othersLogs?: boolean | User$othersLogsArgs<ExtArgs>
+    othersApprovals?: boolean | User$othersApprovalsArgs<ExtArgs>
+    othersRejections?: boolean | User$othersRejectionsArgs<ExtArgs>
+    othersRequests?: boolean | User$othersRequestsArgs<ExtArgs>
     paperLogs?: boolean | User$paperLogsArgs<ExtArgs>
     paperApprovals?: boolean | User$paperApprovalsArgs<ExtArgs>
     paperRejections?: boolean | User$paperRejectionsArgs<ExtArgs>
@@ -3866,12 +4004,6 @@ export namespace Prisma {
     paperStocksAdded?: boolean | User$paperStocksAddedArgs<ExtArgs>
     paperStocksTaken?: boolean | User$paperStocksTakenArgs<ExtArgs>
     paperStocksUpdated?: boolean | User$paperStocksUpdatedArgs<ExtArgs>
-    othersItemsAdded?: boolean | User$othersItemsAddedArgs<ExtArgs>
-    othersItemsTaken?: boolean | User$othersItemsTakenArgs<ExtArgs>
-    othersLogs?: boolean | User$othersLogsArgs<ExtArgs>
-    othersRequests?: boolean | User$othersRequestsArgs<ExtArgs>
-    othersApprovals?: boolean | User$othersApprovalsArgs<ExtArgs>
-    othersRejections?: boolean | User$othersRejectionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -3915,6 +4047,7 @@ export namespace Prisma {
     inkStocksAdded?: boolean | User$inkStocksAddedArgs<ExtArgs>
     inkStocksTaken?: boolean | User$inkStocksTakenArgs<ExtArgs>
     inkStocksUpdated?: boolean | User$inkStocksUpdatedArgs<ExtArgs>
+    orderLogs?: boolean | User$orderLogsArgs<ExtArgs>
     ordersCutting?: boolean | User$ordersCuttingArgs<ExtArgs>
     ordersDesigned?: boolean | User$ordersDesignedArgs<ExtArgs>
     ordersDTF?: boolean | User$ordersDTFArgs<ExtArgs>
@@ -3924,6 +4057,12 @@ export namespace Prisma {
     ordersPress?: boolean | User$ordersPressArgs<ExtArgs>
     ordersPrint?: boolean | User$ordersPrintArgs<ExtArgs>
     ordersCreated?: boolean | User$ordersCreatedArgs<ExtArgs>
+    othersItemsTaken?: boolean | User$othersItemsTakenArgs<ExtArgs>
+    othersItemsAdded?: boolean | User$othersItemsAddedArgs<ExtArgs>
+    othersLogs?: boolean | User$othersLogsArgs<ExtArgs>
+    othersApprovals?: boolean | User$othersApprovalsArgs<ExtArgs>
+    othersRejections?: boolean | User$othersRejectionsArgs<ExtArgs>
+    othersRequests?: boolean | User$othersRequestsArgs<ExtArgs>
     paperLogs?: boolean | User$paperLogsArgs<ExtArgs>
     paperApprovals?: boolean | User$paperApprovalsArgs<ExtArgs>
     paperRejections?: boolean | User$paperRejectionsArgs<ExtArgs>
@@ -3931,12 +4070,6 @@ export namespace Prisma {
     paperStocksAdded?: boolean | User$paperStocksAddedArgs<ExtArgs>
     paperStocksTaken?: boolean | User$paperStocksTakenArgs<ExtArgs>
     paperStocksUpdated?: boolean | User$paperStocksUpdatedArgs<ExtArgs>
-    othersItemsAdded?: boolean | User$othersItemsAddedArgs<ExtArgs>
-    othersItemsTaken?: boolean | User$othersItemsTakenArgs<ExtArgs>
-    othersLogs?: boolean | User$othersLogsArgs<ExtArgs>
-    othersRequests?: boolean | User$othersRequestsArgs<ExtArgs>
-    othersApprovals?: boolean | User$othersApprovalsArgs<ExtArgs>
-    othersRejections?: boolean | User$othersRejectionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3958,6 +4091,7 @@ export namespace Prisma {
       inkStocksAdded: Prisma.$InkStockPayload<ExtArgs>[]
       inkStocksTaken: Prisma.$InkStockPayload<ExtArgs>[]
       inkStocksUpdated: Prisma.$InkStockPayload<ExtArgs>[]
+      orderLogs: Prisma.$OrderLogPayload<ExtArgs>[]
       ordersCutting: Prisma.$OrderPayload<ExtArgs>[]
       ordersDesigned: Prisma.$OrderPayload<ExtArgs>[]
       ordersDTF: Prisma.$OrderPayload<ExtArgs>[]
@@ -3967,6 +4101,12 @@ export namespace Prisma {
       ordersPress: Prisma.$OrderPayload<ExtArgs>[]
       ordersPrint: Prisma.$OrderPayload<ExtArgs>[]
       ordersCreated: Prisma.$OrderPayload<ExtArgs>[]
+      othersItemsTaken: Prisma.$OthersItemPayload<ExtArgs>[]
+      othersItemsAdded: Prisma.$OthersItemPayload<ExtArgs>[]
+      othersLogs: Prisma.$OthersLogPayload<ExtArgs>[]
+      othersApprovals: Prisma.$OthersRequestPayload<ExtArgs>[]
+      othersRejections: Prisma.$OthersRequestPayload<ExtArgs>[]
+      othersRequests: Prisma.$OthersRequestPayload<ExtArgs>[]
       paperLogs: Prisma.$PaperLogPayload<ExtArgs>[]
       paperApprovals: Prisma.$PaperRequestPayload<ExtArgs>[]
       paperRejections: Prisma.$PaperRequestPayload<ExtArgs>[]
@@ -3974,12 +4114,6 @@ export namespace Prisma {
       paperStocksAdded: Prisma.$PaperStockPayload<ExtArgs>[]
       paperStocksTaken: Prisma.$PaperStockPayload<ExtArgs>[]
       paperStocksUpdated: Prisma.$PaperStockPayload<ExtArgs>[]
-      othersItemsAdded: Prisma.$OthersItemPayload<ExtArgs>[]
-      othersItemsTaken: Prisma.$OthersItemPayload<ExtArgs>[]
-      othersLogs: Prisma.$OthersLogPayload<ExtArgs>[]
-      othersRequests: Prisma.$OthersRequestPayload<ExtArgs>[]
-      othersApprovals: Prisma.$OthersRequestPayload<ExtArgs>[]
-      othersRejections: Prisma.$OthersRequestPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4391,6 +4525,7 @@ export namespace Prisma {
     inkStocksAdded<T extends User$inkStocksAddedArgs<ExtArgs> = {}>(args?: Subset<T, User$inkStocksAddedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InkStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     inkStocksTaken<T extends User$inkStocksTakenArgs<ExtArgs> = {}>(args?: Subset<T, User$inkStocksTakenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InkStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     inkStocksUpdated<T extends User$inkStocksUpdatedArgs<ExtArgs> = {}>(args?: Subset<T, User$inkStocksUpdatedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InkStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    orderLogs<T extends User$orderLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$orderLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     ordersCutting<T extends User$ordersCuttingArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersCuttingArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     ordersDesigned<T extends User$ordersDesignedArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersDesignedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     ordersDTF<T extends User$ordersDTFArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersDTFArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4400,6 +4535,12 @@ export namespace Prisma {
     ordersPress<T extends User$ordersPressArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersPressArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     ordersPrint<T extends User$ordersPrintArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersPrintArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     ordersCreated<T extends User$ordersCreatedArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    othersItemsTaken<T extends User$othersItemsTakenArgs<ExtArgs> = {}>(args?: Subset<T, User$othersItemsTakenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    othersItemsAdded<T extends User$othersItemsAddedArgs<ExtArgs> = {}>(args?: Subset<T, User$othersItemsAddedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    othersLogs<T extends User$othersLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    othersApprovals<T extends User$othersApprovalsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersApprovalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    othersRejections<T extends User$othersRejectionsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersRejectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    othersRequests<T extends User$othersRequestsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     paperLogs<T extends User$paperLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$paperLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     paperApprovals<T extends User$paperApprovalsArgs<ExtArgs> = {}>(args?: Subset<T, User$paperApprovalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     paperRejections<T extends User$paperRejectionsArgs<ExtArgs> = {}>(args?: Subset<T, User$paperRejectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4407,12 +4548,6 @@ export namespace Prisma {
     paperStocksAdded<T extends User$paperStocksAddedArgs<ExtArgs> = {}>(args?: Subset<T, User$paperStocksAddedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     paperStocksTaken<T extends User$paperStocksTakenArgs<ExtArgs> = {}>(args?: Subset<T, User$paperStocksTakenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     paperStocksUpdated<T extends User$paperStocksUpdatedArgs<ExtArgs> = {}>(args?: Subset<T, User$paperStocksUpdatedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    othersItemsAdded<T extends User$othersItemsAddedArgs<ExtArgs> = {}>(args?: Subset<T, User$othersItemsAddedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    othersItemsTaken<T extends User$othersItemsTakenArgs<ExtArgs> = {}>(args?: Subset<T, User$othersItemsTakenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    othersLogs<T extends User$othersLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    othersRequests<T extends User$othersRequestsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    othersApprovals<T extends User$othersApprovalsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersApprovalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    othersRejections<T extends User$othersRejectionsArgs<ExtArgs> = {}>(args?: Subset<T, User$othersRejectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5036,6 +5171,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.orderLogs
+   */
+  export type User$orderLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    where?: OrderLogWhereInput
+    orderBy?: OrderLogOrderByWithRelationInput | OrderLogOrderByWithRelationInput[]
+    cursor?: OrderLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OrderLogScalarFieldEnum | OrderLogScalarFieldEnum[]
+  }
+
+  /**
    * User.ordersCutting
    */
   export type User$ordersCuttingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5252,6 +5411,150 @@ export namespace Prisma {
   }
 
   /**
+   * User.othersItemsTaken
+   */
+  export type User$othersItemsTakenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OthersItem
+     */
+    select?: OthersItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OthersItem
+     */
+    omit?: OthersItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OthersItemInclude<ExtArgs> | null
+    where?: OthersItemWhereInput
+    orderBy?: OthersItemOrderByWithRelationInput | OthersItemOrderByWithRelationInput[]
+    cursor?: OthersItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OthersItemScalarFieldEnum | OthersItemScalarFieldEnum[]
+  }
+
+  /**
+   * User.othersItemsAdded
+   */
+  export type User$othersItemsAddedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OthersItem
+     */
+    select?: OthersItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OthersItem
+     */
+    omit?: OthersItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OthersItemInclude<ExtArgs> | null
+    where?: OthersItemWhereInput
+    orderBy?: OthersItemOrderByWithRelationInput | OthersItemOrderByWithRelationInput[]
+    cursor?: OthersItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OthersItemScalarFieldEnum | OthersItemScalarFieldEnum[]
+  }
+
+  /**
+   * User.othersLogs
+   */
+  export type User$othersLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OthersLog
+     */
+    select?: OthersLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OthersLog
+     */
+    omit?: OthersLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OthersLogInclude<ExtArgs> | null
+    where?: OthersLogWhereInput
+    orderBy?: OthersLogOrderByWithRelationInput | OthersLogOrderByWithRelationInput[]
+    cursor?: OthersLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OthersLogScalarFieldEnum | OthersLogScalarFieldEnum[]
+  }
+
+  /**
+   * User.othersApprovals
+   */
+  export type User$othersApprovalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OthersRequest
+     */
+    select?: OthersRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OthersRequest
+     */
+    omit?: OthersRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OthersRequestInclude<ExtArgs> | null
+    where?: OthersRequestWhereInput
+    orderBy?: OthersRequestOrderByWithRelationInput | OthersRequestOrderByWithRelationInput[]
+    cursor?: OthersRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OthersRequestScalarFieldEnum | OthersRequestScalarFieldEnum[]
+  }
+
+  /**
+   * User.othersRejections
+   */
+  export type User$othersRejectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OthersRequest
+     */
+    select?: OthersRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OthersRequest
+     */
+    omit?: OthersRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OthersRequestInclude<ExtArgs> | null
+    where?: OthersRequestWhereInput
+    orderBy?: OthersRequestOrderByWithRelationInput | OthersRequestOrderByWithRelationInput[]
+    cursor?: OthersRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OthersRequestScalarFieldEnum | OthersRequestScalarFieldEnum[]
+  }
+
+  /**
+   * User.othersRequests
+   */
+  export type User$othersRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OthersRequest
+     */
+    select?: OthersRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OthersRequest
+     */
+    omit?: OthersRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OthersRequestInclude<ExtArgs> | null
+    where?: OthersRequestWhereInput
+    orderBy?: OthersRequestOrderByWithRelationInput | OthersRequestOrderByWithRelationInput[]
+    cursor?: OthersRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OthersRequestScalarFieldEnum | OthersRequestScalarFieldEnum[]
+  }
+
+  /**
    * User.paperLogs
    */
   export type User$paperLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5417,150 +5720,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PaperStockScalarFieldEnum | PaperStockScalarFieldEnum[]
-  }
-
-  /**
-   * User.othersItemsAdded
-   */
-  export type User$othersItemsAddedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OthersItem
-     */
-    select?: OthersItemSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the OthersItem
-     */
-    omit?: OthersItemOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OthersItemInclude<ExtArgs> | null
-    where?: OthersItemWhereInput
-    orderBy?: OthersItemOrderByWithRelationInput | OthersItemOrderByWithRelationInput[]
-    cursor?: OthersItemWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: OthersItemScalarFieldEnum | OthersItemScalarFieldEnum[]
-  }
-
-  /**
-   * User.othersItemsTaken
-   */
-  export type User$othersItemsTakenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OthersItem
-     */
-    select?: OthersItemSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the OthersItem
-     */
-    omit?: OthersItemOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OthersItemInclude<ExtArgs> | null
-    where?: OthersItemWhereInput
-    orderBy?: OthersItemOrderByWithRelationInput | OthersItemOrderByWithRelationInput[]
-    cursor?: OthersItemWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: OthersItemScalarFieldEnum | OthersItemScalarFieldEnum[]
-  }
-
-  /**
-   * User.othersLogs
-   */
-  export type User$othersLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OthersLog
-     */
-    select?: OthersLogSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the OthersLog
-     */
-    omit?: OthersLogOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OthersLogInclude<ExtArgs> | null
-    where?: OthersLogWhereInput
-    orderBy?: OthersLogOrderByWithRelationInput | OthersLogOrderByWithRelationInput[]
-    cursor?: OthersLogWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: OthersLogScalarFieldEnum | OthersLogScalarFieldEnum[]
-  }
-
-  /**
-   * User.othersRequests
-   */
-  export type User$othersRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OthersRequest
-     */
-    select?: OthersRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the OthersRequest
-     */
-    omit?: OthersRequestOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OthersRequestInclude<ExtArgs> | null
-    where?: OthersRequestWhereInput
-    orderBy?: OthersRequestOrderByWithRelationInput | OthersRequestOrderByWithRelationInput[]
-    cursor?: OthersRequestWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: OthersRequestScalarFieldEnum | OthersRequestScalarFieldEnum[]
-  }
-
-  /**
-   * User.othersApprovals
-   */
-  export type User$othersApprovalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OthersRequest
-     */
-    select?: OthersRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the OthersRequest
-     */
-    omit?: OthersRequestOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OthersRequestInclude<ExtArgs> | null
-    where?: OthersRequestWhereInput
-    orderBy?: OthersRequestOrderByWithRelationInput | OthersRequestOrderByWithRelationInput[]
-    cursor?: OthersRequestWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: OthersRequestScalarFieldEnum | OthersRequestScalarFieldEnum[]
-  }
-
-  /**
-   * User.othersRejections
-   */
-  export type User$othersRejectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OthersRequest
-     */
-    select?: OthersRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the OthersRequest
-     */
-    omit?: OthersRequestOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OthersRequestInclude<ExtArgs> | null
-    where?: OthersRequestWhereInput
-    orderBy?: OthersRequestOrderByWithRelationInput | OthersRequestOrderByWithRelationInput[]
-    cursor?: OthersRequestWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: OthersRequestScalarFieldEnum | OthersRequestScalarFieldEnum[]
   }
 
   /**
@@ -16807,6 +16966,8 @@ export namespace Prisma {
     dtf_done: Date | null
     press_done: Date | null
     print_done: Date | null
+    holdReason: string | null
+    previousStatus: string | null
   }
 
   export type OrderMaxAggregateOutputType = {
@@ -16957,6 +17118,8 @@ export namespace Prisma {
     dtf_done: Date | null
     press_done: Date | null
     print_done: Date | null
+    holdReason: string | null
+    previousStatus: string | null
   }
 
   export type OrderCountAggregateOutputType = {
@@ -17107,6 +17270,8 @@ export namespace Prisma {
     dtf_done: number
     press_done: number
     print_done: number
+    holdReason: number
+    previousStatus: number
     _all: number
   }
 
@@ -17277,6 +17442,8 @@ export namespace Prisma {
     dtf_done?: true
     press_done?: true
     print_done?: true
+    holdReason?: true
+    previousStatus?: true
   }
 
   export type OrderMaxAggregateInputType = {
@@ -17427,6 +17594,8 @@ export namespace Prisma {
     dtf_done?: true
     press_done?: true
     print_done?: true
+    holdReason?: true
+    previousStatus?: true
   }
 
   export type OrderCountAggregateInputType = {
@@ -17577,6 +17746,8 @@ export namespace Prisma {
     dtf_done?: true
     press_done?: true
     print_done?: true
+    holdReason?: true
+    previousStatus?: true
     _all?: true
   }
 
@@ -17814,6 +17985,8 @@ export namespace Prisma {
     dtf_done: Date | null
     press_done: Date | null
     print_done: Date | null
+    holdReason: string | null
+    previousStatus: string | null
     _count: OrderCountAggregateOutputType | null
     _avg: OrderAvgAggregateOutputType | null
     _sum: OrderSumAggregateOutputType | null
@@ -17983,6 +18156,9 @@ export namespace Prisma {
     dtf_done?: boolean
     press_done?: boolean
     print_done?: boolean
+    holdReason?: boolean
+    previousStatus?: boolean
+    logs?: boolean | Order$logsArgs<ExtArgs>
     asal_bahan_rel?: boolean | Order$asal_bahan_relArgs<ExtArgs>
     customer?: boolean | Order$customerArgs<ExtArgs>
     cutting?: boolean | Order$cuttingArgs<ExtArgs>
@@ -17995,6 +18171,7 @@ export namespace Prisma {
     press?: boolean | Order$pressArgs<ExtArgs>
     print?: boolean | Order$printArgs<ExtArgs>
     user?: boolean | Order$userArgs<ExtArgs>
+    _count?: boolean | OrderCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
 
   export type OrderSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -18145,6 +18322,8 @@ export namespace Prisma {
     dtf_done?: boolean
     press_done?: boolean
     print_done?: boolean
+    holdReason?: boolean
+    previousStatus?: boolean
     asal_bahan_rel?: boolean | Order$asal_bahan_relArgs<ExtArgs>
     customer?: boolean | Order$customerArgs<ExtArgs>
     cutting?: boolean | Order$cuttingArgs<ExtArgs>
@@ -18307,6 +18486,8 @@ export namespace Prisma {
     dtf_done?: boolean
     press_done?: boolean
     print_done?: boolean
+    holdReason?: boolean
+    previousStatus?: boolean
     asal_bahan_rel?: boolean | Order$asal_bahan_relArgs<ExtArgs>
     customer?: boolean | Order$customerArgs<ExtArgs>
     cutting?: boolean | Order$cuttingArgs<ExtArgs>
@@ -18469,10 +18650,13 @@ export namespace Prisma {
     dtf_done?: boolean
     press_done?: boolean
     print_done?: boolean
+    holdReason?: boolean
+    previousStatus?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tanggal" | "spk" | "reject" | "panjang_reject" | "panjang_order" | "lebar_kertas" | "marketing" | "nominal" | "harga_satuan" | "keterangan" | "invoice" | "jenis_pembayaran" | "dp" | "tgl_dp" | "sisa" | "pelunasan" | "biaya_tambahan" | "tgl_lunas" | "tgl_invoice" | "status" | "statusm" | "approval" | "approve_mng" | "approval_barang" | "approval_opr" | "opr_id" | "userId" | "print_id" | "press_id" | "cutting_id" | "dtf_id" | "penyerahan_id" | "designer_id" | "manager_id" | "customerId" | "rip" | "produk" | "path" | "tf_dp" | "tf_pelunasan" | "tf_full" | "catatan_tf" | "capture" | "capture_name" | "nama_kain" | "jumlah_kain" | "tipe_produk" | "qty" | "kategori" | "gramasi" | "nama_produk" | "catatan" | "catatan_print" | "catatan_press" | "catatan_cutting" | "lebar_file" | "est_order" | "no_project" | "warna_acuan" | "statusprod" | "lebar_kain" | "prioritas" | "prints_mesin" | "prints_icc" | "prints_target" | "dimensi_file" | "prints_qty" | "total_kertas" | "prints_bagus" | "prints_reject" | "prints_waste" | "press_mesin" | "press_presure" | "press_suhu" | "press_speed" | "press_protect" | "total_kain" | "press_bagus" | "press_reject" | "press_waste" | "printd_mesin" | "printd_icc" | "pet" | "suhu_meja" | "printd_speed" | "white_setting" | "choke" | "white_precentage" | "total_pet" | "cutting_mesin" | "cutting_speed" | "acc" | "power" | "cutting_bagus" | "cutting_reject" | "tgl_pengiriman" | "tambah_bahan" | "tambah_cutting" | "tambah_cutting1" | "tambah_cutting2" | "tambah_cutting3" | "tambah_cutting4" | "tambah_cutting5" | "satuan_bahan" | "satuan_cutting" | "satuan_cutting1" | "satuan_cutting2" | "satuan_cutting3" | "satuan_cutting4" | "satuan_cutting5" | "qty_bahan" | "qty_cutting" | "qty_cutting1" | "qty_cutting2" | "qty_cutting3" | "qty_cutting4" | "qty_cutting5" | "total_bahan" | "total_cutting" | "total_cutting1" | "total_cutting2" | "total_cutting3" | "total_cutting4" | "total_cutting5" | "nominal_total" | "no" | "nospk" | "catatan_design" | "tgl_app_cs" | "tgl_app_prod" | "tgl_app_manager" | "diskon" | "tambah_produk" | "created_at" | "updated_at" | "asal_bahan_id" | "jns_produk_id" | "tgl_print" | "tgl_cutting" | "tgl_dtf" | "tgl_press" | "waktu_rip" | "cutting_done" | "dtf_done" | "press_done" | "print_done", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tanggal" | "spk" | "reject" | "panjang_reject" | "panjang_order" | "lebar_kertas" | "marketing" | "nominal" | "harga_satuan" | "keterangan" | "invoice" | "jenis_pembayaran" | "dp" | "tgl_dp" | "sisa" | "pelunasan" | "biaya_tambahan" | "tgl_lunas" | "tgl_invoice" | "status" | "statusm" | "approval" | "approve_mng" | "approval_barang" | "approval_opr" | "opr_id" | "userId" | "print_id" | "press_id" | "cutting_id" | "dtf_id" | "penyerahan_id" | "designer_id" | "manager_id" | "customerId" | "rip" | "produk" | "path" | "tf_dp" | "tf_pelunasan" | "tf_full" | "catatan_tf" | "capture" | "capture_name" | "nama_kain" | "jumlah_kain" | "tipe_produk" | "qty" | "kategori" | "gramasi" | "nama_produk" | "catatan" | "catatan_print" | "catatan_press" | "catatan_cutting" | "lebar_file" | "est_order" | "no_project" | "warna_acuan" | "statusprod" | "lebar_kain" | "prioritas" | "prints_mesin" | "prints_icc" | "prints_target" | "dimensi_file" | "prints_qty" | "total_kertas" | "prints_bagus" | "prints_reject" | "prints_waste" | "press_mesin" | "press_presure" | "press_suhu" | "press_speed" | "press_protect" | "total_kain" | "press_bagus" | "press_reject" | "press_waste" | "printd_mesin" | "printd_icc" | "pet" | "suhu_meja" | "printd_speed" | "white_setting" | "choke" | "white_precentage" | "total_pet" | "cutting_mesin" | "cutting_speed" | "acc" | "power" | "cutting_bagus" | "cutting_reject" | "tgl_pengiriman" | "tambah_bahan" | "tambah_cutting" | "tambah_cutting1" | "tambah_cutting2" | "tambah_cutting3" | "tambah_cutting4" | "tambah_cutting5" | "satuan_bahan" | "satuan_cutting" | "satuan_cutting1" | "satuan_cutting2" | "satuan_cutting3" | "satuan_cutting4" | "satuan_cutting5" | "qty_bahan" | "qty_cutting" | "qty_cutting1" | "qty_cutting2" | "qty_cutting3" | "qty_cutting4" | "qty_cutting5" | "total_bahan" | "total_cutting" | "total_cutting1" | "total_cutting2" | "total_cutting3" | "total_cutting4" | "total_cutting5" | "nominal_total" | "no" | "nospk" | "catatan_design" | "tgl_app_cs" | "tgl_app_prod" | "tgl_app_manager" | "diskon" | "tambah_produk" | "created_at" | "updated_at" | "asal_bahan_id" | "jns_produk_id" | "tgl_print" | "tgl_cutting" | "tgl_dtf" | "tgl_press" | "waktu_rip" | "cutting_done" | "dtf_done" | "press_done" | "print_done" | "holdReason" | "previousStatus", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    logs?: boolean | Order$logsArgs<ExtArgs>
     asal_bahan_rel?: boolean | Order$asal_bahan_relArgs<ExtArgs>
     customer?: boolean | Order$customerArgs<ExtArgs>
     cutting?: boolean | Order$cuttingArgs<ExtArgs>
@@ -18485,6 +18669,7 @@ export namespace Prisma {
     press?: boolean | Order$pressArgs<ExtArgs>
     print?: boolean | Order$printArgs<ExtArgs>
     user?: boolean | Order$userArgs<ExtArgs>
+    _count?: boolean | OrderCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrderIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     asal_bahan_rel?: boolean | Order$asal_bahan_relArgs<ExtArgs>
@@ -18518,6 +18703,7 @@ export namespace Prisma {
   export type $OrderPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Order"
     objects: {
+      logs: Prisma.$OrderLogPayload<ExtArgs>[]
       asal_bahan_rel: Prisma.$customerPayload<ExtArgs> | null
       customer: Prisma.$customerPayload<ExtArgs> | null
       cutting: Prisma.$UserPayload<ExtArgs> | null
@@ -18679,6 +18865,8 @@ export namespace Prisma {
       dtf_done: Date | null
       press_done: Date | null
       print_done: Date | null
+      holdReason: string | null
+      previousStatus: string | null
     }, ExtArgs["result"]["order"]>
     composites: {}
   }
@@ -19073,6 +19261,7 @@ export namespace Prisma {
    */
   export interface Prisma__OrderClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    logs<T extends Order$logsArgs<ExtArgs> = {}>(args?: Subset<T, Order$logsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     asal_bahan_rel<T extends Order$asal_bahan_relArgs<ExtArgs> = {}>(args?: Subset<T, Order$asal_bahan_relArgs<ExtArgs>>): Prisma__customerClient<$Result.GetResult<Prisma.$customerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     customer<T extends Order$customerArgs<ExtArgs> = {}>(args?: Subset<T, Order$customerArgs<ExtArgs>>): Prisma__customerClient<$Result.GetResult<Prisma.$customerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     cutting<T extends Order$cuttingArgs<ExtArgs> = {}>(args?: Subset<T, Order$cuttingArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -19261,6 +19450,8 @@ export namespace Prisma {
     readonly dtf_done: FieldRef<"Order", 'DateTime'>
     readonly press_done: FieldRef<"Order", 'DateTime'>
     readonly print_done: FieldRef<"Order", 'DateTime'>
+    readonly holdReason: FieldRef<"Order", 'String'>
+    readonly previousStatus: FieldRef<"Order", 'String'>
   }
     
 
@@ -19657,6 +19848,30 @@ export namespace Prisma {
   }
 
   /**
+   * Order.logs
+   */
+  export type Order$logsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    where?: OrderLogWhereInput
+    orderBy?: OrderLogOrderByWithRelationInput | OrderLogOrderByWithRelationInput[]
+    cursor?: OrderLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OrderLogScalarFieldEnum | OrderLogScalarFieldEnum[]
+  }
+
+  /**
    * Order.asal_bahan_rel
    */
   export type Order$asal_bahan_relArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -19900,6 +20115,1085 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: OrderInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model OrderLog
+   */
+
+  export type AggregateOrderLog = {
+    _count: OrderLogCountAggregateOutputType | null
+    _min: OrderLogMinAggregateOutputType | null
+    _max: OrderLogMaxAggregateOutputType | null
+  }
+
+  export type OrderLogMinAggregateOutputType = {
+    id: string | null
+    orderId: string | null
+    userId: string | null
+    action: string | null
+    notes: string | null
+    timestamp: Date | null
+  }
+
+  export type OrderLogMaxAggregateOutputType = {
+    id: string | null
+    orderId: string | null
+    userId: string | null
+    action: string | null
+    notes: string | null
+    timestamp: Date | null
+  }
+
+  export type OrderLogCountAggregateOutputType = {
+    id: number
+    orderId: number
+    userId: number
+    action: number
+    notes: number
+    timestamp: number
+    _all: number
+  }
+
+
+  export type OrderLogMinAggregateInputType = {
+    id?: true
+    orderId?: true
+    userId?: true
+    action?: true
+    notes?: true
+    timestamp?: true
+  }
+
+  export type OrderLogMaxAggregateInputType = {
+    id?: true
+    orderId?: true
+    userId?: true
+    action?: true
+    notes?: true
+    timestamp?: true
+  }
+
+  export type OrderLogCountAggregateInputType = {
+    id?: true
+    orderId?: true
+    userId?: true
+    action?: true
+    notes?: true
+    timestamp?: true
+    _all?: true
+  }
+
+  export type OrderLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OrderLog to aggregate.
+     */
+    where?: OrderLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrderLogs to fetch.
+     */
+    orderBy?: OrderLogOrderByWithRelationInput | OrderLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OrderLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrderLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrderLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned OrderLogs
+    **/
+    _count?: true | OrderLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OrderLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OrderLogMaxAggregateInputType
+  }
+
+  export type GetOrderLogAggregateType<T extends OrderLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateOrderLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOrderLog[P]>
+      : GetScalarType<T[P], AggregateOrderLog[P]>
+  }
+
+
+
+
+  export type OrderLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OrderLogWhereInput
+    orderBy?: OrderLogOrderByWithAggregationInput | OrderLogOrderByWithAggregationInput[]
+    by: OrderLogScalarFieldEnum[] | OrderLogScalarFieldEnum
+    having?: OrderLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OrderLogCountAggregateInputType | true
+    _min?: OrderLogMinAggregateInputType
+    _max?: OrderLogMaxAggregateInputType
+  }
+
+  export type OrderLogGroupByOutputType = {
+    id: string
+    orderId: string
+    userId: string
+    action: string
+    notes: string | null
+    timestamp: Date
+    _count: OrderLogCountAggregateOutputType | null
+    _min: OrderLogMinAggregateOutputType | null
+    _max: OrderLogMaxAggregateOutputType | null
+  }
+
+  type GetOrderLogGroupByPayload<T extends OrderLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OrderLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OrderLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OrderLogGroupByOutputType[P]>
+            : GetScalarType<T[P], OrderLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OrderLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    orderId?: boolean
+    userId?: boolean
+    action?: boolean
+    notes?: boolean
+    timestamp?: boolean
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["orderLog"]>
+
+  export type OrderLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    orderId?: boolean
+    userId?: boolean
+    action?: boolean
+    notes?: boolean
+    timestamp?: boolean
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["orderLog"]>
+
+  export type OrderLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    orderId?: boolean
+    userId?: boolean
+    action?: boolean
+    notes?: boolean
+    timestamp?: boolean
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["orderLog"]>
+
+  export type OrderLogSelectScalar = {
+    id?: boolean
+    orderId?: boolean
+    userId?: boolean
+    action?: boolean
+    notes?: boolean
+    timestamp?: boolean
+  }
+
+  export type OrderLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "userId" | "action" | "notes" | "timestamp", ExtArgs["result"]["orderLog"]>
+  export type OrderLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type OrderLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type OrderLogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $OrderLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "OrderLog"
+    objects: {
+      order: Prisma.$OrderPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      orderId: string
+      userId: string
+      action: string
+      notes: string | null
+      timestamp: Date
+    }, ExtArgs["result"]["orderLog"]>
+    composites: {}
+  }
+
+  type OrderLogGetPayload<S extends boolean | null | undefined | OrderLogDefaultArgs> = $Result.GetResult<Prisma.$OrderLogPayload, S>
+
+  type OrderLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OrderLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OrderLogCountAggregateInputType | true
+    }
+
+  export interface OrderLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['OrderLog'], meta: { name: 'OrderLog' } }
+    /**
+     * Find zero or one OrderLog that matches the filter.
+     * @param {OrderLogFindUniqueArgs} args - Arguments to find a OrderLog
+     * @example
+     * // Get one OrderLog
+     * const orderLog = await prisma.orderLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OrderLogFindUniqueArgs>(args: SelectSubset<T, OrderLogFindUniqueArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one OrderLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OrderLogFindUniqueOrThrowArgs} args - Arguments to find a OrderLog
+     * @example
+     * // Get one OrderLog
+     * const orderLog = await prisma.orderLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OrderLogFindUniqueOrThrowArgs>(args: SelectSubset<T, OrderLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OrderLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrderLogFindFirstArgs} args - Arguments to find a OrderLog
+     * @example
+     * // Get one OrderLog
+     * const orderLog = await prisma.orderLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OrderLogFindFirstArgs>(args?: SelectSubset<T, OrderLogFindFirstArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OrderLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrderLogFindFirstOrThrowArgs} args - Arguments to find a OrderLog
+     * @example
+     * // Get one OrderLog
+     * const orderLog = await prisma.orderLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OrderLogFindFirstOrThrowArgs>(args?: SelectSubset<T, OrderLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more OrderLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrderLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all OrderLogs
+     * const orderLogs = await prisma.orderLog.findMany()
+     * 
+     * // Get first 10 OrderLogs
+     * const orderLogs = await prisma.orderLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const orderLogWithIdOnly = await prisma.orderLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OrderLogFindManyArgs>(args?: SelectSubset<T, OrderLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a OrderLog.
+     * @param {OrderLogCreateArgs} args - Arguments to create a OrderLog.
+     * @example
+     * // Create one OrderLog
+     * const OrderLog = await prisma.orderLog.create({
+     *   data: {
+     *     // ... data to create a OrderLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends OrderLogCreateArgs>(args: SelectSubset<T, OrderLogCreateArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many OrderLogs.
+     * @param {OrderLogCreateManyArgs} args - Arguments to create many OrderLogs.
+     * @example
+     * // Create many OrderLogs
+     * const orderLog = await prisma.orderLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OrderLogCreateManyArgs>(args?: SelectSubset<T, OrderLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many OrderLogs and returns the data saved in the database.
+     * @param {OrderLogCreateManyAndReturnArgs} args - Arguments to create many OrderLogs.
+     * @example
+     * // Create many OrderLogs
+     * const orderLog = await prisma.orderLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many OrderLogs and only return the `id`
+     * const orderLogWithIdOnly = await prisma.orderLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends OrderLogCreateManyAndReturnArgs>(args?: SelectSubset<T, OrderLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a OrderLog.
+     * @param {OrderLogDeleteArgs} args - Arguments to delete one OrderLog.
+     * @example
+     * // Delete one OrderLog
+     * const OrderLog = await prisma.orderLog.delete({
+     *   where: {
+     *     // ... filter to delete one OrderLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OrderLogDeleteArgs>(args: SelectSubset<T, OrderLogDeleteArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one OrderLog.
+     * @param {OrderLogUpdateArgs} args - Arguments to update one OrderLog.
+     * @example
+     * // Update one OrderLog
+     * const orderLog = await prisma.orderLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OrderLogUpdateArgs>(args: SelectSubset<T, OrderLogUpdateArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more OrderLogs.
+     * @param {OrderLogDeleteManyArgs} args - Arguments to filter OrderLogs to delete.
+     * @example
+     * // Delete a few OrderLogs
+     * const { count } = await prisma.orderLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OrderLogDeleteManyArgs>(args?: SelectSubset<T, OrderLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OrderLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrderLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many OrderLogs
+     * const orderLog = await prisma.orderLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OrderLogUpdateManyArgs>(args: SelectSubset<T, OrderLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OrderLogs and returns the data updated in the database.
+     * @param {OrderLogUpdateManyAndReturnArgs} args - Arguments to update many OrderLogs.
+     * @example
+     * // Update many OrderLogs
+     * const orderLog = await prisma.orderLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more OrderLogs and only return the `id`
+     * const orderLogWithIdOnly = await prisma.orderLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends OrderLogUpdateManyAndReturnArgs>(args: SelectSubset<T, OrderLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one OrderLog.
+     * @param {OrderLogUpsertArgs} args - Arguments to update or create a OrderLog.
+     * @example
+     * // Update or create a OrderLog
+     * const orderLog = await prisma.orderLog.upsert({
+     *   create: {
+     *     // ... data to create a OrderLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the OrderLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OrderLogUpsertArgs>(args: SelectSubset<T, OrderLogUpsertArgs<ExtArgs>>): Prisma__OrderLogClient<$Result.GetResult<Prisma.$OrderLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of OrderLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrderLogCountArgs} args - Arguments to filter OrderLogs to count.
+     * @example
+     * // Count the number of OrderLogs
+     * const count = await prisma.orderLog.count({
+     *   where: {
+     *     // ... the filter for the OrderLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends OrderLogCountArgs>(
+      args?: Subset<T, OrderLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OrderLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a OrderLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrderLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OrderLogAggregateArgs>(args: Subset<T, OrderLogAggregateArgs>): Prisma.PrismaPromise<GetOrderLogAggregateType<T>>
+
+    /**
+     * Group by OrderLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrderLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OrderLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OrderLogGroupByArgs['orderBy'] }
+        : { orderBy?: OrderLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OrderLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOrderLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the OrderLog model
+   */
+  readonly fields: OrderLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for OrderLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OrderLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    order<T extends OrderDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrderDefaultArgs<ExtArgs>>): Prisma__OrderClient<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the OrderLog model
+   */
+  interface OrderLogFieldRefs {
+    readonly id: FieldRef<"OrderLog", 'String'>
+    readonly orderId: FieldRef<"OrderLog", 'String'>
+    readonly userId: FieldRef<"OrderLog", 'String'>
+    readonly action: FieldRef<"OrderLog", 'String'>
+    readonly notes: FieldRef<"OrderLog", 'String'>
+    readonly timestamp: FieldRef<"OrderLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * OrderLog findUnique
+   */
+  export type OrderLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * Filter, which OrderLog to fetch.
+     */
+    where: OrderLogWhereUniqueInput
+  }
+
+  /**
+   * OrderLog findUniqueOrThrow
+   */
+  export type OrderLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * Filter, which OrderLog to fetch.
+     */
+    where: OrderLogWhereUniqueInput
+  }
+
+  /**
+   * OrderLog findFirst
+   */
+  export type OrderLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * Filter, which OrderLog to fetch.
+     */
+    where?: OrderLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrderLogs to fetch.
+     */
+    orderBy?: OrderLogOrderByWithRelationInput | OrderLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OrderLogs.
+     */
+    cursor?: OrderLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrderLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrderLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OrderLogs.
+     */
+    distinct?: OrderLogScalarFieldEnum | OrderLogScalarFieldEnum[]
+  }
+
+  /**
+   * OrderLog findFirstOrThrow
+   */
+  export type OrderLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * Filter, which OrderLog to fetch.
+     */
+    where?: OrderLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrderLogs to fetch.
+     */
+    orderBy?: OrderLogOrderByWithRelationInput | OrderLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OrderLogs.
+     */
+    cursor?: OrderLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrderLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrderLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OrderLogs.
+     */
+    distinct?: OrderLogScalarFieldEnum | OrderLogScalarFieldEnum[]
+  }
+
+  /**
+   * OrderLog findMany
+   */
+  export type OrderLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * Filter, which OrderLogs to fetch.
+     */
+    where?: OrderLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrderLogs to fetch.
+     */
+    orderBy?: OrderLogOrderByWithRelationInput | OrderLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing OrderLogs.
+     */
+    cursor?: OrderLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrderLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrderLogs.
+     */
+    skip?: number
+    distinct?: OrderLogScalarFieldEnum | OrderLogScalarFieldEnum[]
+  }
+
+  /**
+   * OrderLog create
+   */
+  export type OrderLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * The data needed to create a OrderLog.
+     */
+    data: XOR<OrderLogCreateInput, OrderLogUncheckedCreateInput>
+  }
+
+  /**
+   * OrderLog createMany
+   */
+  export type OrderLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many OrderLogs.
+     */
+    data: OrderLogCreateManyInput | OrderLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * OrderLog createManyAndReturn
+   */
+  export type OrderLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many OrderLogs.
+     */
+    data: OrderLogCreateManyInput | OrderLogCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * OrderLog update
+   */
+  export type OrderLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * The data needed to update a OrderLog.
+     */
+    data: XOR<OrderLogUpdateInput, OrderLogUncheckedUpdateInput>
+    /**
+     * Choose, which OrderLog to update.
+     */
+    where: OrderLogWhereUniqueInput
+  }
+
+  /**
+   * OrderLog updateMany
+   */
+  export type OrderLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update OrderLogs.
+     */
+    data: XOR<OrderLogUpdateManyMutationInput, OrderLogUncheckedUpdateManyInput>
+    /**
+     * Filter which OrderLogs to update
+     */
+    where?: OrderLogWhereInput
+    /**
+     * Limit how many OrderLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OrderLog updateManyAndReturn
+   */
+  export type OrderLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * The data used to update OrderLogs.
+     */
+    data: XOR<OrderLogUpdateManyMutationInput, OrderLogUncheckedUpdateManyInput>
+    /**
+     * Filter which OrderLogs to update
+     */
+    where?: OrderLogWhereInput
+    /**
+     * Limit how many OrderLogs to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * OrderLog upsert
+   */
+  export type OrderLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * The filter to search for the OrderLog to update in case it exists.
+     */
+    where: OrderLogWhereUniqueInput
+    /**
+     * In case the OrderLog found by the `where` argument doesn't exist, create a new OrderLog with this data.
+     */
+    create: XOR<OrderLogCreateInput, OrderLogUncheckedCreateInput>
+    /**
+     * In case the OrderLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OrderLogUpdateInput, OrderLogUncheckedUpdateInput>
+  }
+
+  /**
+   * OrderLog delete
+   */
+  export type OrderLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
+    /**
+     * Filter which OrderLog to delete.
+     */
+    where: OrderLogWhereUniqueInput
+  }
+
+  /**
+   * OrderLog deleteMany
+   */
+  export type OrderLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OrderLogs to delete
+     */
+    where?: OrderLogWhereInput
+    /**
+     * Limit how many OrderLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * OrderLog without action
+   */
+  export type OrderLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrderLog
+     */
+    select?: OrderLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrderLog
+     */
+    omit?: OrderLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderLogInclude<ExtArgs> | null
   }
 
 
@@ -31179,8 +32473,8 @@ export namespace Prisma {
     taken_at?: boolean
     created_at?: boolean
     updated_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     taken_by_user?: boolean | OthersItem$taken_by_userArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
     logs?: boolean | OthersItem$logsArgs<ExtArgs>
     _count?: boolean | OthersItemCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersItem"]>
@@ -31201,8 +32495,8 @@ export namespace Prisma {
     taken_at?: boolean
     created_at?: boolean
     updated_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     taken_by_user?: boolean | OthersItem$taken_by_userArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersItem"]>
 
   export type OthersItemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -31221,8 +32515,8 @@ export namespace Prisma {
     taken_at?: boolean
     created_at?: boolean
     updated_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     taken_by_user?: boolean | OthersItem$taken_by_userArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersItem"]>
 
   export type OthersItemSelectScalar = {
@@ -31245,25 +32539,25 @@ export namespace Prisma {
 
   export type OthersItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "qr_code" | "category" | "item_name" | "description" | "quantity" | "unit" | "location" | "notes" | "availability" | "user_id" | "taken_by_user_id" | "taken_at" | "created_at" | "updated_at", ExtArgs["result"]["othersItem"]>
   export type OthersItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     taken_by_user?: boolean | OthersItem$taken_by_userArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
     logs?: boolean | OthersItem$logsArgs<ExtArgs>
     _count?: boolean | OthersItemCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OthersItemIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     taken_by_user?: boolean | OthersItem$taken_by_userArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type OthersItemIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     taken_by_user?: boolean | OthersItem$taken_by_userArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $OthersItemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "OthersItem"
     objects: {
-      user: Prisma.$UserPayload<ExtArgs>
       taken_by_user: Prisma.$UserPayload<ExtArgs> | null
+      user: Prisma.$UserPayload<ExtArgs>
       logs: Prisma.$OthersLogPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -31676,8 +32970,8 @@ export namespace Prisma {
    */
   export interface Prisma__OthersItemClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     taken_by_user<T extends OthersItem$taken_by_userArgs<ExtArgs> = {}>(args?: Subset<T, OthersItem$taken_by_userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     logs<T extends OthersItem$logsArgs<ExtArgs> = {}>(args?: Subset<T, OthersItem$logsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -32467,9 +33761,9 @@ export namespace Prisma {
     created_at?: boolean
     updated_at?: boolean
     logs?: boolean | OthersRequest$logsArgs<ExtArgs>
-    user?: boolean | UserDefaultArgs<ExtArgs>
     approver?: boolean | OthersRequest$approverArgs<ExtArgs>
     rejector?: boolean | OthersRequest$rejectorArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
     _count?: boolean | OthersRequestCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersRequest"]>
 
@@ -32490,9 +33784,9 @@ export namespace Prisma {
     rejection_reason?: boolean
     created_at?: boolean
     updated_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     approver?: boolean | OthersRequest$approverArgs<ExtArgs>
     rejector?: boolean | OthersRequest$rejectorArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersRequest"]>
 
   export type OthersRequestSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -32512,9 +33806,9 @@ export namespace Prisma {
     rejection_reason?: boolean
     created_at?: boolean
     updated_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
     approver?: boolean | OthersRequest$approverArgs<ExtArgs>
     rejector?: boolean | OthersRequest$rejectorArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersRequest"]>
 
   export type OthersRequestSelectScalar = {
@@ -32539,29 +33833,29 @@ export namespace Prisma {
   export type OthersRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "user_id" | "category" | "item_name" | "quantity" | "unit" | "user_notes" | "status" | "approver_id" | "rejector_id" | "approved_at" | "rejected_at" | "approver_notes" | "rejection_reason" | "created_at" | "updated_at", ExtArgs["result"]["othersRequest"]>
   export type OthersRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     logs?: boolean | OthersRequest$logsArgs<ExtArgs>
-    user?: boolean | UserDefaultArgs<ExtArgs>
     approver?: boolean | OthersRequest$approverArgs<ExtArgs>
     rejector?: boolean | OthersRequest$rejectorArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
     _count?: boolean | OthersRequestCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OthersRequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     approver?: boolean | OthersRequest$approverArgs<ExtArgs>
     rejector?: boolean | OthersRequest$rejectorArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type OthersRequestIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
     approver?: boolean | OthersRequest$approverArgs<ExtArgs>
     rejector?: boolean | OthersRequest$rejectorArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $OthersRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "OthersRequest"
     objects: {
       logs: Prisma.$OthersLogPayload<ExtArgs>[]
-      user: Prisma.$UserPayload<ExtArgs>
       approver: Prisma.$UserPayload<ExtArgs> | null
       rejector: Prisma.$UserPayload<ExtArgs> | null
+      user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -32975,9 +34269,9 @@ export namespace Prisma {
   export interface Prisma__OthersRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     logs<T extends OthersRequest$logsArgs<ExtArgs> = {}>(args?: Subset<T, OthersRequest$logsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OthersLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     approver<T extends OthersRequest$approverArgs<ExtArgs> = {}>(args?: Subset<T, OthersRequest$approverArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     rejector<T extends OthersRequest$rejectorArgs<ExtArgs> = {}>(args?: Subset<T, OthersRequest$rejectorArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -33679,9 +34973,9 @@ export namespace Prisma {
     others_item_id?: boolean
     notes?: boolean
     created_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
     others_item?: boolean | OthersLog$others_itemArgs<ExtArgs>
+    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersLog"]>
 
   export type OthersLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -33692,9 +34986,9 @@ export namespace Prisma {
     others_item_id?: boolean
     notes?: boolean
     created_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
     others_item?: boolean | OthersLog$others_itemArgs<ExtArgs>
+    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersLog"]>
 
   export type OthersLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -33705,9 +34999,9 @@ export namespace Prisma {
     others_item_id?: boolean
     notes?: boolean
     created_at?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
     others_item?: boolean | OthersLog$others_itemArgs<ExtArgs>
+    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["othersLog"]>
 
   export type OthersLogSelectScalar = {
@@ -33722,27 +35016,27 @@ export namespace Prisma {
 
   export type OthersLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "action" | "user_id" | "others_request_id" | "others_item_id" | "notes" | "created_at", ExtArgs["result"]["othersLog"]>
   export type OthersLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
     others_item?: boolean | OthersLog$others_itemArgs<ExtArgs>
+    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type OthersLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
     others_item?: boolean | OthersLog$others_itemArgs<ExtArgs>
+    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type OthersLogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
     others_item?: boolean | OthersLog$others_itemArgs<ExtArgs>
+    others_request?: boolean | OthersLog$others_requestArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $OthersLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "OthersLog"
     objects: {
-      user: Prisma.$UserPayload<ExtArgs>
-      others_request: Prisma.$OthersRequestPayload<ExtArgs> | null
       others_item: Prisma.$OthersItemPayload<ExtArgs> | null
+      others_request: Prisma.$OthersRequestPayload<ExtArgs> | null
+      user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -34146,9 +35440,9 @@ export namespace Prisma {
    */
   export interface Prisma__OthersLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    others_request<T extends OthersLog$others_requestArgs<ExtArgs> = {}>(args?: Subset<T, OthersLog$others_requestArgs<ExtArgs>>): Prisma__OthersRequestClient<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     others_item<T extends OthersLog$others_itemArgs<ExtArgs> = {}>(args?: Subset<T, OthersLog$others_itemArgs<ExtArgs>>): Prisma__OthersItemClient<$Result.GetResult<Prisma.$OthersItemPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    others_request<T extends OthersLog$others_requestArgs<ExtArgs> = {}>(args?: Subset<T, OthersLog$others_requestArgs<ExtArgs>>): Prisma__OthersRequestClient<$Result.GetResult<Prisma.$OthersRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -34581,25 +35875,6 @@ export namespace Prisma {
   }
 
   /**
-   * OthersLog.others_request
-   */
-  export type OthersLog$others_requestArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OthersRequest
-     */
-    select?: OthersRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the OthersRequest
-     */
-    omit?: OthersRequestOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OthersRequestInclude<ExtArgs> | null
-    where?: OthersRequestWhereInput
-  }
-
-  /**
    * OthersLog.others_item
    */
   export type OthersLog$others_itemArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -34616,6 +35891,25 @@ export namespace Prisma {
      */
     include?: OthersItemInclude<ExtArgs> | null
     where?: OthersItemWhereInput
+  }
+
+  /**
+   * OthersLog.others_request
+   */
+  export type OthersLog$others_requestArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OthersRequest
+     */
+    select?: OthersRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OthersRequest
+     */
+    omit?: OthersRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OthersRequestInclude<ExtArgs> | null
+    where?: OthersRequestWhereInput
   }
 
   /**
@@ -34946,10 +36240,24 @@ export namespace Prisma {
     cutting_done: 'cutting_done',
     dtf_done: 'dtf_done',
     press_done: 'press_done',
-    print_done: 'print_done'
+    print_done: 'print_done',
+    holdReason: 'holdReason',
+    previousStatus: 'previousStatus'
   };
 
   export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
+
+
+  export const OrderLogScalarFieldEnum: {
+    id: 'id',
+    orderId: 'orderId',
+    userId: 'userId',
+    action: 'action',
+    notes: 'notes',
+    timestamp: 'timestamp'
+  };
+
+  export type OrderLogScalarFieldEnum = (typeof OrderLogScalarFieldEnum)[keyof typeof OrderLogScalarFieldEnum]
 
 
   export const ProdukScalarFieldEnum: {
@@ -35354,6 +36662,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockListRelationFilter
     inkStocksTaken?: InkStockListRelationFilter
     inkStocksUpdated?: InkStockListRelationFilter
+    orderLogs?: OrderLogListRelationFilter
     ordersCutting?: OrderListRelationFilter
     ordersDesigned?: OrderListRelationFilter
     ordersDTF?: OrderListRelationFilter
@@ -35363,6 +36672,12 @@ export namespace Prisma {
     ordersPress?: OrderListRelationFilter
     ordersPrint?: OrderListRelationFilter
     ordersCreated?: OrderListRelationFilter
+    othersItemsTaken?: OthersItemListRelationFilter
+    othersItemsAdded?: OthersItemListRelationFilter
+    othersLogs?: OthersLogListRelationFilter
+    othersApprovals?: OthersRequestListRelationFilter
+    othersRejections?: OthersRequestListRelationFilter
+    othersRequests?: OthersRequestListRelationFilter
     paperLogs?: PaperLogListRelationFilter
     paperApprovals?: PaperRequestListRelationFilter
     paperRejections?: PaperRequestListRelationFilter
@@ -35370,12 +36685,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockListRelationFilter
     paperStocksTaken?: PaperStockListRelationFilter
     paperStocksUpdated?: PaperStockListRelationFilter
-    othersItemsAdded?: OthersItemListRelationFilter
-    othersItemsTaken?: OthersItemListRelationFilter
-    othersLogs?: OthersLogListRelationFilter
-    othersRequests?: OthersRequestListRelationFilter
-    othersApprovals?: OthersRequestListRelationFilter
-    othersRejections?: OthersRequestListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -35394,6 +36703,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockOrderByRelationAggregateInput
     inkStocksTaken?: InkStockOrderByRelationAggregateInput
     inkStocksUpdated?: InkStockOrderByRelationAggregateInput
+    orderLogs?: OrderLogOrderByRelationAggregateInput
     ordersCutting?: OrderOrderByRelationAggregateInput
     ordersDesigned?: OrderOrderByRelationAggregateInput
     ordersDTF?: OrderOrderByRelationAggregateInput
@@ -35403,6 +36713,12 @@ export namespace Prisma {
     ordersPress?: OrderOrderByRelationAggregateInput
     ordersPrint?: OrderOrderByRelationAggregateInput
     ordersCreated?: OrderOrderByRelationAggregateInput
+    othersItemsTaken?: OthersItemOrderByRelationAggregateInput
+    othersItemsAdded?: OthersItemOrderByRelationAggregateInput
+    othersLogs?: OthersLogOrderByRelationAggregateInput
+    othersApprovals?: OthersRequestOrderByRelationAggregateInput
+    othersRejections?: OthersRequestOrderByRelationAggregateInput
+    othersRequests?: OthersRequestOrderByRelationAggregateInput
     paperLogs?: PaperLogOrderByRelationAggregateInput
     paperApprovals?: PaperRequestOrderByRelationAggregateInput
     paperRejections?: PaperRequestOrderByRelationAggregateInput
@@ -35410,12 +36726,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockOrderByRelationAggregateInput
     paperStocksTaken?: PaperStockOrderByRelationAggregateInput
     paperStocksUpdated?: PaperStockOrderByRelationAggregateInput
-    othersItemsAdded?: OthersItemOrderByRelationAggregateInput
-    othersItemsTaken?: OthersItemOrderByRelationAggregateInput
-    othersLogs?: OthersLogOrderByRelationAggregateInput
-    othersRequests?: OthersRequestOrderByRelationAggregateInput
-    othersApprovals?: OthersRequestOrderByRelationAggregateInput
-    othersRejections?: OthersRequestOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -35437,6 +36747,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockListRelationFilter
     inkStocksTaken?: InkStockListRelationFilter
     inkStocksUpdated?: InkStockListRelationFilter
+    orderLogs?: OrderLogListRelationFilter
     ordersCutting?: OrderListRelationFilter
     ordersDesigned?: OrderListRelationFilter
     ordersDTF?: OrderListRelationFilter
@@ -35446,6 +36757,12 @@ export namespace Prisma {
     ordersPress?: OrderListRelationFilter
     ordersPrint?: OrderListRelationFilter
     ordersCreated?: OrderListRelationFilter
+    othersItemsTaken?: OthersItemListRelationFilter
+    othersItemsAdded?: OthersItemListRelationFilter
+    othersLogs?: OthersLogListRelationFilter
+    othersApprovals?: OthersRequestListRelationFilter
+    othersRejections?: OthersRequestListRelationFilter
+    othersRequests?: OthersRequestListRelationFilter
     paperLogs?: PaperLogListRelationFilter
     paperApprovals?: PaperRequestListRelationFilter
     paperRejections?: PaperRequestListRelationFilter
@@ -35453,12 +36770,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockListRelationFilter
     paperStocksTaken?: PaperStockListRelationFilter
     paperStocksUpdated?: PaperStockListRelationFilter
-    othersItemsAdded?: OthersItemListRelationFilter
-    othersItemsTaken?: OthersItemListRelationFilter
-    othersLogs?: OthersLogListRelationFilter
-    othersRequests?: OthersRequestListRelationFilter
-    othersApprovals?: OthersRequestListRelationFilter
-    othersRejections?: OthersRequestListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -36329,6 +37640,9 @@ export namespace Prisma {
     dtf_done?: DateTimeNullableFilter<"Order"> | Date | string | null
     press_done?: DateTimeNullableFilter<"Order"> | Date | string | null
     print_done?: DateTimeNullableFilter<"Order"> | Date | string | null
+    holdReason?: StringNullableFilter<"Order"> | string | null
+    previousStatus?: StringNullableFilter<"Order"> | string | null
+    logs?: OrderLogListRelationFilter
     asal_bahan_rel?: XOR<CustomerNullableScalarRelationFilter, customerWhereInput> | null
     customer?: XOR<CustomerNullableScalarRelationFilter, customerWhereInput> | null
     cutting?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
@@ -36491,6 +37805,9 @@ export namespace Prisma {
     dtf_done?: SortOrderInput | SortOrder
     press_done?: SortOrderInput | SortOrder
     print_done?: SortOrderInput | SortOrder
+    holdReason?: SortOrderInput | SortOrder
+    previousStatus?: SortOrderInput | SortOrder
+    logs?: OrderLogOrderByRelationAggregateInput
     asal_bahan_rel?: customerOrderByWithRelationInput
     customer?: customerOrderByWithRelationInput
     cutting?: UserOrderByWithRelationInput
@@ -36656,6 +37973,9 @@ export namespace Prisma {
     dtf_done?: DateTimeNullableFilter<"Order"> | Date | string | null
     press_done?: DateTimeNullableFilter<"Order"> | Date | string | null
     print_done?: DateTimeNullableFilter<"Order"> | Date | string | null
+    holdReason?: StringNullableFilter<"Order"> | string | null
+    previousStatus?: StringNullableFilter<"Order"> | string | null
+    logs?: OrderLogListRelationFilter
     asal_bahan_rel?: XOR<CustomerNullableScalarRelationFilter, customerWhereInput> | null
     customer?: XOR<CustomerNullableScalarRelationFilter, customerWhereInput> | null
     cutting?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
@@ -36818,6 +38138,8 @@ export namespace Prisma {
     dtf_done?: SortOrderInput | SortOrder
     press_done?: SortOrderInput | SortOrder
     print_done?: SortOrderInput | SortOrder
+    holdReason?: SortOrderInput | SortOrder
+    previousStatus?: SortOrderInput | SortOrder
     _count?: OrderCountOrderByAggregateInput
     _avg?: OrderAvgOrderByAggregateInput
     _max?: OrderMaxOrderByAggregateInput
@@ -36976,6 +38298,71 @@ export namespace Prisma {
     dtf_done?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
     press_done?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
     print_done?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+    holdReason?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    previousStatus?: StringNullableWithAggregatesFilter<"Order"> | string | null
+  }
+
+  export type OrderLogWhereInput = {
+    AND?: OrderLogWhereInput | OrderLogWhereInput[]
+    OR?: OrderLogWhereInput[]
+    NOT?: OrderLogWhereInput | OrderLogWhereInput[]
+    id?: StringFilter<"OrderLog"> | string
+    orderId?: StringFilter<"OrderLog"> | string
+    userId?: StringFilter<"OrderLog"> | string
+    action?: StringFilter<"OrderLog"> | string
+    notes?: StringNullableFilter<"OrderLog"> | string | null
+    timestamp?: DateTimeFilter<"OrderLog"> | Date | string
+    order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type OrderLogOrderByWithRelationInput = {
+    id?: SortOrder
+    orderId?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    timestamp?: SortOrder
+    order?: OrderOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type OrderLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: OrderLogWhereInput | OrderLogWhereInput[]
+    OR?: OrderLogWhereInput[]
+    NOT?: OrderLogWhereInput | OrderLogWhereInput[]
+    orderId?: StringFilter<"OrderLog"> | string
+    userId?: StringFilter<"OrderLog"> | string
+    action?: StringFilter<"OrderLog"> | string
+    notes?: StringNullableFilter<"OrderLog"> | string | null
+    timestamp?: DateTimeFilter<"OrderLog"> | Date | string
+    order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type OrderLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    orderId?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    timestamp?: SortOrder
+    _count?: OrderLogCountOrderByAggregateInput
+    _max?: OrderLogMaxOrderByAggregateInput
+    _min?: OrderLogMinOrderByAggregateInput
+  }
+
+  export type OrderLogScalarWhereWithAggregatesInput = {
+    AND?: OrderLogScalarWhereWithAggregatesInput | OrderLogScalarWhereWithAggregatesInput[]
+    OR?: OrderLogScalarWhereWithAggregatesInput[]
+    NOT?: OrderLogScalarWhereWithAggregatesInput | OrderLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"OrderLog"> | string
+    orderId?: StringWithAggregatesFilter<"OrderLog"> | string
+    userId?: StringWithAggregatesFilter<"OrderLog"> | string
+    action?: StringWithAggregatesFilter<"OrderLog"> | string
+    notes?: StringNullableWithAggregatesFilter<"OrderLog"> | string | null
+    timestamp?: DateTimeWithAggregatesFilter<"OrderLog"> | Date | string
   }
 
   export type ProdukWhereInput = {
@@ -37864,8 +39251,8 @@ export namespace Prisma {
     taken_at?: DateTimeNullableFilter<"OthersItem"> | Date | string | null
     created_at?: DateTimeFilter<"OthersItem"> | Date | string
     updated_at?: DateTimeFilter<"OthersItem"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     taken_by_user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     logs?: OthersLogListRelationFilter
   }
 
@@ -37885,8 +39272,8 @@ export namespace Prisma {
     taken_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
-    user?: UserOrderByWithRelationInput
     taken_by_user?: UserOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
     logs?: OthersLogOrderByRelationAggregateInput
   }
 
@@ -37909,8 +39296,8 @@ export namespace Prisma {
     taken_at?: DateTimeNullableFilter<"OthersItem"> | Date | string | null
     created_at?: DateTimeFilter<"OthersItem"> | Date | string
     updated_at?: DateTimeFilter<"OthersItem"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     taken_by_user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     logs?: OthersLogListRelationFilter
   }, "id" | "qr_code">
 
@@ -37979,9 +39366,9 @@ export namespace Prisma {
     created_at?: DateTimeFilter<"OthersRequest"> | Date | string
     updated_at?: DateTimeFilter<"OthersRequest"> | Date | string
     logs?: OthersLogListRelationFilter
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     approver?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     rejector?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
   export type OthersRequestOrderByWithRelationInput = {
@@ -38002,9 +39389,9 @@ export namespace Prisma {
     created_at?: SortOrder
     updated_at?: SortOrder
     logs?: OthersLogOrderByRelationAggregateInput
-    user?: UserOrderByWithRelationInput
     approver?: UserOrderByWithRelationInput
     rejector?: UserOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
   }
 
   export type OthersRequestWhereUniqueInput = Prisma.AtLeast<{
@@ -38028,9 +39415,9 @@ export namespace Prisma {
     created_at?: DateTimeFilter<"OthersRequest"> | Date | string
     updated_at?: DateTimeFilter<"OthersRequest"> | Date | string
     logs?: OthersLogListRelationFilter
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     approver?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     rejector?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
 
   export type OthersRequestOrderByWithAggregationInput = {
@@ -38090,9 +39477,9 @@ export namespace Prisma {
     others_item_id?: StringNullableFilter<"OthersLog"> | string | null
     notes?: StringNullableFilter<"OthersLog"> | string | null
     created_at?: DateTimeFilter<"OthersLog"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    others_request?: XOR<OthersRequestNullableScalarRelationFilter, OthersRequestWhereInput> | null
     others_item?: XOR<OthersItemNullableScalarRelationFilter, OthersItemWhereInput> | null
+    others_request?: XOR<OthersRequestNullableScalarRelationFilter, OthersRequestWhereInput> | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
   export type OthersLogOrderByWithRelationInput = {
@@ -38103,9 +39490,9 @@ export namespace Prisma {
     others_item_id?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
     created_at?: SortOrder
-    user?: UserOrderByWithRelationInput
-    others_request?: OthersRequestOrderByWithRelationInput
     others_item?: OthersItemOrderByWithRelationInput
+    others_request?: OthersRequestOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
   }
 
   export type OthersLogWhereUniqueInput = Prisma.AtLeast<{
@@ -38119,9 +39506,9 @@ export namespace Prisma {
     others_item_id?: StringNullableFilter<"OthersLog"> | string | null
     notes?: StringNullableFilter<"OthersLog"> | string | null
     created_at?: DateTimeFilter<"OthersLog"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    others_request?: XOR<OthersRequestNullableScalarRelationFilter, OthersRequestWhereInput> | null
     others_item?: XOR<OthersItemNullableScalarRelationFilter, OthersItemWhereInput> | null
+    others_request?: XOR<OthersRequestNullableScalarRelationFilter, OthersRequestWhereInput> | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
 
   export type OthersLogOrderByWithAggregationInput = {
@@ -38165,6 +39552,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -38174,6 +39562,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -38181,12 +39575,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -38204,6 +39592,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -38213,6 +39602,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -38220,12 +39615,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUpdateInput = {
@@ -38243,6 +39632,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -38252,6 +39642,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -38259,12 +39655,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -38282,6 +39672,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -38291,6 +39682,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -38298,12 +39695,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -39244,6 +40635,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -39406,6 +40800,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderUpdateInput = {
@@ -39544,6 +40941,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -39706,6 +41106,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderCreateManyInput = {
@@ -39856,6 +41259,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderUpdateManyMutationInput = {
@@ -39994,6 +41399,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUncheckedUpdateManyInput = {
@@ -40144,6 +41551,69 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type OrderLogCreateInput = {
+    id?: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+    order: OrderCreateNestedOneWithoutLogsInput
+    user: UserCreateNestedOneWithoutOrderLogsInput
+  }
+
+  export type OrderLogUncheckedCreateInput = {
+    id?: string
+    orderId: string
+    userId: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+  }
+
+  export type OrderLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    order?: OrderUpdateOneRequiredWithoutLogsNestedInput
+    user?: UserUpdateOneRequiredWithoutOrderLogsNestedInput
+  }
+
+  export type OrderLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrderLogCreateManyInput = {
+    id?: string
+    orderId: string
+    userId: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+  }
+
+  export type OrderLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrderLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ProdukCreateInput = {
@@ -41095,8 +42565,8 @@ export namespace Prisma {
     taken_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
-    user: UserCreateNestedOneWithoutOthersItemsAddedInput
     taken_by_user?: UserCreateNestedOneWithoutOthersItemsTakenInput
+    user: UserCreateNestedOneWithoutOthersItemsAddedInput
     logs?: OthersLogCreateNestedManyWithoutOthers_itemInput
   }
 
@@ -41133,8 +42603,8 @@ export namespace Prisma {
     taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput
     taken_by_user?: UserUpdateOneWithoutOthersItemsTakenNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput
     logs?: OthersLogUpdateManyWithoutOthers_itemNestedInput
   }
 
@@ -41224,9 +42694,9 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     logs?: OthersLogCreateNestedManyWithoutOthers_requestInput
-    user: UserCreateNestedOneWithoutOthersRequestsInput
     approver?: UserCreateNestedOneWithoutOthersApprovalsInput
     rejector?: UserCreateNestedOneWithoutOthersRejectionsInput
+    user: UserCreateNestedOneWithoutOthersRequestsInput
   }
 
   export type OthersRequestUncheckedCreateInput = {
@@ -41264,9 +42734,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     logs?: OthersLogUpdateManyWithoutOthers_requestNestedInput
-    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
     approver?: UserUpdateOneWithoutOthersApprovalsNestedInput
     rejector?: UserUpdateOneWithoutOthersRejectionsNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
   }
 
   export type OthersRequestUncheckedUpdateInput = {
@@ -41348,9 +42818,9 @@ export namespace Prisma {
     action: string
     notes?: string | null
     created_at?: Date | string
-    user: UserCreateNestedOneWithoutOthersLogsInput
-    others_request?: OthersRequestCreateNestedOneWithoutLogsInput
     others_item?: OthersItemCreateNestedOneWithoutLogsInput
+    others_request?: OthersRequestCreateNestedOneWithoutLogsInput
+    user: UserCreateNestedOneWithoutOthersLogsInput
   }
 
   export type OthersLogUncheckedCreateInput = {
@@ -41368,9 +42838,9 @@ export namespace Prisma {
     action?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutOthersLogsNestedInput
-    others_request?: OthersRequestUpdateOneWithoutLogsNestedInput
     others_item?: OthersItemUpdateOneWithoutLogsNestedInput
+    others_request?: OthersRequestUpdateOneWithoutLogsNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersLogsNestedInput
   }
 
   export type OthersLogUncheckedUpdateInput = {
@@ -41459,28 +42929,16 @@ export namespace Prisma {
     none?: InkStockWhereInput
   }
 
+  export type OrderLogListRelationFilter = {
+    every?: OrderLogWhereInput
+    some?: OrderLogWhereInput
+    none?: OrderLogWhereInput
+  }
+
   export type OrderListRelationFilter = {
     every?: OrderWhereInput
     some?: OrderWhereInput
     none?: OrderWhereInput
-  }
-
-  export type PaperLogListRelationFilter = {
-    every?: PaperLogWhereInput
-    some?: PaperLogWhereInput
-    none?: PaperLogWhereInput
-  }
-
-  export type PaperRequestListRelationFilter = {
-    every?: PaperRequestWhereInput
-    some?: PaperRequestWhereInput
-    none?: PaperRequestWhereInput
-  }
-
-  export type PaperStockListRelationFilter = {
-    every?: PaperStockWhereInput
-    some?: PaperStockWhereInput
-    none?: PaperStockWhereInput
   }
 
   export type OthersItemListRelationFilter = {
@@ -41501,6 +42959,24 @@ export namespace Prisma {
     none?: OthersRequestWhereInput
   }
 
+  export type PaperLogListRelationFilter = {
+    every?: PaperLogWhereInput
+    some?: PaperLogWhereInput
+    none?: PaperLogWhereInput
+  }
+
+  export type PaperRequestListRelationFilter = {
+    every?: PaperRequestWhereInput
+    some?: PaperRequestWhereInput
+    none?: PaperRequestWhereInput
+  }
+
+  export type PaperStockListRelationFilter = {
+    every?: PaperStockWhereInput
+    some?: PaperStockWhereInput
+    none?: PaperStockWhereInput
+  }
+
   export type OtherConsumableOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -41517,19 +42993,11 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type OrderLogOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type OrderOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type PaperLogOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type PaperRequestOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type PaperStockOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -41542,6 +43010,18 @@ export namespace Prisma {
   }
 
   export type OthersRequestOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PaperLogOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PaperRequestOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PaperStockOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -42453,6 +43933,8 @@ export namespace Prisma {
     dtf_done?: SortOrder
     press_done?: SortOrder
     print_done?: SortOrder
+    holdReason?: SortOrder
+    previousStatus?: SortOrder
   }
 
   export type OrderAvgOrderByAggregateInput = {
@@ -42612,6 +44094,8 @@ export namespace Prisma {
     dtf_done?: SortOrder
     press_done?: SortOrder
     print_done?: SortOrder
+    holdReason?: SortOrder
+    previousStatus?: SortOrder
   }
 
   export type OrderMinOrderByAggregateInput = {
@@ -42762,6 +44246,8 @@ export namespace Prisma {
     dtf_done?: SortOrder
     press_done?: SortOrder
     print_done?: SortOrder
+    holdReason?: SortOrder
+    previousStatus?: SortOrder
   }
 
   export type OrderSumOrderByAggregateInput = {
@@ -42805,6 +44291,43 @@ export namespace Prisma {
     _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
+  export type OrderScalarRelationFilter = {
+    is?: OrderWhereInput
+    isNot?: OrderWhereInput
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type OrderLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    orderId?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    notes?: SortOrder
+    timestamp?: SortOrder
+  }
+
+  export type OrderLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    orderId?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    notes?: SortOrder
+    timestamp?: SortOrder
+  }
+
+  export type OrderLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    orderId?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    notes?: SortOrder
+    timestamp?: SortOrder
+  }
+
   export type ProdukCountOrderByAggregateInput = {
     id?: SortOrder
     nama_produk?: SortOrder
@@ -42839,11 +44362,6 @@ export namespace Prisma {
     in?: $Enums.InventoryAvailability[] | ListEnumInventoryAvailabilityFieldRefInput<$PrismaModel>
     notIn?: $Enums.InventoryAvailability[] | ListEnumInventoryAvailabilityFieldRefInput<$PrismaModel>
     not?: NestedEnumInventoryAvailabilityFilter<$PrismaModel> | $Enums.InventoryAvailability
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type PaperRequestNullableScalarRelationFilter = {
@@ -43450,14 +44968,14 @@ export namespace Prisma {
     quantity?: SortOrder
   }
 
-  export type OthersRequestNullableScalarRelationFilter = {
-    is?: OthersRequestWhereInput | null
-    isNot?: OthersRequestWhereInput | null
-  }
-
   export type OthersItemNullableScalarRelationFilter = {
     is?: OthersItemWhereInput | null
     isNot?: OthersItemWhereInput | null
+  }
+
+  export type OthersRequestNullableScalarRelationFilter = {
+    is?: OthersRequestWhereInput | null
+    isNot?: OthersRequestWhereInput | null
   }
 
   export type OthersLogCountOrderByAggregateInput = {
@@ -43552,6 +45070,13 @@ export namespace Prisma {
     connect?: InkStockWhereUniqueInput | InkStockWhereUniqueInput[]
   }
 
+  export type OrderLogCreateNestedManyWithoutUserInput = {
+    create?: XOR<OrderLogCreateWithoutUserInput, OrderLogUncheckedCreateWithoutUserInput> | OrderLogCreateWithoutUserInput[] | OrderLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutUserInput | OrderLogCreateOrConnectWithoutUserInput[]
+    createMany?: OrderLogCreateManyUserInputEnvelope
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+  }
+
   export type OrderCreateNestedManyWithoutCuttingInput = {
     create?: XOR<OrderCreateWithoutCuttingInput, OrderUncheckedCreateWithoutCuttingInput> | OrderCreateWithoutCuttingInput[] | OrderUncheckedCreateWithoutCuttingInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutCuttingInput | OrderCreateOrConnectWithoutCuttingInput[]
@@ -43615,6 +45140,48 @@ export namespace Prisma {
     connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
   }
 
+  export type OthersItemCreateNestedManyWithoutTaken_by_userInput = {
+    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
+    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+  }
+
+  export type OthersItemCreateNestedManyWithoutUserInput = {
+    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
+    createMany?: OthersItemCreateManyUserInputEnvelope
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+  }
+
+  export type OthersLogCreateNestedManyWithoutUserInput = {
+    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
+    createMany?: OthersLogCreateManyUserInputEnvelope
+    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+  }
+
+  export type OthersRequestCreateNestedManyWithoutApproverInput = {
+    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
+    createMany?: OthersRequestCreateManyApproverInputEnvelope
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+  }
+
+  export type OthersRequestCreateNestedManyWithoutRejectorInput = {
+    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
+    createMany?: OthersRequestCreateManyRejectorInputEnvelope
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+  }
+
+  export type OthersRequestCreateNestedManyWithoutUserInput = {
+    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
+    createMany?: OthersRequestCreateManyUserInputEnvelope
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+  }
+
   export type PaperLogCreateNestedManyWithoutUserInput = {
     create?: XOR<PaperLogCreateWithoutUserInput, PaperLogUncheckedCreateWithoutUserInput> | PaperLogCreateWithoutUserInput[] | PaperLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: PaperLogCreateOrConnectWithoutUserInput | PaperLogCreateOrConnectWithoutUserInput[]
@@ -43662,48 +45229,6 @@ export namespace Prisma {
     connectOrCreate?: PaperStockCreateOrConnectWithoutUpdatedByUserInput | PaperStockCreateOrConnectWithoutUpdatedByUserInput[]
     createMany?: PaperStockCreateManyUpdatedByUserInputEnvelope
     connect?: PaperStockWhereUniqueInput | PaperStockWhereUniqueInput[]
-  }
-
-  export type OthersItemCreateNestedManyWithoutUserInput = {
-    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
-    createMany?: OthersItemCreateManyUserInputEnvelope
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-  }
-
-  export type OthersItemCreateNestedManyWithoutTaken_by_userInput = {
-    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
-    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-  }
-
-  export type OthersLogCreateNestedManyWithoutUserInput = {
-    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
-    createMany?: OthersLogCreateManyUserInputEnvelope
-    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-  }
-
-  export type OthersRequestCreateNestedManyWithoutUserInput = {
-    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
-    createMany?: OthersRequestCreateManyUserInputEnvelope
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-  }
-
-  export type OthersRequestCreateNestedManyWithoutApproverInput = {
-    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
-    createMany?: OthersRequestCreateManyApproverInputEnvelope
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-  }
-
-  export type OthersRequestCreateNestedManyWithoutRejectorInput = {
-    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
-    createMany?: OthersRequestCreateManyRejectorInputEnvelope
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
   }
 
   export type OtherConsumableUncheckedCreateNestedManyWithoutUserInput = {
@@ -43760,6 +45285,13 @@ export namespace Prisma {
     connectOrCreate?: InkStockCreateOrConnectWithoutUpdatedByUserInput | InkStockCreateOrConnectWithoutUpdatedByUserInput[]
     createMany?: InkStockCreateManyUpdatedByUserInputEnvelope
     connect?: InkStockWhereUniqueInput | InkStockWhereUniqueInput[]
+  }
+
+  export type OrderLogUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<OrderLogCreateWithoutUserInput, OrderLogUncheckedCreateWithoutUserInput> | OrderLogCreateWithoutUserInput[] | OrderLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutUserInput | OrderLogCreateOrConnectWithoutUserInput[]
+    createMany?: OrderLogCreateManyUserInputEnvelope
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
   }
 
   export type OrderUncheckedCreateNestedManyWithoutCuttingInput = {
@@ -43825,6 +45357,48 @@ export namespace Prisma {
     connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
   }
 
+  export type OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput = {
+    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
+    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+  }
+
+  export type OthersItemUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
+    createMany?: OthersItemCreateManyUserInputEnvelope
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+  }
+
+  export type OthersLogUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
+    createMany?: OthersLogCreateManyUserInputEnvelope
+    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+  }
+
+  export type OthersRequestUncheckedCreateNestedManyWithoutApproverInput = {
+    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
+    createMany?: OthersRequestCreateManyApproverInputEnvelope
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+  }
+
+  export type OthersRequestUncheckedCreateNestedManyWithoutRejectorInput = {
+    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
+    createMany?: OthersRequestCreateManyRejectorInputEnvelope
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+  }
+
+  export type OthersRequestUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
+    createMany?: OthersRequestCreateManyUserInputEnvelope
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+  }
+
   export type PaperLogUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<PaperLogCreateWithoutUserInput, PaperLogUncheckedCreateWithoutUserInput> | PaperLogCreateWithoutUserInput[] | PaperLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: PaperLogCreateOrConnectWithoutUserInput | PaperLogCreateOrConnectWithoutUserInput[]
@@ -43872,48 +45446,6 @@ export namespace Prisma {
     connectOrCreate?: PaperStockCreateOrConnectWithoutUpdatedByUserInput | PaperStockCreateOrConnectWithoutUpdatedByUserInput[]
     createMany?: PaperStockCreateManyUpdatedByUserInputEnvelope
     connect?: PaperStockWhereUniqueInput | PaperStockWhereUniqueInput[]
-  }
-
-  export type OthersItemUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
-    createMany?: OthersItemCreateManyUserInputEnvelope
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-  }
-
-  export type OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput = {
-    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
-    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-  }
-
-  export type OthersLogUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
-    createMany?: OthersLogCreateManyUserInputEnvelope
-    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-  }
-
-  export type OthersRequestUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
-    createMany?: OthersRequestCreateManyUserInputEnvelope
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-  }
-
-  export type OthersRequestUncheckedCreateNestedManyWithoutApproverInput = {
-    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
-    createMany?: OthersRequestCreateManyApproverInputEnvelope
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-  }
-
-  export type OthersRequestUncheckedCreateNestedManyWithoutRejectorInput = {
-    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
-    createMany?: OthersRequestCreateManyRejectorInputEnvelope
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -44044,6 +45576,20 @@ export namespace Prisma {
     deleteMany?: InkStockScalarWhereInput | InkStockScalarWhereInput[]
   }
 
+  export type OrderLogUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OrderLogCreateWithoutUserInput, OrderLogUncheckedCreateWithoutUserInput> | OrderLogCreateWithoutUserInput[] | OrderLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutUserInput | OrderLogCreateOrConnectWithoutUserInput[]
+    upsert?: OrderLogUpsertWithWhereUniqueWithoutUserInput | OrderLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OrderLogCreateManyUserInputEnvelope
+    set?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    disconnect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    delete?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    update?: OrderLogUpdateWithWhereUniqueWithoutUserInput | OrderLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OrderLogUpdateManyWithWhereWithoutUserInput | OrderLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OrderLogScalarWhereInput | OrderLogScalarWhereInput[]
+  }
+
   export type OrderUpdateManyWithoutCuttingNestedInput = {
     create?: XOR<OrderCreateWithoutCuttingInput, OrderUncheckedCreateWithoutCuttingInput> | OrderCreateWithoutCuttingInput[] | OrderUncheckedCreateWithoutCuttingInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutCuttingInput | OrderCreateOrConnectWithoutCuttingInput[]
@@ -44170,6 +45716,90 @@ export namespace Prisma {
     deleteMany?: OrderScalarWhereInput | OrderScalarWhereInput[]
   }
 
+  export type OthersItemUpdateManyWithoutTaken_by_userNestedInput = {
+    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
+    upsert?: OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput[]
+    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
+    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    update?: OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput[]
+    updateMany?: OthersItemUpdateManyWithWhereWithoutTaken_by_userInput | OthersItemUpdateManyWithWhereWithoutTaken_by_userInput[]
+    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
+  }
+
+  export type OthersItemUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
+    upsert?: OthersItemUpsertWithWhereUniqueWithoutUserInput | OthersItemUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OthersItemCreateManyUserInputEnvelope
+    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    update?: OthersItemUpdateWithWhereUniqueWithoutUserInput | OthersItemUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OthersItemUpdateManyWithWhereWithoutUserInput | OthersItemUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
+  }
+
+  export type OthersLogUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
+    upsert?: OthersLogUpsertWithWhereUniqueWithoutUserInput | OthersLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OthersLogCreateManyUserInputEnvelope
+    set?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    disconnect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    delete?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    update?: OthersLogUpdateWithWhereUniqueWithoutUserInput | OthersLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OthersLogUpdateManyWithWhereWithoutUserInput | OthersLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
+  }
+
+  export type OthersRequestUpdateManyWithoutApproverNestedInput = {
+    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
+    upsert?: OthersRequestUpsertWithWhereUniqueWithoutApproverInput | OthersRequestUpsertWithWhereUniqueWithoutApproverInput[]
+    createMany?: OthersRequestCreateManyApproverInputEnvelope
+    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    update?: OthersRequestUpdateWithWhereUniqueWithoutApproverInput | OthersRequestUpdateWithWhereUniqueWithoutApproverInput[]
+    updateMany?: OthersRequestUpdateManyWithWhereWithoutApproverInput | OthersRequestUpdateManyWithWhereWithoutApproverInput[]
+    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+  }
+
+  export type OthersRequestUpdateManyWithoutRejectorNestedInput = {
+    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
+    upsert?: OthersRequestUpsertWithWhereUniqueWithoutRejectorInput | OthersRequestUpsertWithWhereUniqueWithoutRejectorInput[]
+    createMany?: OthersRequestCreateManyRejectorInputEnvelope
+    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    update?: OthersRequestUpdateWithWhereUniqueWithoutRejectorInput | OthersRequestUpdateWithWhereUniqueWithoutRejectorInput[]
+    updateMany?: OthersRequestUpdateManyWithWhereWithoutRejectorInput | OthersRequestUpdateManyWithWhereWithoutRejectorInput[]
+    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+  }
+
+  export type OthersRequestUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
+    upsert?: OthersRequestUpsertWithWhereUniqueWithoutUserInput | OthersRequestUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OthersRequestCreateManyUserInputEnvelope
+    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    update?: OthersRequestUpdateWithWhereUniqueWithoutUserInput | OthersRequestUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OthersRequestUpdateManyWithWhereWithoutUserInput | OthersRequestUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+  }
+
   export type PaperLogUpdateManyWithoutUserNestedInput = {
     create?: XOR<PaperLogCreateWithoutUserInput, PaperLogUncheckedCreateWithoutUserInput> | PaperLogCreateWithoutUserInput[] | PaperLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: PaperLogCreateOrConnectWithoutUserInput | PaperLogCreateOrConnectWithoutUserInput[]
@@ -44266,90 +45896,6 @@ export namespace Prisma {
     update?: PaperStockUpdateWithWhereUniqueWithoutUpdatedByUserInput | PaperStockUpdateWithWhereUniqueWithoutUpdatedByUserInput[]
     updateMany?: PaperStockUpdateManyWithWhereWithoutUpdatedByUserInput | PaperStockUpdateManyWithWhereWithoutUpdatedByUserInput[]
     deleteMany?: PaperStockScalarWhereInput | PaperStockScalarWhereInput[]
-  }
-
-  export type OthersItemUpdateManyWithoutUserNestedInput = {
-    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
-    upsert?: OthersItemUpsertWithWhereUniqueWithoutUserInput | OthersItemUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: OthersItemCreateManyUserInputEnvelope
-    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    update?: OthersItemUpdateWithWhereUniqueWithoutUserInput | OthersItemUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: OthersItemUpdateManyWithWhereWithoutUserInput | OthersItemUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
-  }
-
-  export type OthersItemUpdateManyWithoutTaken_by_userNestedInput = {
-    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
-    upsert?: OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput[]
-    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
-    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    update?: OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput[]
-    updateMany?: OthersItemUpdateManyWithWhereWithoutTaken_by_userInput | OthersItemUpdateManyWithWhereWithoutTaken_by_userInput[]
-    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
-  }
-
-  export type OthersLogUpdateManyWithoutUserNestedInput = {
-    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
-    upsert?: OthersLogUpsertWithWhereUniqueWithoutUserInput | OthersLogUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: OthersLogCreateManyUserInputEnvelope
-    set?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    disconnect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    delete?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    update?: OthersLogUpdateWithWhereUniqueWithoutUserInput | OthersLogUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: OthersLogUpdateManyWithWhereWithoutUserInput | OthersLogUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
-  }
-
-  export type OthersRequestUpdateManyWithoutUserNestedInput = {
-    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
-    upsert?: OthersRequestUpsertWithWhereUniqueWithoutUserInput | OthersRequestUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: OthersRequestCreateManyUserInputEnvelope
-    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    update?: OthersRequestUpdateWithWhereUniqueWithoutUserInput | OthersRequestUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: OthersRequestUpdateManyWithWhereWithoutUserInput | OthersRequestUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
-  }
-
-  export type OthersRequestUpdateManyWithoutApproverNestedInput = {
-    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
-    upsert?: OthersRequestUpsertWithWhereUniqueWithoutApproverInput | OthersRequestUpsertWithWhereUniqueWithoutApproverInput[]
-    createMany?: OthersRequestCreateManyApproverInputEnvelope
-    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    update?: OthersRequestUpdateWithWhereUniqueWithoutApproverInput | OthersRequestUpdateWithWhereUniqueWithoutApproverInput[]
-    updateMany?: OthersRequestUpdateManyWithWhereWithoutApproverInput | OthersRequestUpdateManyWithWhereWithoutApproverInput[]
-    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
-  }
-
-  export type OthersRequestUpdateManyWithoutRejectorNestedInput = {
-    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
-    upsert?: OthersRequestUpsertWithWhereUniqueWithoutRejectorInput | OthersRequestUpsertWithWhereUniqueWithoutRejectorInput[]
-    createMany?: OthersRequestCreateManyRejectorInputEnvelope
-    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    update?: OthersRequestUpdateWithWhereUniqueWithoutRejectorInput | OthersRequestUpdateWithWhereUniqueWithoutRejectorInput[]
-    updateMany?: OthersRequestUpdateManyWithWhereWithoutRejectorInput | OthersRequestUpdateManyWithWhereWithoutRejectorInput[]
-    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
   }
 
   export type OtherConsumableUncheckedUpdateManyWithoutUserNestedInput = {
@@ -44462,6 +46008,20 @@ export namespace Prisma {
     update?: InkStockUpdateWithWhereUniqueWithoutUpdatedByUserInput | InkStockUpdateWithWhereUniqueWithoutUpdatedByUserInput[]
     updateMany?: InkStockUpdateManyWithWhereWithoutUpdatedByUserInput | InkStockUpdateManyWithWhereWithoutUpdatedByUserInput[]
     deleteMany?: InkStockScalarWhereInput | InkStockScalarWhereInput[]
+  }
+
+  export type OrderLogUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OrderLogCreateWithoutUserInput, OrderLogUncheckedCreateWithoutUserInput> | OrderLogCreateWithoutUserInput[] | OrderLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutUserInput | OrderLogCreateOrConnectWithoutUserInput[]
+    upsert?: OrderLogUpsertWithWhereUniqueWithoutUserInput | OrderLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OrderLogCreateManyUserInputEnvelope
+    set?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    disconnect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    delete?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    update?: OrderLogUpdateWithWhereUniqueWithoutUserInput | OrderLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OrderLogUpdateManyWithWhereWithoutUserInput | OrderLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OrderLogScalarWhereInput | OrderLogScalarWhereInput[]
   }
 
   export type OrderUncheckedUpdateManyWithoutCuttingNestedInput = {
@@ -44590,6 +46150,90 @@ export namespace Prisma {
     deleteMany?: OrderScalarWhereInput | OrderScalarWhereInput[]
   }
 
+  export type OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput = {
+    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
+    upsert?: OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput[]
+    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
+    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    update?: OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput[]
+    updateMany?: OthersItemUpdateManyWithWhereWithoutTaken_by_userInput | OthersItemUpdateManyWithWhereWithoutTaken_by_userInput[]
+    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
+  }
+
+  export type OthersItemUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
+    upsert?: OthersItemUpsertWithWhereUniqueWithoutUserInput | OthersItemUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OthersItemCreateManyUserInputEnvelope
+    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
+    update?: OthersItemUpdateWithWhereUniqueWithoutUserInput | OthersItemUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OthersItemUpdateManyWithWhereWithoutUserInput | OthersItemUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
+  }
+
+  export type OthersLogUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
+    upsert?: OthersLogUpsertWithWhereUniqueWithoutUserInput | OthersLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OthersLogCreateManyUserInputEnvelope
+    set?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    disconnect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    delete?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
+    update?: OthersLogUpdateWithWhereUniqueWithoutUserInput | OthersLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OthersLogUpdateManyWithWhereWithoutUserInput | OthersLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
+  }
+
+  export type OthersRequestUncheckedUpdateManyWithoutApproverNestedInput = {
+    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
+    upsert?: OthersRequestUpsertWithWhereUniqueWithoutApproverInput | OthersRequestUpsertWithWhereUniqueWithoutApproverInput[]
+    createMany?: OthersRequestCreateManyApproverInputEnvelope
+    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    update?: OthersRequestUpdateWithWhereUniqueWithoutApproverInput | OthersRequestUpdateWithWhereUniqueWithoutApproverInput[]
+    updateMany?: OthersRequestUpdateManyWithWhereWithoutApproverInput | OthersRequestUpdateManyWithWhereWithoutApproverInput[]
+    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+  }
+
+  export type OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput = {
+    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
+    upsert?: OthersRequestUpsertWithWhereUniqueWithoutRejectorInput | OthersRequestUpsertWithWhereUniqueWithoutRejectorInput[]
+    createMany?: OthersRequestCreateManyRejectorInputEnvelope
+    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    update?: OthersRequestUpdateWithWhereUniqueWithoutRejectorInput | OthersRequestUpdateWithWhereUniqueWithoutRejectorInput[]
+    updateMany?: OthersRequestUpdateManyWithWhereWithoutRejectorInput | OthersRequestUpdateManyWithWhereWithoutRejectorInput[]
+    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+  }
+
+  export type OthersRequestUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
+    upsert?: OthersRequestUpsertWithWhereUniqueWithoutUserInput | OthersRequestUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: OthersRequestCreateManyUserInputEnvelope
+    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
+    update?: OthersRequestUpdateWithWhereUniqueWithoutUserInput | OthersRequestUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: OthersRequestUpdateManyWithWhereWithoutUserInput | OthersRequestUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+  }
+
   export type PaperLogUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<PaperLogCreateWithoutUserInput, PaperLogUncheckedCreateWithoutUserInput> | PaperLogCreateWithoutUserInput[] | PaperLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: PaperLogCreateOrConnectWithoutUserInput | PaperLogCreateOrConnectWithoutUserInput[]
@@ -44686,90 +46330,6 @@ export namespace Prisma {
     update?: PaperStockUpdateWithWhereUniqueWithoutUpdatedByUserInput | PaperStockUpdateWithWhereUniqueWithoutUpdatedByUserInput[]
     updateMany?: PaperStockUpdateManyWithWhereWithoutUpdatedByUserInput | PaperStockUpdateManyWithWhereWithoutUpdatedByUserInput[]
     deleteMany?: PaperStockScalarWhereInput | PaperStockScalarWhereInput[]
-  }
-
-  export type OthersItemUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput> | OthersItemCreateWithoutUserInput[] | OthersItemUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutUserInput | OthersItemCreateOrConnectWithoutUserInput[]
-    upsert?: OthersItemUpsertWithWhereUniqueWithoutUserInput | OthersItemUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: OthersItemCreateManyUserInputEnvelope
-    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    update?: OthersItemUpdateWithWhereUniqueWithoutUserInput | OthersItemUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: OthersItemUpdateManyWithWhereWithoutUserInput | OthersItemUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
-  }
-
-  export type OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput = {
-    create?: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput> | OthersItemCreateWithoutTaken_by_userInput[] | OthersItemUncheckedCreateWithoutTaken_by_userInput[]
-    connectOrCreate?: OthersItemCreateOrConnectWithoutTaken_by_userInput | OthersItemCreateOrConnectWithoutTaken_by_userInput[]
-    upsert?: OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput[]
-    createMany?: OthersItemCreateManyTaken_by_userInputEnvelope
-    set?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    disconnect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    delete?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    connect?: OthersItemWhereUniqueInput | OthersItemWhereUniqueInput[]
-    update?: OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput | OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput[]
-    updateMany?: OthersItemUpdateManyWithWhereWithoutTaken_by_userInput | OthersItemUpdateManyWithWhereWithoutTaken_by_userInput[]
-    deleteMany?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
-  }
-
-  export type OthersLogUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput> | OthersLogCreateWithoutUserInput[] | OthersLogUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersLogCreateOrConnectWithoutUserInput | OthersLogCreateOrConnectWithoutUserInput[]
-    upsert?: OthersLogUpsertWithWhereUniqueWithoutUserInput | OthersLogUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: OthersLogCreateManyUserInputEnvelope
-    set?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    disconnect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    delete?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
-    update?: OthersLogUpdateWithWhereUniqueWithoutUserInput | OthersLogUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: OthersLogUpdateManyWithWhereWithoutUserInput | OthersLogUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
-  }
-
-  export type OthersRequestUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput> | OthersRequestCreateWithoutUserInput[] | OthersRequestUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutUserInput | OthersRequestCreateOrConnectWithoutUserInput[]
-    upsert?: OthersRequestUpsertWithWhereUniqueWithoutUserInput | OthersRequestUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: OthersRequestCreateManyUserInputEnvelope
-    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    update?: OthersRequestUpdateWithWhereUniqueWithoutUserInput | OthersRequestUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: OthersRequestUpdateManyWithWhereWithoutUserInput | OthersRequestUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
-  }
-
-  export type OthersRequestUncheckedUpdateManyWithoutApproverNestedInput = {
-    create?: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput> | OthersRequestCreateWithoutApproverInput[] | OthersRequestUncheckedCreateWithoutApproverInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutApproverInput | OthersRequestCreateOrConnectWithoutApproverInput[]
-    upsert?: OthersRequestUpsertWithWhereUniqueWithoutApproverInput | OthersRequestUpsertWithWhereUniqueWithoutApproverInput[]
-    createMany?: OthersRequestCreateManyApproverInputEnvelope
-    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    update?: OthersRequestUpdateWithWhereUniqueWithoutApproverInput | OthersRequestUpdateWithWhereUniqueWithoutApproverInput[]
-    updateMany?: OthersRequestUpdateManyWithWhereWithoutApproverInput | OthersRequestUpdateManyWithWhereWithoutApproverInput[]
-    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
-  }
-
-  export type OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput = {
-    create?: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput> | OthersRequestCreateWithoutRejectorInput[] | OthersRequestUncheckedCreateWithoutRejectorInput[]
-    connectOrCreate?: OthersRequestCreateOrConnectWithoutRejectorInput | OthersRequestCreateOrConnectWithoutRejectorInput[]
-    upsert?: OthersRequestUpsertWithWhereUniqueWithoutRejectorInput | OthersRequestUpsertWithWhereUniqueWithoutRejectorInput[]
-    createMany?: OthersRequestCreateManyRejectorInputEnvelope
-    set?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    disconnect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    delete?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    connect?: OthersRequestWhereUniqueInput | OthersRequestWhereUniqueInput[]
-    update?: OthersRequestUpdateWithWhereUniqueWithoutRejectorInput | OthersRequestUpdateWithWhereUniqueWithoutRejectorInput[]
-    updateMany?: OthersRequestUpdateManyWithWhereWithoutRejectorInput | OthersRequestUpdateManyWithWhereWithoutRejectorInput[]
-    deleteMany?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
   }
 
   export type UserCreateNestedManyWithoutRoleInput = {
@@ -45208,6 +46768,13 @@ export namespace Prisma {
     update?: XOR<XOR<customerUpdateToOneWithWhereWithoutChatMessagesInput, customerUpdateWithoutChatMessagesInput>, customerUncheckedUpdateWithoutChatMessagesInput>
   }
 
+  export type OrderLogCreateNestedManyWithoutOrderInput = {
+    create?: XOR<OrderLogCreateWithoutOrderInput, OrderLogUncheckedCreateWithoutOrderInput> | OrderLogCreateWithoutOrderInput[] | OrderLogUncheckedCreateWithoutOrderInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutOrderInput | OrderLogCreateOrConnectWithoutOrderInput[]
+    createMany?: OrderLogCreateManyOrderInputEnvelope
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+  }
+
   export type customerCreateNestedOneWithoutAsalBahanForInput = {
     create?: XOR<customerCreateWithoutAsalBahanForInput, customerUncheckedCreateWithoutAsalBahanForInput>
     connectOrCreate?: customerCreateOrConnectWithoutAsalBahanForInput
@@ -45280,6 +46847,13 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type OrderLogUncheckedCreateNestedManyWithoutOrderInput = {
+    create?: XOR<OrderLogCreateWithoutOrderInput, OrderLogUncheckedCreateWithoutOrderInput> | OrderLogCreateWithoutOrderInput[] | OrderLogUncheckedCreateWithoutOrderInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutOrderInput | OrderLogCreateOrConnectWithoutOrderInput[]
+    createMany?: OrderLogCreateManyOrderInputEnvelope
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+  }
+
   export type NullableFloatFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
@@ -45294,6 +46868,20 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type OrderLogUpdateManyWithoutOrderNestedInput = {
+    create?: XOR<OrderLogCreateWithoutOrderInput, OrderLogUncheckedCreateWithoutOrderInput> | OrderLogCreateWithoutOrderInput[] | OrderLogUncheckedCreateWithoutOrderInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutOrderInput | OrderLogCreateOrConnectWithoutOrderInput[]
+    upsert?: OrderLogUpsertWithWhereUniqueWithoutOrderInput | OrderLogUpsertWithWhereUniqueWithoutOrderInput[]
+    createMany?: OrderLogCreateManyOrderInputEnvelope
+    set?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    disconnect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    delete?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    update?: OrderLogUpdateWithWhereUniqueWithoutOrderInput | OrderLogUpdateWithWhereUniqueWithoutOrderInput[]
+    updateMany?: OrderLogUpdateManyWithWhereWithoutOrderInput | OrderLogUpdateManyWithWhereWithoutOrderInput[]
+    deleteMany?: OrderLogScalarWhereInput | OrderLogScalarWhereInput[]
   }
 
   export type customerUpdateOneWithoutAsalBahanForNestedInput = {
@@ -45414,6 +47002,48 @@ export namespace Prisma {
     delete?: UserWhereInput | boolean
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOrdersCreatedInput, UserUpdateWithoutOrdersCreatedInput>, UserUncheckedUpdateWithoutOrdersCreatedInput>
+  }
+
+  export type OrderLogUncheckedUpdateManyWithoutOrderNestedInput = {
+    create?: XOR<OrderLogCreateWithoutOrderInput, OrderLogUncheckedCreateWithoutOrderInput> | OrderLogCreateWithoutOrderInput[] | OrderLogUncheckedCreateWithoutOrderInput[]
+    connectOrCreate?: OrderLogCreateOrConnectWithoutOrderInput | OrderLogCreateOrConnectWithoutOrderInput[]
+    upsert?: OrderLogUpsertWithWhereUniqueWithoutOrderInput | OrderLogUpsertWithWhereUniqueWithoutOrderInput[]
+    createMany?: OrderLogCreateManyOrderInputEnvelope
+    set?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    disconnect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    delete?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    connect?: OrderLogWhereUniqueInput | OrderLogWhereUniqueInput[]
+    update?: OrderLogUpdateWithWhereUniqueWithoutOrderInput | OrderLogUpdateWithWhereUniqueWithoutOrderInput[]
+    updateMany?: OrderLogUpdateManyWithWhereWithoutOrderInput | OrderLogUpdateManyWithWhereWithoutOrderInput[]
+    deleteMany?: OrderLogScalarWhereInput | OrderLogScalarWhereInput[]
+  }
+
+  export type OrderCreateNestedOneWithoutLogsInput = {
+    create?: XOR<OrderCreateWithoutLogsInput, OrderUncheckedCreateWithoutLogsInput>
+    connectOrCreate?: OrderCreateOrConnectWithoutLogsInput
+    connect?: OrderWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutOrderLogsInput = {
+    create?: XOR<UserCreateWithoutOrderLogsInput, UserUncheckedCreateWithoutOrderLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOrderLogsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type OrderUpdateOneRequiredWithoutLogsNestedInput = {
+    create?: XOR<OrderCreateWithoutLogsInput, OrderUncheckedCreateWithoutLogsInput>
+    connectOrCreate?: OrderCreateOrConnectWithoutLogsInput
+    upsert?: OrderUpsertWithoutLogsInput
+    connect?: OrderWhereUniqueInput
+    update?: XOR<XOR<OrderUpdateToOneWithWhereWithoutLogsInput, OrderUpdateWithoutLogsInput>, OrderUncheckedUpdateWithoutLogsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutOrderLogsNestedInput = {
+    create?: XOR<UserCreateWithoutOrderLogsInput, UserUncheckedCreateWithoutOrderLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOrderLogsInput
+    upsert?: UserUpsertWithoutOrderLogsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOrderLogsInput, UserUpdateWithoutOrderLogsInput>, UserUncheckedUpdateWithoutOrderLogsInput>
   }
 
   export type OrderCreateNestedManyWithoutProduk_relInput = {
@@ -46024,15 +47654,15 @@ export namespace Prisma {
     divide?: Decimal | DecimalJsLike | number | string
   }
 
-  export type UserCreateNestedOneWithoutOthersItemsAddedInput = {
-    create?: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
-    connectOrCreate?: UserCreateOrConnectWithoutOthersItemsAddedInput
-    connect?: UserWhereUniqueInput
-  }
-
   export type UserCreateNestedOneWithoutOthersItemsTakenInput = {
     create?: XOR<UserCreateWithoutOthersItemsTakenInput, UserUncheckedCreateWithoutOthersItemsTakenInput>
     connectOrCreate?: UserCreateOrConnectWithoutOthersItemsTakenInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutOthersItemsAddedInput = {
+    create?: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOthersItemsAddedInput
     connect?: UserWhereUniqueInput
   }
 
@@ -46050,14 +47680,6 @@ export namespace Prisma {
     connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
   }
 
-  export type UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput = {
-    create?: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
-    connectOrCreate?: UserCreateOrConnectWithoutOthersItemsAddedInput
-    upsert?: UserUpsertWithoutOthersItemsAddedInput
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersItemsAddedInput, UserUpdateWithoutOthersItemsAddedInput>, UserUncheckedUpdateWithoutOthersItemsAddedInput>
-  }
-
   export type UserUpdateOneWithoutOthersItemsTakenNestedInput = {
     create?: XOR<UserCreateWithoutOthersItemsTakenInput, UserUncheckedCreateWithoutOthersItemsTakenInput>
     connectOrCreate?: UserCreateOrConnectWithoutOthersItemsTakenInput
@@ -46066,6 +47688,14 @@ export namespace Prisma {
     delete?: UserWhereInput | boolean
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersItemsTakenInput, UserUpdateWithoutOthersItemsTakenInput>, UserUncheckedUpdateWithoutOthersItemsTakenInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput = {
+    create?: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOthersItemsAddedInput
+    upsert?: UserUpsertWithoutOthersItemsAddedInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersItemsAddedInput, UserUpdateWithoutOthersItemsAddedInput>, UserUncheckedUpdateWithoutOthersItemsAddedInput>
   }
 
   export type OthersLogUpdateManyWithoutOthers_itemNestedInput = {
@@ -46103,12 +47733,6 @@ export namespace Prisma {
     connect?: OthersLogWhereUniqueInput | OthersLogWhereUniqueInput[]
   }
 
-  export type UserCreateNestedOneWithoutOthersRequestsInput = {
-    create?: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutOthersRequestsInput
-    connect?: UserWhereUniqueInput
-  }
-
   export type UserCreateNestedOneWithoutOthersApprovalsInput = {
     create?: XOR<UserCreateWithoutOthersApprovalsInput, UserUncheckedCreateWithoutOthersApprovalsInput>
     connectOrCreate?: UserCreateOrConnectWithoutOthersApprovalsInput
@@ -46118,6 +47742,12 @@ export namespace Prisma {
   export type UserCreateNestedOneWithoutOthersRejectionsInput = {
     create?: XOR<UserCreateWithoutOthersRejectionsInput, UserUncheckedCreateWithoutOthersRejectionsInput>
     connectOrCreate?: UserCreateOrConnectWithoutOthersRejectionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutOthersRequestsInput = {
+    create?: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOthersRequestsInput
     connect?: UserWhereUniqueInput
   }
 
@@ -46142,14 +47772,6 @@ export namespace Prisma {
     deleteMany?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
   }
 
-  export type UserUpdateOneRequiredWithoutOthersRequestsNestedInput = {
-    create?: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutOthersRequestsInput
-    upsert?: UserUpsertWithoutOthersRequestsInput
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersRequestsInput, UserUpdateWithoutOthersRequestsInput>, UserUncheckedUpdateWithoutOthersRequestsInput>
-  }
-
   export type UserUpdateOneWithoutOthersApprovalsNestedInput = {
     create?: XOR<UserCreateWithoutOthersApprovalsInput, UserUncheckedCreateWithoutOthersApprovalsInput>
     connectOrCreate?: UserCreateOrConnectWithoutOthersApprovalsInput
@@ -46170,6 +47792,14 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersRejectionsInput, UserUpdateWithoutOthersRejectionsInput>, UserUncheckedUpdateWithoutOthersRejectionsInput>
   }
 
+  export type UserUpdateOneRequiredWithoutOthersRequestsNestedInput = {
+    create?: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOthersRequestsInput
+    upsert?: UserUpsertWithoutOthersRequestsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersRequestsInput, UserUpdateWithoutOthersRequestsInput>, UserUncheckedUpdateWithoutOthersRequestsInput>
+  }
+
   export type OthersLogUncheckedUpdateManyWithoutOthers_requestNestedInput = {
     create?: XOR<OthersLogCreateWithoutOthers_requestInput, OthersLogUncheckedCreateWithoutOthers_requestInput> | OthersLogCreateWithoutOthers_requestInput[] | OthersLogUncheckedCreateWithoutOthers_requestInput[]
     connectOrCreate?: OthersLogCreateOrConnectWithoutOthers_requestInput | OthersLogCreateOrConnectWithoutOthers_requestInput[]
@@ -46184,10 +47814,10 @@ export namespace Prisma {
     deleteMany?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
   }
 
-  export type UserCreateNestedOneWithoutOthersLogsInput = {
-    create?: XOR<UserCreateWithoutOthersLogsInput, UserUncheckedCreateWithoutOthersLogsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutOthersLogsInput
-    connect?: UserWhereUniqueInput
+  export type OthersItemCreateNestedOneWithoutLogsInput = {
+    create?: XOR<OthersItemCreateWithoutLogsInput, OthersItemUncheckedCreateWithoutLogsInput>
+    connectOrCreate?: OthersItemCreateOrConnectWithoutLogsInput
+    connect?: OthersItemWhereUniqueInput
   }
 
   export type OthersRequestCreateNestedOneWithoutLogsInput = {
@@ -46196,18 +47826,20 @@ export namespace Prisma {
     connect?: OthersRequestWhereUniqueInput
   }
 
-  export type OthersItemCreateNestedOneWithoutLogsInput = {
-    create?: XOR<OthersItemCreateWithoutLogsInput, OthersItemUncheckedCreateWithoutLogsInput>
-    connectOrCreate?: OthersItemCreateOrConnectWithoutLogsInput
-    connect?: OthersItemWhereUniqueInput
-  }
-
-  export type UserUpdateOneRequiredWithoutOthersLogsNestedInput = {
+  export type UserCreateNestedOneWithoutOthersLogsInput = {
     create?: XOR<UserCreateWithoutOthersLogsInput, UserUncheckedCreateWithoutOthersLogsInput>
     connectOrCreate?: UserCreateOrConnectWithoutOthersLogsInput
-    upsert?: UserUpsertWithoutOthersLogsInput
     connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersLogsInput, UserUpdateWithoutOthersLogsInput>, UserUncheckedUpdateWithoutOthersLogsInput>
+  }
+
+  export type OthersItemUpdateOneWithoutLogsNestedInput = {
+    create?: XOR<OthersItemCreateWithoutLogsInput, OthersItemUncheckedCreateWithoutLogsInput>
+    connectOrCreate?: OthersItemCreateOrConnectWithoutLogsInput
+    upsert?: OthersItemUpsertWithoutLogsInput
+    disconnect?: OthersItemWhereInput | boolean
+    delete?: OthersItemWhereInput | boolean
+    connect?: OthersItemWhereUniqueInput
+    update?: XOR<XOR<OthersItemUpdateToOneWithWhereWithoutLogsInput, OthersItemUpdateWithoutLogsInput>, OthersItemUncheckedUpdateWithoutLogsInput>
   }
 
   export type OthersRequestUpdateOneWithoutLogsNestedInput = {
@@ -46220,14 +47852,12 @@ export namespace Prisma {
     update?: XOR<XOR<OthersRequestUpdateToOneWithWhereWithoutLogsInput, OthersRequestUpdateWithoutLogsInput>, OthersRequestUncheckedUpdateWithoutLogsInput>
   }
 
-  export type OthersItemUpdateOneWithoutLogsNestedInput = {
-    create?: XOR<OthersItemCreateWithoutLogsInput, OthersItemUncheckedCreateWithoutLogsInput>
-    connectOrCreate?: OthersItemCreateOrConnectWithoutLogsInput
-    upsert?: OthersItemUpsertWithoutLogsInput
-    disconnect?: OthersItemWhereInput | boolean
-    delete?: OthersItemWhereInput | boolean
-    connect?: OthersItemWhereUniqueInput
-    update?: XOR<XOR<OthersItemUpdateToOneWithWhereWithoutLogsInput, OthersItemUpdateWithoutLogsInput>, OthersItemUncheckedUpdateWithoutLogsInput>
+  export type UserUpdateOneRequiredWithoutOthersLogsNestedInput = {
+    create?: XOR<UserCreateWithoutOthersLogsInput, UserUncheckedCreateWithoutOthersLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOthersLogsInput
+    upsert?: UserUpsertWithoutOthersLogsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOthersLogsInput, UserUpdateWithoutOthersLogsInput>, UserUncheckedUpdateWithoutOthersLogsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -46965,6 +48595,32 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type OrderLogCreateWithoutUserInput = {
+    id?: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+    order: OrderCreateNestedOneWithoutLogsInput
+  }
+
+  export type OrderLogUncheckedCreateWithoutUserInput = {
+    id?: string
+    orderId: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+  }
+
+  export type OrderLogCreateOrConnectWithoutUserInput = {
+    where: OrderLogWhereUniqueInput
+    create: XOR<OrderLogCreateWithoutUserInput, OrderLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type OrderLogCreateManyUserInputEnvelope = {
+    data: OrderLogCreateManyUserInput | OrderLogCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type OrderCreateWithoutCuttingInput = {
     id?: string
     tanggal?: Date | string | null
@@ -47101,6 +48757,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     designer?: UserCreateNestedOneWithoutOrdersDesignedInput
@@ -47261,6 +48920,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutCuttingInput = {
@@ -47409,6 +49071,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -47569,6 +49234,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutDesignerInput = {
@@ -47717,6 +49385,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -47877,6 +49548,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutDtfInput = {
@@ -48025,6 +49699,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -48185,6 +49862,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutManagerInput = {
@@ -48333,6 +50013,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -48493,6 +50176,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutOperatorInput = {
@@ -48641,6 +50327,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -48801,6 +50490,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutPenyerahanInput = {
@@ -48949,6 +50641,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -49109,6 +50804,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutPressInput = {
@@ -49257,6 +50955,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -49417,6 +51118,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutPrintInput = {
@@ -49565,6 +51269,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -49725,6 +51432,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutUserInput = {
@@ -49734,6 +51444,270 @@ export namespace Prisma {
 
   export type OrderCreateManyUserInputEnvelope = {
     data: OrderCreateManyUserInput | OrderCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OthersItemCreateWithoutTaken_by_userInput = {
+    id?: string
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    user: UserCreateNestedOneWithoutOthersItemsAddedInput
+    logs?: OthersLogCreateNestedManyWithoutOthers_itemInput
+  }
+
+  export type OthersItemUncheckedCreateWithoutTaken_by_userInput = {
+    id?: string
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    user_id: string
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_itemInput
+  }
+
+  export type OthersItemCreateOrConnectWithoutTaken_by_userInput = {
+    where: OthersItemWhereUniqueInput
+    create: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput>
+  }
+
+  export type OthersItemCreateManyTaken_by_userInputEnvelope = {
+    data: OthersItemCreateManyTaken_by_userInput | OthersItemCreateManyTaken_by_userInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OthersItemCreateWithoutUserInput = {
+    id?: string
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    taken_by_user?: UserCreateNestedOneWithoutOthersItemsTakenInput
+    logs?: OthersLogCreateNestedManyWithoutOthers_itemInput
+  }
+
+  export type OthersItemUncheckedCreateWithoutUserInput = {
+    id?: string
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    taken_by_user_id?: string | null
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_itemInput
+  }
+
+  export type OthersItemCreateOrConnectWithoutUserInput = {
+    where: OthersItemWhereUniqueInput
+    create: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput>
+  }
+
+  export type OthersItemCreateManyUserInputEnvelope = {
+    data: OthersItemCreateManyUserInput | OthersItemCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OthersLogCreateWithoutUserInput = {
+    id?: string
+    action: string
+    notes?: string | null
+    created_at?: Date | string
+    others_item?: OthersItemCreateNestedOneWithoutLogsInput
+    others_request?: OthersRequestCreateNestedOneWithoutLogsInput
+  }
+
+  export type OthersLogUncheckedCreateWithoutUserInput = {
+    id?: string
+    action: string
+    others_request_id?: string | null
+    others_item_id?: string | null
+    notes?: string | null
+    created_at?: Date | string
+  }
+
+  export type OthersLogCreateOrConnectWithoutUserInput = {
+    where: OthersLogWhereUniqueInput
+    create: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type OthersLogCreateManyUserInputEnvelope = {
+    data: OthersLogCreateManyUserInput | OthersLogCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OthersRequestCreateWithoutApproverInput = {
+    id?: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogCreateNestedManyWithoutOthers_requestInput
+    rejector?: UserCreateNestedOneWithoutOthersRejectionsInput
+    user: UserCreateNestedOneWithoutOthersRequestsInput
+  }
+
+  export type OthersRequestUncheckedCreateWithoutApproverInput = {
+    id?: string
+    user_id: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    rejector_id?: string | null
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_requestInput
+  }
+
+  export type OthersRequestCreateOrConnectWithoutApproverInput = {
+    where: OthersRequestWhereUniqueInput
+    create: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput>
+  }
+
+  export type OthersRequestCreateManyApproverInputEnvelope = {
+    data: OthersRequestCreateManyApproverInput | OthersRequestCreateManyApproverInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OthersRequestCreateWithoutRejectorInput = {
+    id?: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogCreateNestedManyWithoutOthers_requestInput
+    approver?: UserCreateNestedOneWithoutOthersApprovalsInput
+    user: UserCreateNestedOneWithoutOthersRequestsInput
+  }
+
+  export type OthersRequestUncheckedCreateWithoutRejectorInput = {
+    id?: string
+    user_id: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    approver_id?: string | null
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_requestInput
+  }
+
+  export type OthersRequestCreateOrConnectWithoutRejectorInput = {
+    where: OthersRequestWhereUniqueInput
+    create: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput>
+  }
+
+  export type OthersRequestCreateManyRejectorInputEnvelope = {
+    data: OthersRequestCreateManyRejectorInput | OthersRequestCreateManyRejectorInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OthersRequestCreateWithoutUserInput = {
+    id?: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogCreateNestedManyWithoutOthers_requestInput
+    approver?: UserCreateNestedOneWithoutOthersApprovalsInput
+    rejector?: UserCreateNestedOneWithoutOthersRejectionsInput
+  }
+
+  export type OthersRequestUncheckedCreateWithoutUserInput = {
+    id?: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    approver_id?: string | null
+    rejector_id?: string | null
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_requestInput
+  }
+
+  export type OthersRequestCreateOrConnectWithoutUserInput = {
+    where: OthersRequestWhereUniqueInput
+    create: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput>
+  }
+
+  export type OthersRequestCreateManyUserInputEnvelope = {
+    data: OthersRequestCreateManyUserInput | OthersRequestCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -50071,270 +52045,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type OthersItemCreateWithoutUserInput = {
-    id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    taken_by_user?: UserCreateNestedOneWithoutOthersItemsTakenInput
-    logs?: OthersLogCreateNestedManyWithoutOthers_itemInput
-  }
-
-  export type OthersItemUncheckedCreateWithoutUserInput = {
-    id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    taken_by_user_id?: string | null
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_itemInput
-  }
-
-  export type OthersItemCreateOrConnectWithoutUserInput = {
-    where: OthersItemWhereUniqueInput
-    create: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput>
-  }
-
-  export type OthersItemCreateManyUserInputEnvelope = {
-    data: OthersItemCreateManyUserInput | OthersItemCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type OthersItemCreateWithoutTaken_by_userInput = {
-    id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    user: UserCreateNestedOneWithoutOthersItemsAddedInput
-    logs?: OthersLogCreateNestedManyWithoutOthers_itemInput
-  }
-
-  export type OthersItemUncheckedCreateWithoutTaken_by_userInput = {
-    id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    user_id: string
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_itemInput
-  }
-
-  export type OthersItemCreateOrConnectWithoutTaken_by_userInput = {
-    where: OthersItemWhereUniqueInput
-    create: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput>
-  }
-
-  export type OthersItemCreateManyTaken_by_userInputEnvelope = {
-    data: OthersItemCreateManyTaken_by_userInput | OthersItemCreateManyTaken_by_userInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type OthersLogCreateWithoutUserInput = {
-    id?: string
-    action: string
-    notes?: string | null
-    created_at?: Date | string
-    others_request?: OthersRequestCreateNestedOneWithoutLogsInput
-    others_item?: OthersItemCreateNestedOneWithoutLogsInput
-  }
-
-  export type OthersLogUncheckedCreateWithoutUserInput = {
-    id?: string
-    action: string
-    others_request_id?: string | null
-    others_item_id?: string | null
-    notes?: string | null
-    created_at?: Date | string
-  }
-
-  export type OthersLogCreateOrConnectWithoutUserInput = {
-    where: OthersLogWhereUniqueInput
-    create: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput>
-  }
-
-  export type OthersLogCreateManyUserInputEnvelope = {
-    data: OthersLogCreateManyUserInput | OthersLogCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type OthersRequestCreateWithoutUserInput = {
-    id?: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogCreateNestedManyWithoutOthers_requestInput
-    approver?: UserCreateNestedOneWithoutOthersApprovalsInput
-    rejector?: UserCreateNestedOneWithoutOthersRejectionsInput
-  }
-
-  export type OthersRequestUncheckedCreateWithoutUserInput = {
-    id?: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    approver_id?: string | null
-    rejector_id?: string | null
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_requestInput
-  }
-
-  export type OthersRequestCreateOrConnectWithoutUserInput = {
-    where: OthersRequestWhereUniqueInput
-    create: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput>
-  }
-
-  export type OthersRequestCreateManyUserInputEnvelope = {
-    data: OthersRequestCreateManyUserInput | OthersRequestCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type OthersRequestCreateWithoutApproverInput = {
-    id?: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogCreateNestedManyWithoutOthers_requestInput
-    user: UserCreateNestedOneWithoutOthersRequestsInput
-    rejector?: UserCreateNestedOneWithoutOthersRejectionsInput
-  }
-
-  export type OthersRequestUncheckedCreateWithoutApproverInput = {
-    id?: string
-    user_id: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    rejector_id?: string | null
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_requestInput
-  }
-
-  export type OthersRequestCreateOrConnectWithoutApproverInput = {
-    where: OthersRequestWhereUniqueInput
-    create: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput>
-  }
-
-  export type OthersRequestCreateManyApproverInputEnvelope = {
-    data: OthersRequestCreateManyApproverInput | OthersRequestCreateManyApproverInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type OthersRequestCreateWithoutRejectorInput = {
-    id?: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogCreateNestedManyWithoutOthers_requestInput
-    user: UserCreateNestedOneWithoutOthersRequestsInput
-    approver?: UserCreateNestedOneWithoutOthersApprovalsInput
-  }
-
-  export type OthersRequestUncheckedCreateWithoutRejectorInput = {
-    id?: string
-    user_id: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    approver_id?: string | null
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    logs?: OthersLogUncheckedCreateNestedManyWithoutOthers_requestInput
-  }
-
-  export type OthersRequestCreateOrConnectWithoutRejectorInput = {
-    where: OthersRequestWhereUniqueInput
-    create: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput>
-  }
-
-  export type OthersRequestCreateManyRejectorInputEnvelope = {
-    data: OthersRequestCreateManyRejectorInput | OthersRequestCreateManyRejectorInput[]
-    skipDuplicates?: boolean
-  }
-
   export type OtherConsumableUpsertWithWhereUniqueWithoutUserInput = {
     where: OtherConsumableWhereUniqueInput
     update: XOR<OtherConsumableUpdateWithoutUserInput, OtherConsumableUncheckedUpdateWithoutUserInput>
@@ -50571,6 +52281,34 @@ export namespace Prisma {
     data: XOR<InkStockUpdateManyMutationInput, InkStockUncheckedUpdateManyWithoutUpdatedByUserInput>
   }
 
+  export type OrderLogUpsertWithWhereUniqueWithoutUserInput = {
+    where: OrderLogWhereUniqueInput
+    update: XOR<OrderLogUpdateWithoutUserInput, OrderLogUncheckedUpdateWithoutUserInput>
+    create: XOR<OrderLogCreateWithoutUserInput, OrderLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type OrderLogUpdateWithWhereUniqueWithoutUserInput = {
+    where: OrderLogWhereUniqueInput
+    data: XOR<OrderLogUpdateWithoutUserInput, OrderLogUncheckedUpdateWithoutUserInput>
+  }
+
+  export type OrderLogUpdateManyWithWhereWithoutUserInput = {
+    where: OrderLogScalarWhereInput
+    data: XOR<OrderLogUpdateManyMutationInput, OrderLogUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type OrderLogScalarWhereInput = {
+    AND?: OrderLogScalarWhereInput | OrderLogScalarWhereInput[]
+    OR?: OrderLogScalarWhereInput[]
+    NOT?: OrderLogScalarWhereInput | OrderLogScalarWhereInput[]
+    id?: StringFilter<"OrderLog"> | string
+    orderId?: StringFilter<"OrderLog"> | string
+    userId?: StringFilter<"OrderLog"> | string
+    action?: StringFilter<"OrderLog"> | string
+    notes?: StringNullableFilter<"OrderLog"> | string | null
+    timestamp?: DateTimeFilter<"OrderLog"> | Date | string
+  }
+
   export type OrderUpsertWithWhereUniqueWithoutCuttingInput = {
     where: OrderWhereUniqueInput
     update: XOR<OrderUpdateWithoutCuttingInput, OrderUncheckedUpdateWithoutCuttingInput>
@@ -50738,6 +52476,8 @@ export namespace Prisma {
     dtf_done?: DateTimeNullableFilter<"Order"> | Date | string | null
     press_done?: DateTimeNullableFilter<"Order"> | Date | string | null
     print_done?: DateTimeNullableFilter<"Order"> | Date | string | null
+    holdReason?: StringNullableFilter<"Order"> | string | null
+    previousStatus?: StringNullableFilter<"Order"> | string | null
   }
 
   export type OrderUpsertWithWhereUniqueWithoutDesignerInput = {
@@ -50866,6 +52606,158 @@ export namespace Prisma {
   export type OrderUpdateManyWithWhereWithoutUserInput = {
     where: OrderScalarWhereInput
     data: XOR<OrderUpdateManyMutationInput, OrderUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput = {
+    where: OthersItemWhereUniqueInput
+    update: XOR<OthersItemUpdateWithoutTaken_by_userInput, OthersItemUncheckedUpdateWithoutTaken_by_userInput>
+    create: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput>
+  }
+
+  export type OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput = {
+    where: OthersItemWhereUniqueInput
+    data: XOR<OthersItemUpdateWithoutTaken_by_userInput, OthersItemUncheckedUpdateWithoutTaken_by_userInput>
+  }
+
+  export type OthersItemUpdateManyWithWhereWithoutTaken_by_userInput = {
+    where: OthersItemScalarWhereInput
+    data: XOR<OthersItemUpdateManyMutationInput, OthersItemUncheckedUpdateManyWithoutTaken_by_userInput>
+  }
+
+  export type OthersItemScalarWhereInput = {
+    AND?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
+    OR?: OthersItemScalarWhereInput[]
+    NOT?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
+    id?: StringFilter<"OthersItem"> | string
+    qr_code?: StringNullableFilter<"OthersItem"> | string | null
+    category?: StringFilter<"OthersItem"> | string
+    item_name?: StringFilter<"OthersItem"> | string
+    description?: StringNullableFilter<"OthersItem"> | string | null
+    quantity?: IntFilter<"OthersItem"> | number
+    unit?: StringFilter<"OthersItem"> | string
+    location?: StringNullableFilter<"OthersItem"> | string | null
+    notes?: StringNullableFilter<"OthersItem"> | string | null
+    availability?: BoolFilter<"OthersItem"> | boolean
+    user_id?: StringFilter<"OthersItem"> | string
+    taken_by_user_id?: StringNullableFilter<"OthersItem"> | string | null
+    taken_at?: DateTimeNullableFilter<"OthersItem"> | Date | string | null
+    created_at?: DateTimeFilter<"OthersItem"> | Date | string
+    updated_at?: DateTimeFilter<"OthersItem"> | Date | string
+  }
+
+  export type OthersItemUpsertWithWhereUniqueWithoutUserInput = {
+    where: OthersItemWhereUniqueInput
+    update: XOR<OthersItemUpdateWithoutUserInput, OthersItemUncheckedUpdateWithoutUserInput>
+    create: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput>
+  }
+
+  export type OthersItemUpdateWithWhereUniqueWithoutUserInput = {
+    where: OthersItemWhereUniqueInput
+    data: XOR<OthersItemUpdateWithoutUserInput, OthersItemUncheckedUpdateWithoutUserInput>
+  }
+
+  export type OthersItemUpdateManyWithWhereWithoutUserInput = {
+    where: OthersItemScalarWhereInput
+    data: XOR<OthersItemUpdateManyMutationInput, OthersItemUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type OthersLogUpsertWithWhereUniqueWithoutUserInput = {
+    where: OthersLogWhereUniqueInput
+    update: XOR<OthersLogUpdateWithoutUserInput, OthersLogUncheckedUpdateWithoutUserInput>
+    create: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type OthersLogUpdateWithWhereUniqueWithoutUserInput = {
+    where: OthersLogWhereUniqueInput
+    data: XOR<OthersLogUpdateWithoutUserInput, OthersLogUncheckedUpdateWithoutUserInput>
+  }
+
+  export type OthersLogUpdateManyWithWhereWithoutUserInput = {
+    where: OthersLogScalarWhereInput
+    data: XOR<OthersLogUpdateManyMutationInput, OthersLogUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type OthersLogScalarWhereInput = {
+    AND?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
+    OR?: OthersLogScalarWhereInput[]
+    NOT?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
+    id?: StringFilter<"OthersLog"> | string
+    action?: StringFilter<"OthersLog"> | string
+    user_id?: StringFilter<"OthersLog"> | string
+    others_request_id?: StringNullableFilter<"OthersLog"> | string | null
+    others_item_id?: StringNullableFilter<"OthersLog"> | string | null
+    notes?: StringNullableFilter<"OthersLog"> | string | null
+    created_at?: DateTimeFilter<"OthersLog"> | Date | string
+  }
+
+  export type OthersRequestUpsertWithWhereUniqueWithoutApproverInput = {
+    where: OthersRequestWhereUniqueInput
+    update: XOR<OthersRequestUpdateWithoutApproverInput, OthersRequestUncheckedUpdateWithoutApproverInput>
+    create: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput>
+  }
+
+  export type OthersRequestUpdateWithWhereUniqueWithoutApproverInput = {
+    where: OthersRequestWhereUniqueInput
+    data: XOR<OthersRequestUpdateWithoutApproverInput, OthersRequestUncheckedUpdateWithoutApproverInput>
+  }
+
+  export type OthersRequestUpdateManyWithWhereWithoutApproverInput = {
+    where: OthersRequestScalarWhereInput
+    data: XOR<OthersRequestUpdateManyMutationInput, OthersRequestUncheckedUpdateManyWithoutApproverInput>
+  }
+
+  export type OthersRequestScalarWhereInput = {
+    AND?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+    OR?: OthersRequestScalarWhereInput[]
+    NOT?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
+    id?: StringFilter<"OthersRequest"> | string
+    user_id?: StringFilter<"OthersRequest"> | string
+    category?: StringFilter<"OthersRequest"> | string
+    item_name?: StringFilter<"OthersRequest"> | string
+    quantity?: IntFilter<"OthersRequest"> | number
+    unit?: StringFilter<"OthersRequest"> | string
+    user_notes?: StringNullableFilter<"OthersRequest"> | string | null
+    status?: StringFilter<"OthersRequest"> | string
+    approver_id?: StringNullableFilter<"OthersRequest"> | string | null
+    rejector_id?: StringNullableFilter<"OthersRequest"> | string | null
+    approved_at?: DateTimeNullableFilter<"OthersRequest"> | Date | string | null
+    rejected_at?: DateTimeNullableFilter<"OthersRequest"> | Date | string | null
+    approver_notes?: StringNullableFilter<"OthersRequest"> | string | null
+    rejection_reason?: StringNullableFilter<"OthersRequest"> | string | null
+    created_at?: DateTimeFilter<"OthersRequest"> | Date | string
+    updated_at?: DateTimeFilter<"OthersRequest"> | Date | string
+  }
+
+  export type OthersRequestUpsertWithWhereUniqueWithoutRejectorInput = {
+    where: OthersRequestWhereUniqueInput
+    update: XOR<OthersRequestUpdateWithoutRejectorInput, OthersRequestUncheckedUpdateWithoutRejectorInput>
+    create: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput>
+  }
+
+  export type OthersRequestUpdateWithWhereUniqueWithoutRejectorInput = {
+    where: OthersRequestWhereUniqueInput
+    data: XOR<OthersRequestUpdateWithoutRejectorInput, OthersRequestUncheckedUpdateWithoutRejectorInput>
+  }
+
+  export type OthersRequestUpdateManyWithWhereWithoutRejectorInput = {
+    where: OthersRequestScalarWhereInput
+    data: XOR<OthersRequestUpdateManyMutationInput, OthersRequestUncheckedUpdateManyWithoutRejectorInput>
+  }
+
+  export type OthersRequestUpsertWithWhereUniqueWithoutUserInput = {
+    where: OthersRequestWhereUniqueInput
+    update: XOR<OthersRequestUpdateWithoutUserInput, OthersRequestUncheckedUpdateWithoutUserInput>
+    create: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput>
+  }
+
+  export type OthersRequestUpdateWithWhereUniqueWithoutUserInput = {
+    where: OthersRequestWhereUniqueInput
+    data: XOR<OthersRequestUpdateWithoutUserInput, OthersRequestUncheckedUpdateWithoutUserInput>
+  }
+
+  export type OthersRequestUpdateManyWithWhereWithoutUserInput = {
+    where: OthersRequestScalarWhereInput
+    data: XOR<OthersRequestUpdateManyMutationInput, OthersRequestUncheckedUpdateManyWithoutUserInput>
   }
 
   export type PaperLogUpsertWithWhereUniqueWithoutUserInput = {
@@ -51039,158 +52931,6 @@ export namespace Prisma {
     data: XOR<PaperStockUpdateManyMutationInput, PaperStockUncheckedUpdateManyWithoutUpdatedByUserInput>
   }
 
-  export type OthersItemUpsertWithWhereUniqueWithoutUserInput = {
-    where: OthersItemWhereUniqueInput
-    update: XOR<OthersItemUpdateWithoutUserInput, OthersItemUncheckedUpdateWithoutUserInput>
-    create: XOR<OthersItemCreateWithoutUserInput, OthersItemUncheckedCreateWithoutUserInput>
-  }
-
-  export type OthersItemUpdateWithWhereUniqueWithoutUserInput = {
-    where: OthersItemWhereUniqueInput
-    data: XOR<OthersItemUpdateWithoutUserInput, OthersItemUncheckedUpdateWithoutUserInput>
-  }
-
-  export type OthersItemUpdateManyWithWhereWithoutUserInput = {
-    where: OthersItemScalarWhereInput
-    data: XOR<OthersItemUpdateManyMutationInput, OthersItemUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type OthersItemScalarWhereInput = {
-    AND?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
-    OR?: OthersItemScalarWhereInput[]
-    NOT?: OthersItemScalarWhereInput | OthersItemScalarWhereInput[]
-    id?: StringFilter<"OthersItem"> | string
-    qr_code?: StringNullableFilter<"OthersItem"> | string | null
-    category?: StringFilter<"OthersItem"> | string
-    item_name?: StringFilter<"OthersItem"> | string
-    description?: StringNullableFilter<"OthersItem"> | string | null
-    quantity?: IntFilter<"OthersItem"> | number
-    unit?: StringFilter<"OthersItem"> | string
-    location?: StringNullableFilter<"OthersItem"> | string | null
-    notes?: StringNullableFilter<"OthersItem"> | string | null
-    availability?: BoolFilter<"OthersItem"> | boolean
-    user_id?: StringFilter<"OthersItem"> | string
-    taken_by_user_id?: StringNullableFilter<"OthersItem"> | string | null
-    taken_at?: DateTimeNullableFilter<"OthersItem"> | Date | string | null
-    created_at?: DateTimeFilter<"OthersItem"> | Date | string
-    updated_at?: DateTimeFilter<"OthersItem"> | Date | string
-  }
-
-  export type OthersItemUpsertWithWhereUniqueWithoutTaken_by_userInput = {
-    where: OthersItemWhereUniqueInput
-    update: XOR<OthersItemUpdateWithoutTaken_by_userInput, OthersItemUncheckedUpdateWithoutTaken_by_userInput>
-    create: XOR<OthersItemCreateWithoutTaken_by_userInput, OthersItemUncheckedCreateWithoutTaken_by_userInput>
-  }
-
-  export type OthersItemUpdateWithWhereUniqueWithoutTaken_by_userInput = {
-    where: OthersItemWhereUniqueInput
-    data: XOR<OthersItemUpdateWithoutTaken_by_userInput, OthersItemUncheckedUpdateWithoutTaken_by_userInput>
-  }
-
-  export type OthersItemUpdateManyWithWhereWithoutTaken_by_userInput = {
-    where: OthersItemScalarWhereInput
-    data: XOR<OthersItemUpdateManyMutationInput, OthersItemUncheckedUpdateManyWithoutTaken_by_userInput>
-  }
-
-  export type OthersLogUpsertWithWhereUniqueWithoutUserInput = {
-    where: OthersLogWhereUniqueInput
-    update: XOR<OthersLogUpdateWithoutUserInput, OthersLogUncheckedUpdateWithoutUserInput>
-    create: XOR<OthersLogCreateWithoutUserInput, OthersLogUncheckedCreateWithoutUserInput>
-  }
-
-  export type OthersLogUpdateWithWhereUniqueWithoutUserInput = {
-    where: OthersLogWhereUniqueInput
-    data: XOR<OthersLogUpdateWithoutUserInput, OthersLogUncheckedUpdateWithoutUserInput>
-  }
-
-  export type OthersLogUpdateManyWithWhereWithoutUserInput = {
-    where: OthersLogScalarWhereInput
-    data: XOR<OthersLogUpdateManyMutationInput, OthersLogUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type OthersLogScalarWhereInput = {
-    AND?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
-    OR?: OthersLogScalarWhereInput[]
-    NOT?: OthersLogScalarWhereInput | OthersLogScalarWhereInput[]
-    id?: StringFilter<"OthersLog"> | string
-    action?: StringFilter<"OthersLog"> | string
-    user_id?: StringFilter<"OthersLog"> | string
-    others_request_id?: StringNullableFilter<"OthersLog"> | string | null
-    others_item_id?: StringNullableFilter<"OthersLog"> | string | null
-    notes?: StringNullableFilter<"OthersLog"> | string | null
-    created_at?: DateTimeFilter<"OthersLog"> | Date | string
-  }
-
-  export type OthersRequestUpsertWithWhereUniqueWithoutUserInput = {
-    where: OthersRequestWhereUniqueInput
-    update: XOR<OthersRequestUpdateWithoutUserInput, OthersRequestUncheckedUpdateWithoutUserInput>
-    create: XOR<OthersRequestCreateWithoutUserInput, OthersRequestUncheckedCreateWithoutUserInput>
-  }
-
-  export type OthersRequestUpdateWithWhereUniqueWithoutUserInput = {
-    where: OthersRequestWhereUniqueInput
-    data: XOR<OthersRequestUpdateWithoutUserInput, OthersRequestUncheckedUpdateWithoutUserInput>
-  }
-
-  export type OthersRequestUpdateManyWithWhereWithoutUserInput = {
-    where: OthersRequestScalarWhereInput
-    data: XOR<OthersRequestUpdateManyMutationInput, OthersRequestUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type OthersRequestScalarWhereInput = {
-    AND?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
-    OR?: OthersRequestScalarWhereInput[]
-    NOT?: OthersRequestScalarWhereInput | OthersRequestScalarWhereInput[]
-    id?: StringFilter<"OthersRequest"> | string
-    user_id?: StringFilter<"OthersRequest"> | string
-    category?: StringFilter<"OthersRequest"> | string
-    item_name?: StringFilter<"OthersRequest"> | string
-    quantity?: IntFilter<"OthersRequest"> | number
-    unit?: StringFilter<"OthersRequest"> | string
-    user_notes?: StringNullableFilter<"OthersRequest"> | string | null
-    status?: StringFilter<"OthersRequest"> | string
-    approver_id?: StringNullableFilter<"OthersRequest"> | string | null
-    rejector_id?: StringNullableFilter<"OthersRequest"> | string | null
-    approved_at?: DateTimeNullableFilter<"OthersRequest"> | Date | string | null
-    rejected_at?: DateTimeNullableFilter<"OthersRequest"> | Date | string | null
-    approver_notes?: StringNullableFilter<"OthersRequest"> | string | null
-    rejection_reason?: StringNullableFilter<"OthersRequest"> | string | null
-    created_at?: DateTimeFilter<"OthersRequest"> | Date | string
-    updated_at?: DateTimeFilter<"OthersRequest"> | Date | string
-  }
-
-  export type OthersRequestUpsertWithWhereUniqueWithoutApproverInput = {
-    where: OthersRequestWhereUniqueInput
-    update: XOR<OthersRequestUpdateWithoutApproverInput, OthersRequestUncheckedUpdateWithoutApproverInput>
-    create: XOR<OthersRequestCreateWithoutApproverInput, OthersRequestUncheckedCreateWithoutApproverInput>
-  }
-
-  export type OthersRequestUpdateWithWhereUniqueWithoutApproverInput = {
-    where: OthersRequestWhereUniqueInput
-    data: XOR<OthersRequestUpdateWithoutApproverInput, OthersRequestUncheckedUpdateWithoutApproverInput>
-  }
-
-  export type OthersRequestUpdateManyWithWhereWithoutApproverInput = {
-    where: OthersRequestScalarWhereInput
-    data: XOR<OthersRequestUpdateManyMutationInput, OthersRequestUncheckedUpdateManyWithoutApproverInput>
-  }
-
-  export type OthersRequestUpsertWithWhereUniqueWithoutRejectorInput = {
-    where: OthersRequestWhereUniqueInput
-    update: XOR<OthersRequestUpdateWithoutRejectorInput, OthersRequestUncheckedUpdateWithoutRejectorInput>
-    create: XOR<OthersRequestCreateWithoutRejectorInput, OthersRequestUncheckedCreateWithoutRejectorInput>
-  }
-
-  export type OthersRequestUpdateWithWhereUniqueWithoutRejectorInput = {
-    where: OthersRequestWhereUniqueInput
-    data: XOR<OthersRequestUpdateWithoutRejectorInput, OthersRequestUncheckedUpdateWithoutRejectorInput>
-  }
-
-  export type OthersRequestUpdateManyWithWhereWithoutRejectorInput = {
-    where: OthersRequestScalarWhereInput
-    data: XOR<OthersRequestUpdateManyMutationInput, OthersRequestUncheckedUpdateManyWithoutRejectorInput>
-  }
-
   export type UserCreateWithoutRoleInput = {
     id?: string
     name: string
@@ -51205,6 +52945,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -51214,6 +52955,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -51221,12 +52968,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutRoleInput = {
@@ -51243,6 +52984,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -51252,6 +52994,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -51259,12 +53007,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutRoleInput = {
@@ -51715,6 +53457,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
     designer?: UserCreateNestedOneWithoutOrdersDesignedInput
@@ -51875,6 +53620,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutAsal_bahan_relInput = {
@@ -52023,6 +53771,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
     designer?: UserCreateNestedOneWithoutOrdersDesignedInput
@@ -52183,6 +53934,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutCustomerInput = {
@@ -52397,6 +54151,32 @@ export namespace Prisma {
     orders?: OrderUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
+  export type OrderLogCreateWithoutOrderInput = {
+    id?: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+    user: UserCreateNestedOneWithoutOrderLogsInput
+  }
+
+  export type OrderLogUncheckedCreateWithoutOrderInput = {
+    id?: string
+    userId: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+  }
+
+  export type OrderLogCreateOrConnectWithoutOrderInput = {
+    where: OrderLogWhereUniqueInput
+    create: XOR<OrderLogCreateWithoutOrderInput, OrderLogUncheckedCreateWithoutOrderInput>
+  }
+
+  export type OrderLogCreateManyOrderInputEnvelope = {
+    data: OrderLogCreateManyOrderInput | OrderLogCreateManyOrderInput[]
+    skipDuplicates?: boolean
+  }
+
   export type customerCreateWithoutAsalBahanForInput = {
     id?: bigint | number
     nama: string
@@ -52458,6 +54238,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
     ordersManaged?: OrderCreateNestedManyWithoutManagerInput
@@ -52466,6 +54247,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -52473,12 +54260,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersCuttingInput = {
@@ -52496,6 +54277,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
     ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
@@ -52504,6 +54286,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -52511,12 +54299,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersCuttingInput = {
@@ -52539,6 +54321,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
     ordersManaged?: OrderCreateNestedManyWithoutManagerInput
@@ -52547,6 +54330,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -52554,12 +54343,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersDesignedInput = {
@@ -52577,6 +54360,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
     ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
@@ -52585,6 +54369,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -52592,12 +54382,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersDesignedInput = {
@@ -52620,6 +54404,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersManaged?: OrderCreateNestedManyWithoutManagerInput
@@ -52628,6 +54413,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -52635,12 +54426,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersDTFInput = {
@@ -52658,6 +54443,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
@@ -52666,6 +54452,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -52673,12 +54465,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersDTFInput = {
@@ -52719,6 +54505,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -52727,6 +54514,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -52734,12 +54527,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersManagedInput = {
@@ -52757,6 +54544,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -52765,6 +54553,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -52772,12 +54566,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersManagedInput = {
@@ -52800,6 +54588,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -52808,6 +54597,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -52815,12 +54610,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersOperatedInput = {
@@ -52838,6 +54627,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -52846,6 +54636,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -52853,12 +54649,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersOperatedInput = {
@@ -52881,6 +54671,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -52889,6 +54680,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -52896,12 +54693,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersHandledInput = {
@@ -52919,6 +54710,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -52927,6 +54719,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -52934,12 +54732,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersHandledInput = {
@@ -52962,6 +54754,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -52970,6 +54763,12 @@ export namespace Prisma {
     ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -52977,12 +54776,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersPressInput = {
@@ -53000,6 +54793,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -53008,6 +54802,12 @@ export namespace Prisma {
     ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -53015,12 +54815,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersPressInput = {
@@ -53043,6 +54837,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -53051,6 +54846,12 @@ export namespace Prisma {
     ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -53058,12 +54859,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersPrintInput = {
@@ -53081,6 +54876,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -53089,6 +54885,12 @@ export namespace Prisma {
     ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -53096,12 +54898,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersPrintInput = {
@@ -53124,6 +54920,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -53132,6 +54929,12 @@ export namespace Prisma {
     ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -53139,12 +54942,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOrdersCreatedInput = {
@@ -53162,6 +54959,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -53170,6 +54968,12 @@ export namespace Prisma {
     ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -53177,17 +54981,27 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOrdersCreatedInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutOrdersCreatedInput, UserUncheckedCreateWithoutOrdersCreatedInput>
+  }
+
+  export type OrderLogUpsertWithWhereUniqueWithoutOrderInput = {
+    where: OrderLogWhereUniqueInput
+    update: XOR<OrderLogUpdateWithoutOrderInput, OrderLogUncheckedUpdateWithoutOrderInput>
+    create: XOR<OrderLogCreateWithoutOrderInput, OrderLogUncheckedCreateWithoutOrderInput>
+  }
+
+  export type OrderLogUpdateWithWhereUniqueWithoutOrderInput = {
+    where: OrderLogWhereUniqueInput
+    data: XOR<OrderLogUpdateWithoutOrderInput, OrderLogUncheckedUpdateWithoutOrderInput>
+  }
+
+  export type OrderLogUpdateManyWithWhereWithoutOrderInput = {
+    where: OrderLogScalarWhereInput
+    data: XOR<OrderLogUpdateManyMutationInput, OrderLogUncheckedUpdateManyWithoutOrderInput>
   }
 
   export type customerUpsertWithoutAsalBahanForInput = {
@@ -53274,6 +55088,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
     ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
@@ -53282,6 +55097,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53289,12 +55110,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersCuttingInput = {
@@ -53312,6 +55127,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
     ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
@@ -53320,6 +55136,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53327,12 +55149,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOrdersDesignedInput = {
@@ -53361,6 +55177,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
     ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
@@ -53369,6 +55186,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53376,12 +55199,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersDesignedInput = {
@@ -53399,6 +55216,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
     ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
@@ -53407,6 +55225,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53414,12 +55238,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOrdersDTFInput = {
@@ -53448,6 +55266,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
@@ -53456,6 +55275,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53463,12 +55288,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersDTFInput = {
@@ -53486,6 +55305,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
@@ -53494,6 +55314,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53501,12 +55327,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type ProdukUpsertWithoutOrdersInput = {
@@ -53559,6 +55379,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -53567,6 +55388,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53574,12 +55401,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersManagedInput = {
@@ -53597,6 +55418,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -53605,6 +55427,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53612,12 +55440,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOrdersOperatedInput = {
@@ -53646,6 +55468,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -53654,6 +55477,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53661,12 +55490,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersOperatedInput = {
@@ -53684,6 +55507,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -53692,6 +55516,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53699,12 +55529,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOrdersHandledInput = {
@@ -53733,6 +55557,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -53741,6 +55566,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53748,12 +55579,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersHandledInput = {
@@ -53771,6 +55596,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -53779,6 +55605,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53786,12 +55618,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOrdersPressInput = {
@@ -53820,6 +55646,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -53828,6 +55655,12 @@ export namespace Prisma {
     ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53835,12 +55668,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersPressInput = {
@@ -53858,6 +55685,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -53866,6 +55694,12 @@ export namespace Prisma {
     ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53873,12 +55707,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOrdersPrintInput = {
@@ -53907,6 +55735,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -53915,6 +55744,12 @@ export namespace Prisma {
     ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -53922,12 +55757,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersPrintInput = {
@@ -53945,6 +55774,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -53953,6 +55783,12 @@ export namespace Prisma {
     ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -53960,12 +55796,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOrdersCreatedInput = {
@@ -53994,6 +55824,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -54002,6 +55833,12 @@ export namespace Prisma {
     ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -54009,15 +55846,805 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersCreatedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    roleId?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    otherConsumables?: OtherConsumableUncheckedUpdateManyWithoutUserNestedInput
+    inkLogs?: InkLogUncheckedUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUncheckedUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
+    ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUncheckedUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
+    paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+  }
+
+  export type OrderCreateWithoutLogsInput = {
+    id?: string
+    tanggal?: Date | string | null
+    spk?: string | null
+    reject?: string | null
+    panjang_reject?: string | null
+    panjang_order?: string | null
+    lebar_kertas?: string | null
+    marketing?: string | null
+    nominal?: string | null
+    harga_satuan?: string | null
+    keterangan?: string | null
+    invoice?: string | null
+    jenis_pembayaran?: string | null
+    dp?: string | null
+    tgl_dp?: Date | string | null
+    sisa?: string | null
+    pelunasan?: string | null
+    biaya_tambahan?: string | null
+    tgl_lunas?: Date | string | null
+    tgl_invoice?: Date | string | null
+    status?: string | null
+    statusm?: string | null
+    approval?: string | null
+    approve_mng?: string | null
+    approval_barang?: string | null
+    approval_opr?: string | null
+    rip?: string | null
+    produk?: string | null
+    path?: string | null
+    tf_dp?: string | null
+    tf_pelunasan?: string | null
+    tf_full?: string | null
+    catatan_tf?: string | null
+    capture?: string | null
+    capture_name?: string | null
+    nama_kain?: string | null
+    jumlah_kain?: string | null
+    tipe_produk?: string | null
+    qty?: string | null
+    kategori?: string | null
+    gramasi?: string | null
+    nama_produk?: string | null
+    catatan?: string | null
+    catatan_print?: string | null
+    catatan_press?: string | null
+    catatan_cutting?: string | null
+    lebar_file?: string | null
+    est_order?: Date | string | null
+    no_project?: string | null
+    warna_acuan?: string | null
+    statusprod?: string | null
+    lebar_kain?: string | null
+    prioritas?: string | null
+    prints_mesin?: string | null
+    prints_icc?: string | null
+    prints_target?: string | null
+    dimensi_file?: string | null
+    prints_qty?: string | null
+    total_kertas?: string | null
+    prints_bagus?: string | null
+    prints_reject?: string | null
+    prints_waste?: string | null
+    press_mesin?: string | null
+    press_presure?: string | null
+    press_suhu?: string | null
+    press_speed?: number | null
+    press_protect?: string | null
+    total_kain?: string | null
+    press_bagus?: string | null
+    press_reject?: string | null
+    press_waste?: string | null
+    printd_mesin?: string | null
+    printd_icc?: string | null
+    pet?: string | null
+    suhu_meja?: string | null
+    printd_speed?: string | null
+    white_setting?: string | null
+    choke?: string | null
+    white_precentage?: string | null
+    total_pet?: string | null
+    cutting_mesin?: string | null
+    cutting_speed?: string | null
+    acc?: string | null
+    power?: string | null
+    cutting_bagus?: string | null
+    cutting_reject?: string | null
+    tgl_pengiriman?: Date | string | null
+    tambah_bahan?: string | null
+    tambah_cutting?: string | null
+    tambah_cutting1?: string | null
+    tambah_cutting2?: string | null
+    tambah_cutting3?: string | null
+    tambah_cutting4?: string | null
+    tambah_cutting5?: string | null
+    satuan_bahan?: string | null
+    satuan_cutting?: string | null
+    satuan_cutting1?: string | null
+    satuan_cutting2?: string | null
+    satuan_cutting3?: string | null
+    satuan_cutting4?: string | null
+    satuan_cutting5?: string | null
+    qty_bahan?: string | null
+    qty_cutting?: string | null
+    qty_cutting1?: string | null
+    qty_cutting2?: string | null
+    qty_cutting3?: string | null
+    qty_cutting4?: string | null
+    qty_cutting5?: string | null
+    total_bahan?: string | null
+    total_cutting?: string | null
+    total_cutting1?: string | null
+    total_cutting2?: string | null
+    total_cutting3?: string | null
+    total_cutting4?: string | null
+    total_cutting5?: string | null
+    nominal_total?: string | null
+    no?: number | null
+    nospk?: number | null
+    catatan_design?: string | null
+    tgl_app_cs?: Date | string | null
+    tgl_app_prod?: Date | string | null
+    tgl_app_manager?: Date | string | null
+    diskon?: string | null
+    tambah_produk?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
+    tgl_print?: Date | string | null
+    tgl_cutting?: Date | string | null
+    tgl_dtf?: Date | string | null
+    tgl_press?: Date | string | null
+    waktu_rip?: Date | string | null
+    cutting_done?: Date | string | null
+    dtf_done?: Date | string | null
+    press_done?: Date | string | null
+    print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
+    customer?: customerCreateNestedOneWithoutOrdersInput
+    cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
+    designer?: UserCreateNestedOneWithoutOrdersDesignedInput
+    dtf?: UserCreateNestedOneWithoutOrdersDTFInput
+    produk_rel?: ProdukCreateNestedOneWithoutOrdersInput
+    manager?: UserCreateNestedOneWithoutOrdersManagedInput
+    operator?: UserCreateNestedOneWithoutOrdersOperatedInput
+    penyerahan?: UserCreateNestedOneWithoutOrdersHandledInput
+    press?: UserCreateNestedOneWithoutOrdersPressInput
+    print?: UserCreateNestedOneWithoutOrdersPrintInput
+    user?: UserCreateNestedOneWithoutOrdersCreatedInput
+  }
+
+  export type OrderUncheckedCreateWithoutLogsInput = {
+    id?: string
+    tanggal?: Date | string | null
+    spk?: string | null
+    reject?: string | null
+    panjang_reject?: string | null
+    panjang_order?: string | null
+    lebar_kertas?: string | null
+    marketing?: string | null
+    nominal?: string | null
+    harga_satuan?: string | null
+    keterangan?: string | null
+    invoice?: string | null
+    jenis_pembayaran?: string | null
+    dp?: string | null
+    tgl_dp?: Date | string | null
+    sisa?: string | null
+    pelunasan?: string | null
+    biaya_tambahan?: string | null
+    tgl_lunas?: Date | string | null
+    tgl_invoice?: Date | string | null
+    status?: string | null
+    statusm?: string | null
+    approval?: string | null
+    approve_mng?: string | null
+    approval_barang?: string | null
+    approval_opr?: string | null
+    opr_id?: string | null
+    userId?: string | null
+    print_id?: string | null
+    press_id?: string | null
+    cutting_id?: string | null
+    dtf_id?: string | null
+    penyerahan_id?: string | null
+    designer_id?: string | null
+    manager_id?: string | null
+    customerId?: bigint | number | null
+    rip?: string | null
+    produk?: string | null
+    path?: string | null
+    tf_dp?: string | null
+    tf_pelunasan?: string | null
+    tf_full?: string | null
+    catatan_tf?: string | null
+    capture?: string | null
+    capture_name?: string | null
+    nama_kain?: string | null
+    jumlah_kain?: string | null
+    tipe_produk?: string | null
+    qty?: string | null
+    kategori?: string | null
+    gramasi?: string | null
+    nama_produk?: string | null
+    catatan?: string | null
+    catatan_print?: string | null
+    catatan_press?: string | null
+    catatan_cutting?: string | null
+    lebar_file?: string | null
+    est_order?: Date | string | null
+    no_project?: string | null
+    warna_acuan?: string | null
+    statusprod?: string | null
+    lebar_kain?: string | null
+    prioritas?: string | null
+    prints_mesin?: string | null
+    prints_icc?: string | null
+    prints_target?: string | null
+    dimensi_file?: string | null
+    prints_qty?: string | null
+    total_kertas?: string | null
+    prints_bagus?: string | null
+    prints_reject?: string | null
+    prints_waste?: string | null
+    press_mesin?: string | null
+    press_presure?: string | null
+    press_suhu?: string | null
+    press_speed?: number | null
+    press_protect?: string | null
+    total_kain?: string | null
+    press_bagus?: string | null
+    press_reject?: string | null
+    press_waste?: string | null
+    printd_mesin?: string | null
+    printd_icc?: string | null
+    pet?: string | null
+    suhu_meja?: string | null
+    printd_speed?: string | null
+    white_setting?: string | null
+    choke?: string | null
+    white_precentage?: string | null
+    total_pet?: string | null
+    cutting_mesin?: string | null
+    cutting_speed?: string | null
+    acc?: string | null
+    power?: string | null
+    cutting_bagus?: string | null
+    cutting_reject?: string | null
+    tgl_pengiriman?: Date | string | null
+    tambah_bahan?: string | null
+    tambah_cutting?: string | null
+    tambah_cutting1?: string | null
+    tambah_cutting2?: string | null
+    tambah_cutting3?: string | null
+    tambah_cutting4?: string | null
+    tambah_cutting5?: string | null
+    satuan_bahan?: string | null
+    satuan_cutting?: string | null
+    satuan_cutting1?: string | null
+    satuan_cutting2?: string | null
+    satuan_cutting3?: string | null
+    satuan_cutting4?: string | null
+    satuan_cutting5?: string | null
+    qty_bahan?: string | null
+    qty_cutting?: string | null
+    qty_cutting1?: string | null
+    qty_cutting2?: string | null
+    qty_cutting3?: string | null
+    qty_cutting4?: string | null
+    qty_cutting5?: string | null
+    total_bahan?: string | null
+    total_cutting?: string | null
+    total_cutting1?: string | null
+    total_cutting2?: string | null
+    total_cutting3?: string | null
+    total_cutting4?: string | null
+    total_cutting5?: string | null
+    nominal_total?: string | null
+    no?: number | null
+    nospk?: number | null
+    catatan_design?: string | null
+    tgl_app_cs?: Date | string | null
+    tgl_app_prod?: Date | string | null
+    tgl_app_manager?: Date | string | null
+    diskon?: string | null
+    tambah_produk?: string | null
+    created_at?: Date | string | null
+    updated_at?: Date | string | null
+    asal_bahan_id?: bigint | number | null
+    jns_produk_id?: number | null
+    tgl_print?: Date | string | null
+    tgl_cutting?: Date | string | null
+    tgl_dtf?: Date | string | null
+    tgl_press?: Date | string | null
+    waktu_rip?: Date | string | null
+    cutting_done?: Date | string | null
+    dtf_done?: Date | string | null
+    press_done?: Date | string | null
+    print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+  }
+
+  export type OrderCreateOrConnectWithoutLogsInput = {
+    where: OrderWhereUniqueInput
+    create: XOR<OrderCreateWithoutLogsInput, OrderUncheckedCreateWithoutLogsInput>
+  }
+
+  export type UserCreateWithoutOrderLogsInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
+    role: RoleCreateNestedOneWithoutUsersInput
+    inkLogs?: InkLogCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserUncheckedCreateWithoutOrderLogsInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    roleId: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
+    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserCreateOrConnectWithoutOrderLogsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutOrderLogsInput, UserUncheckedCreateWithoutOrderLogsInput>
+  }
+
+  export type OrderUpsertWithoutLogsInput = {
+    update: XOR<OrderUpdateWithoutLogsInput, OrderUncheckedUpdateWithoutLogsInput>
+    create: XOR<OrderCreateWithoutLogsInput, OrderUncheckedCreateWithoutLogsInput>
+    where?: OrderWhereInput
+  }
+
+  export type OrderUpdateToOneWithWhereWithoutLogsInput = {
+    where?: OrderWhereInput
+    data: XOR<OrderUpdateWithoutLogsInput, OrderUncheckedUpdateWithoutLogsInput>
+  }
+
+  export type OrderUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tanggal?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    spk?: NullableStringFieldUpdateOperationsInput | string | null
+    reject?: NullableStringFieldUpdateOperationsInput | string | null
+    panjang_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    panjang_order?: NullableStringFieldUpdateOperationsInput | string | null
+    lebar_kertas?: NullableStringFieldUpdateOperationsInput | string | null
+    marketing?: NullableStringFieldUpdateOperationsInput | string | null
+    nominal?: NullableStringFieldUpdateOperationsInput | string | null
+    harga_satuan?: NullableStringFieldUpdateOperationsInput | string | null
+    keterangan?: NullableStringFieldUpdateOperationsInput | string | null
+    invoice?: NullableStringFieldUpdateOperationsInput | string | null
+    jenis_pembayaran?: NullableStringFieldUpdateOperationsInput | string | null
+    dp?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_dp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sisa?: NullableStringFieldUpdateOperationsInput | string | null
+    pelunasan?: NullableStringFieldUpdateOperationsInput | string | null
+    biaya_tambahan?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_lunas?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_invoice?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: NullableStringFieldUpdateOperationsInput | string | null
+    statusm?: NullableStringFieldUpdateOperationsInput | string | null
+    approval?: NullableStringFieldUpdateOperationsInput | string | null
+    approve_mng?: NullableStringFieldUpdateOperationsInput | string | null
+    approval_barang?: NullableStringFieldUpdateOperationsInput | string | null
+    approval_opr?: NullableStringFieldUpdateOperationsInput | string | null
+    rip?: NullableStringFieldUpdateOperationsInput | string | null
+    produk?: NullableStringFieldUpdateOperationsInput | string | null
+    path?: NullableStringFieldUpdateOperationsInput | string | null
+    tf_dp?: NullableStringFieldUpdateOperationsInput | string | null
+    tf_pelunasan?: NullableStringFieldUpdateOperationsInput | string | null
+    tf_full?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_tf?: NullableStringFieldUpdateOperationsInput | string | null
+    capture?: NullableStringFieldUpdateOperationsInput | string | null
+    capture_name?: NullableStringFieldUpdateOperationsInput | string | null
+    nama_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    jumlah_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    tipe_produk?: NullableStringFieldUpdateOperationsInput | string | null
+    qty?: NullableStringFieldUpdateOperationsInput | string | null
+    kategori?: NullableStringFieldUpdateOperationsInput | string | null
+    gramasi?: NullableStringFieldUpdateOperationsInput | string | null
+    nama_produk?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_print?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_press?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    lebar_file?: NullableStringFieldUpdateOperationsInput | string | null
+    est_order?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    no_project?: NullableStringFieldUpdateOperationsInput | string | null
+    warna_acuan?: NullableStringFieldUpdateOperationsInput | string | null
+    statusprod?: NullableStringFieldUpdateOperationsInput | string | null
+    lebar_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    prioritas?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_icc?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_target?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensi_file?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_qty?: NullableStringFieldUpdateOperationsInput | string | null
+    total_kertas?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_bagus?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_waste?: NullableStringFieldUpdateOperationsInput | string | null
+    press_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    press_presure?: NullableStringFieldUpdateOperationsInput | string | null
+    press_suhu?: NullableStringFieldUpdateOperationsInput | string | null
+    press_speed?: NullableFloatFieldUpdateOperationsInput | number | null
+    press_protect?: NullableStringFieldUpdateOperationsInput | string | null
+    total_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    press_bagus?: NullableStringFieldUpdateOperationsInput | string | null
+    press_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    press_waste?: NullableStringFieldUpdateOperationsInput | string | null
+    printd_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    printd_icc?: NullableStringFieldUpdateOperationsInput | string | null
+    pet?: NullableStringFieldUpdateOperationsInput | string | null
+    suhu_meja?: NullableStringFieldUpdateOperationsInput | string | null
+    printd_speed?: NullableStringFieldUpdateOperationsInput | string | null
+    white_setting?: NullableStringFieldUpdateOperationsInput | string | null
+    choke?: NullableStringFieldUpdateOperationsInput | string | null
+    white_precentage?: NullableStringFieldUpdateOperationsInput | string | null
+    total_pet?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_speed?: NullableStringFieldUpdateOperationsInput | string | null
+    acc?: NullableStringFieldUpdateOperationsInput | string | null
+    power?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_bagus?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_pengiriman?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tambah_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    total_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    nominal_total?: NullableStringFieldUpdateOperationsInput | string | null
+    no?: NullableIntFieldUpdateOperationsInput | number | null
+    nospk?: NullableIntFieldUpdateOperationsInput | number | null
+    catatan_design?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_app_cs?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_app_prod?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_app_manager?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diskon?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_produk?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_print?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_cutting?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_dtf?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_press?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    waktu_rip?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cutting_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
+    customer?: customerUpdateOneWithoutOrdersNestedInput
+    cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
+    designer?: UserUpdateOneWithoutOrdersDesignedNestedInput
+    dtf?: UserUpdateOneWithoutOrdersDTFNestedInput
+    produk_rel?: ProdukUpdateOneWithoutOrdersNestedInput
+    manager?: UserUpdateOneWithoutOrdersManagedNestedInput
+    operator?: UserUpdateOneWithoutOrdersOperatedNestedInput
+    penyerahan?: UserUpdateOneWithoutOrdersHandledNestedInput
+    press?: UserUpdateOneWithoutOrdersPressNestedInput
+    print?: UserUpdateOneWithoutOrdersPrintNestedInput
+    user?: UserUpdateOneWithoutOrdersCreatedNestedInput
+  }
+
+  export type OrderUncheckedUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tanggal?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    spk?: NullableStringFieldUpdateOperationsInput | string | null
+    reject?: NullableStringFieldUpdateOperationsInput | string | null
+    panjang_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    panjang_order?: NullableStringFieldUpdateOperationsInput | string | null
+    lebar_kertas?: NullableStringFieldUpdateOperationsInput | string | null
+    marketing?: NullableStringFieldUpdateOperationsInput | string | null
+    nominal?: NullableStringFieldUpdateOperationsInput | string | null
+    harga_satuan?: NullableStringFieldUpdateOperationsInput | string | null
+    keterangan?: NullableStringFieldUpdateOperationsInput | string | null
+    invoice?: NullableStringFieldUpdateOperationsInput | string | null
+    jenis_pembayaran?: NullableStringFieldUpdateOperationsInput | string | null
+    dp?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_dp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sisa?: NullableStringFieldUpdateOperationsInput | string | null
+    pelunasan?: NullableStringFieldUpdateOperationsInput | string | null
+    biaya_tambahan?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_lunas?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_invoice?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: NullableStringFieldUpdateOperationsInput | string | null
+    statusm?: NullableStringFieldUpdateOperationsInput | string | null
+    approval?: NullableStringFieldUpdateOperationsInput | string | null
+    approve_mng?: NullableStringFieldUpdateOperationsInput | string | null
+    approval_barang?: NullableStringFieldUpdateOperationsInput | string | null
+    approval_opr?: NullableStringFieldUpdateOperationsInput | string | null
+    opr_id?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    print_id?: NullableStringFieldUpdateOperationsInput | string | null
+    press_id?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_id?: NullableStringFieldUpdateOperationsInput | string | null
+    dtf_id?: NullableStringFieldUpdateOperationsInput | string | null
+    penyerahan_id?: NullableStringFieldUpdateOperationsInput | string | null
+    designer_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manager_id?: NullableStringFieldUpdateOperationsInput | string | null
+    customerId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    rip?: NullableStringFieldUpdateOperationsInput | string | null
+    produk?: NullableStringFieldUpdateOperationsInput | string | null
+    path?: NullableStringFieldUpdateOperationsInput | string | null
+    tf_dp?: NullableStringFieldUpdateOperationsInput | string | null
+    tf_pelunasan?: NullableStringFieldUpdateOperationsInput | string | null
+    tf_full?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_tf?: NullableStringFieldUpdateOperationsInput | string | null
+    capture?: NullableStringFieldUpdateOperationsInput | string | null
+    capture_name?: NullableStringFieldUpdateOperationsInput | string | null
+    nama_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    jumlah_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    tipe_produk?: NullableStringFieldUpdateOperationsInput | string | null
+    qty?: NullableStringFieldUpdateOperationsInput | string | null
+    kategori?: NullableStringFieldUpdateOperationsInput | string | null
+    gramasi?: NullableStringFieldUpdateOperationsInput | string | null
+    nama_produk?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_print?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_press?: NullableStringFieldUpdateOperationsInput | string | null
+    catatan_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    lebar_file?: NullableStringFieldUpdateOperationsInput | string | null
+    est_order?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    no_project?: NullableStringFieldUpdateOperationsInput | string | null
+    warna_acuan?: NullableStringFieldUpdateOperationsInput | string | null
+    statusprod?: NullableStringFieldUpdateOperationsInput | string | null
+    lebar_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    prioritas?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_icc?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_target?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensi_file?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_qty?: NullableStringFieldUpdateOperationsInput | string | null
+    total_kertas?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_bagus?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    prints_waste?: NullableStringFieldUpdateOperationsInput | string | null
+    press_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    press_presure?: NullableStringFieldUpdateOperationsInput | string | null
+    press_suhu?: NullableStringFieldUpdateOperationsInput | string | null
+    press_speed?: NullableFloatFieldUpdateOperationsInput | number | null
+    press_protect?: NullableStringFieldUpdateOperationsInput | string | null
+    total_kain?: NullableStringFieldUpdateOperationsInput | string | null
+    press_bagus?: NullableStringFieldUpdateOperationsInput | string | null
+    press_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    press_waste?: NullableStringFieldUpdateOperationsInput | string | null
+    printd_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    printd_icc?: NullableStringFieldUpdateOperationsInput | string | null
+    pet?: NullableStringFieldUpdateOperationsInput | string | null
+    suhu_meja?: NullableStringFieldUpdateOperationsInput | string | null
+    printd_speed?: NullableStringFieldUpdateOperationsInput | string | null
+    white_setting?: NullableStringFieldUpdateOperationsInput | string | null
+    choke?: NullableStringFieldUpdateOperationsInput | string | null
+    white_precentage?: NullableStringFieldUpdateOperationsInput | string | null
+    total_pet?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_mesin?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_speed?: NullableStringFieldUpdateOperationsInput | string | null
+    acc?: NullableStringFieldUpdateOperationsInput | string | null
+    power?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_bagus?: NullableStringFieldUpdateOperationsInput | string | null
+    cutting_reject?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_pengiriman?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tambah_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    satuan_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    qty_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    total_bahan?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting1?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting2?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting3?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting4?: NullableStringFieldUpdateOperationsInput | string | null
+    total_cutting5?: NullableStringFieldUpdateOperationsInput | string | null
+    nominal_total?: NullableStringFieldUpdateOperationsInput | string | null
+    no?: NullableIntFieldUpdateOperationsInput | number | null
+    nospk?: NullableIntFieldUpdateOperationsInput | number | null
+    catatan_design?: NullableStringFieldUpdateOperationsInput | string | null
+    tgl_app_cs?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_app_prod?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_app_manager?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diskon?: NullableStringFieldUpdateOperationsInput | string | null
+    tambah_produk?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    asal_bahan_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    jns_produk_id?: NullableIntFieldUpdateOperationsInput | number | null
+    tgl_print?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_cutting?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_dtf?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tgl_press?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    waktu_rip?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cutting_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type UserUpsertWithoutOrderLogsInput = {
+    update: XOR<UserUpdateWithoutOrderLogsInput, UserUncheckedUpdateWithoutOrderLogsInput>
+    create: XOR<UserCreateWithoutOrderLogsInput, UserUncheckedCreateWithoutOrderLogsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutOrderLogsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutOrderLogsInput, UserUncheckedUpdateWithoutOrderLogsInput>
+  }
+
+  export type UserUpdateWithoutOrderLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    otherConsumables?: OtherConsumableUpdateManyWithoutUserNestedInput
+    role?: RoleUpdateOneRequiredWithoutUsersNestedInput
+    inkLogs?: InkLogUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
+    paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutOrderLogsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
@@ -54040,6 +56667,13 @@ export namespace Prisma {
     ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -54047,12 +56681,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type OrderCreateWithoutProduk_relInput = {
@@ -54191,6 +56819,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogCreateNestedManyWithoutOrderInput
     asal_bahan_rel?: customerCreateNestedOneWithoutAsalBahanForInput
     customer?: customerCreateNestedOneWithoutOrdersInput
     cutting?: UserCreateNestedOneWithoutOrdersCuttingInput
@@ -54351,6 +56982,9 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+    logs?: OrderLogUncheckedCreateNestedManyWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutProduk_relInput = {
@@ -54422,6 +57056,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -54431,18 +57066,18 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutPaperStocksAddedInput = {
@@ -54460,6 +57095,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -54469,18 +57105,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutPaperStocksAddedInput = {
@@ -54542,6 +57178,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -54551,18 +57188,18 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutPaperStocksTakenInput = {
@@ -54580,6 +57217,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -54589,18 +57227,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutPaperStocksTakenInput = {
@@ -54623,6 +57261,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -54632,18 +57271,18 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutPaperStocksUpdatedInput = {
@@ -54661,6 +57300,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -54670,18 +57310,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutPaperStocksUpdatedInput = {
@@ -54731,6 +57371,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -54740,18 +57381,18 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperStocksAddedInput = {
@@ -54769,6 +57410,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -54778,18 +57420,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type PaperRequestUpsertWithoutPaper_stockInput = {
@@ -54863,6 +57505,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -54872,18 +57515,18 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperStocksTakenInput = {
@@ -54901,6 +57544,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -54910,18 +57554,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutPaperStocksUpdatedInput = {
@@ -54950,6 +57594,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -54959,18 +57604,18 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperStocksUpdatedInput = {
@@ -54988,6 +57633,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -54997,18 +57643,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type PaperLogCreateWithoutRequestInput = {
@@ -55054,6 +57700,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -55063,18 +57710,18 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutPaperApprovalsInput = {
@@ -55092,6 +57739,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -55101,18 +57749,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutPaperApprovalsInput = {
@@ -55135,6 +57783,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -55144,18 +57793,18 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutPaperRejectionsInput = {
@@ -55173,6 +57822,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -55182,18 +57832,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutPaperRejectionsInput = {
@@ -55216,6 +57866,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -55225,18 +57876,18 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutPaperRequestsInput = {
@@ -55254,6 +57905,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -55263,18 +57915,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutPaperRequestsInput = {
@@ -55377,6 +58029,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -55386,18 +58039,18 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperApprovalsInput = {
@@ -55415,6 +58068,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -55424,18 +58078,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutPaperRejectionsInput = {
@@ -55464,6 +58118,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -55473,18 +58128,18 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperRejectionsInput = {
@@ -55502,6 +58157,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -55511,18 +58167,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutPaperRequestsInput = {
@@ -55551,6 +58207,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -55560,18 +58217,18 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperRequestsInput = {
@@ -55589,6 +58246,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -55598,18 +58256,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type PaperStockUpsertWithoutPaperRequestInput = {
@@ -55739,6 +58397,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -55748,18 +58407,18 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutPaperLogsInput = {
@@ -55777,6 +58436,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -55786,18 +58446,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutPaperLogsInput = {
@@ -55929,6 +58589,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -55938,18 +58599,18 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperLogsInput = {
@@ -55967,6 +58628,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -55976,18 +58638,18 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type PaperRequestUpsertWithoutLogsInput = {
@@ -56077,6 +58739,7 @@ export namespace Prisma {
     inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -56086,6 +58749,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -56093,12 +58762,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutInkStocksAddedInput = {
@@ -56115,6 +58778,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -56124,6 +58788,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -56131,12 +58801,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutInkStocksAddedInput = {
@@ -56197,6 +58861,7 @@ export namespace Prisma {
     inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -56206,6 +58871,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -56213,12 +58884,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutInkStocksTakenInput = {
@@ -56235,6 +58900,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -56244,6 +58910,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -56251,12 +58923,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutInkStocksTakenInput = {
@@ -56278,6 +58944,7 @@ export namespace Prisma {
     inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -56287,6 +58954,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -56294,12 +58967,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutInkStocksUpdatedInput = {
@@ -56316,6 +58983,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -56325,6 +58993,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -56332,12 +59006,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutInkStocksUpdatedInput = {
@@ -56386,6 +59054,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -56395,6 +59064,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -56402,12 +59077,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkStocksAddedInput = {
@@ -56424,6 +59093,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -56433,6 +59103,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -56440,12 +59116,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type InkRequestUpsertWithoutInk_stockInput = {
@@ -56518,6 +59188,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -56527,6 +59198,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -56534,12 +59211,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkStocksTakenInput = {
@@ -56556,6 +59227,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -56565,6 +59237,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -56572,12 +59250,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutInkStocksUpdatedInput = {
@@ -56605,6 +59277,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -56614,6 +59287,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -56621,12 +59300,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkStocksUpdatedInput = {
@@ -56643,6 +59316,7 @@ export namespace Prisma {
     inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -56652,6 +59326,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -56659,12 +59339,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type InkLogCreateWithoutRequestInput = {
@@ -56709,6 +59383,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -56718,6 +59393,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -56725,12 +59406,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutInkApprovalsInput = {
@@ -56747,6 +59422,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -56756,6 +59432,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -56763,12 +59445,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutInkApprovalsInput = {
@@ -56790,6 +59466,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -56799,6 +59476,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -56806,12 +59489,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutInkRejectionsInput = {
@@ -56828,6 +59505,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -56837,6 +59515,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -56844,12 +59528,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutInkRejectionsInput = {
@@ -56871,6 +59549,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -56880,6 +59559,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -56887,12 +59572,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutInkRequestsInput = {
@@ -56909,6 +59588,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -56918,6 +59598,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -56925,12 +59611,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutInkRequestsInput = {
@@ -57026,6 +59706,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -57035,6 +59716,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -57042,12 +59729,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkApprovalsInput = {
@@ -57064,6 +59745,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -57073,6 +59755,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -57080,12 +59768,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutInkRejectionsInput = {
@@ -57113,6 +59795,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -57122,6 +59805,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -57129,12 +59818,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkRejectionsInput = {
@@ -57151,6 +59834,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -57160,6 +59844,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -57167,12 +59857,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutInkRequestsInput = {
@@ -57200,6 +59884,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -57209,6 +59894,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -57216,12 +59907,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkRequestsInput = {
@@ -57238,6 +59923,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -57247,6 +59933,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -57254,12 +59946,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type InkStockUpsertWithoutInkRequestInput = {
@@ -57376,6 +60062,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -57385,6 +60072,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -57392,12 +60085,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutInkLogsInput = {
@@ -57414,6 +60101,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -57423,6 +60111,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -57430,12 +60124,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutInkLogsInput = {
@@ -57560,6 +60248,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -57569,6 +60258,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -57576,12 +60271,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkLogsInput = {
@@ -57598,6 +60287,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -57607,6 +60297,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -57614,12 +60310,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type InkRequestUpsertWithoutLogsInput = {
@@ -57681,6 +60371,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -57690,6 +60381,12 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -57697,12 +60394,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOtherConsumablesInput = {
@@ -57719,6 +60410,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -57728,6 +60420,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -57735,12 +60433,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOtherConsumablesInput = {
@@ -57773,6 +60465,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -57782,6 +60475,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -57789,12 +60488,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOtherConsumablesInput = {
@@ -57811,6 +60504,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -57820,6 +60514,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -57827,93 +60527,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
-  }
-
-  export type UserCreateWithoutOthersItemsAddedInput = {
-    id?: string
-    name: string
-    email: string
-    password: string
-    isActive?: boolean
-    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
-    role: RoleCreateNestedOneWithoutUsersInput
-    inkLogs?: InkLogCreateNestedManyWithoutUserInput
-    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
-    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
-    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
-    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
-    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
-    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
-    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
-    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
-    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
-    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
-    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
-    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
-    ordersPress?: OrderCreateNestedManyWithoutPressInput
-    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
-    ordersCreated?: OrderCreateNestedManyWithoutUserInput
-    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
-    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
-    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
-    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
-    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
-    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
-    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
-  }
-
-  export type UserUncheckedCreateWithoutOthersItemsAddedInput = {
-    id?: string
-    name: string
-    email: string
-    password: string
-    roleId: string
-    isActive?: boolean
-    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
-    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
-    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
-    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
-    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
-    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
-    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
-    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
-    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
-    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
-    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
-    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
-    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
-    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
-    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
-    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
-    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
-    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
-    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
-    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
-    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
-    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
-    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
-  }
-
-  export type UserCreateOrConnectWithoutOthersItemsAddedInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
   }
 
   export type UserCreateWithoutOthersItemsTakenInput = {
@@ -57931,6 +60544,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -57940,6 +60554,11 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -57947,11 +60566,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOthersItemsTakenInput = {
@@ -57969,6 +60583,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -57978,6 +60593,11 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -57985,11 +60605,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOthersItemsTakenInput = {
@@ -57997,13 +60612,96 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutOthersItemsTakenInput, UserUncheckedCreateWithoutOthersItemsTakenInput>
   }
 
+  export type UserCreateWithoutOthersItemsAddedInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
+    role: RoleCreateNestedOneWithoutUsersInput
+    inkLogs?: InkLogCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserUncheckedCreateWithoutOthersItemsAddedInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    roleId: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
+    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserCreateOrConnectWithoutOthersItemsAddedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
+  }
+
   export type OthersLogCreateWithoutOthers_itemInput = {
     id?: string
     action: string
     notes?: string | null
     created_at?: Date | string
-    user: UserCreateNestedOneWithoutOthersLogsInput
     others_request?: OthersRequestCreateNestedOneWithoutLogsInput
+    user: UserCreateNestedOneWithoutOthersLogsInput
   }
 
   export type OthersLogUncheckedCreateWithoutOthers_itemInput = {
@@ -58023,93 +60721,6 @@ export namespace Prisma {
   export type OthersLogCreateManyOthers_itemInputEnvelope = {
     data: OthersLogCreateManyOthers_itemInput | OthersLogCreateManyOthers_itemInput[]
     skipDuplicates?: boolean
-  }
-
-  export type UserUpsertWithoutOthersItemsAddedInput = {
-    update: XOR<UserUpdateWithoutOthersItemsAddedInput, UserUncheckedUpdateWithoutOthersItemsAddedInput>
-    create: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
-    where?: UserWhereInput
-  }
-
-  export type UserUpdateToOneWithWhereWithoutOthersItemsAddedInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutOthersItemsAddedInput, UserUncheckedUpdateWithoutOthersItemsAddedInput>
-  }
-
-  export type UserUpdateWithoutOthersItemsAddedInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    otherConsumables?: OtherConsumableUpdateManyWithoutUserNestedInput
-    role?: RoleUpdateOneRequiredWithoutUsersNestedInput
-    inkLogs?: InkLogUpdateManyWithoutUserNestedInput
-    inkApprovals?: InkRequestUpdateManyWithoutApproverNestedInput
-    inkRejections?: InkRequestUpdateManyWithoutRejecterNestedInput
-    inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
-    inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
-    inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
-    inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
-    ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
-    ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
-    ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
-    ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
-    ordersOperated?: OrderUpdateManyWithoutOperatorNestedInput
-    ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
-    ordersPress?: OrderUpdateManyWithoutPressNestedInput
-    ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
-    ordersCreated?: OrderUpdateManyWithoutUserNestedInput
-    paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
-    paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
-    paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
-    paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
-    paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
-    paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
-    paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutOthersItemsAddedInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
-    roleId?: StringFieldUpdateOperationsInput | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    otherConsumables?: OtherConsumableUncheckedUpdateManyWithoutUserNestedInput
-    inkLogs?: InkLogUncheckedUpdateManyWithoutUserNestedInput
-    inkApprovals?: InkRequestUncheckedUpdateManyWithoutApproverNestedInput
-    inkRejections?: InkRequestUncheckedUpdateManyWithoutRejecterNestedInput
-    inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
-    inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
-    inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
-    inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
-    ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
-    ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
-    ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
-    ordersOperated?: OrderUncheckedUpdateManyWithoutOperatorNestedInput
-    ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
-    ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
-    ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
-    ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
-    paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
-    paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
-    paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
-    paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
-    paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
-    paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
-    paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOthersItemsTakenInput = {
@@ -58138,6 +60749,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -58147,6 +60759,11 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -58154,11 +60771,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersItemsTakenInput = {
@@ -58176,6 +60788,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -58185,6 +60798,11 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -58192,11 +60810,95 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUpsertWithoutOthersItemsAddedInput = {
+    update: XOR<UserUpdateWithoutOthersItemsAddedInput, UserUncheckedUpdateWithoutOthersItemsAddedInput>
+    create: XOR<UserCreateWithoutOthersItemsAddedInput, UserUncheckedCreateWithoutOthersItemsAddedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutOthersItemsAddedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutOthersItemsAddedInput, UserUncheckedUpdateWithoutOthersItemsAddedInput>
+  }
+
+  export type UserUpdateWithoutOthersItemsAddedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    otherConsumables?: OtherConsumableUpdateManyWithoutUserNestedInput
+    role?: RoleUpdateOneRequiredWithoutUsersNestedInput
+    inkLogs?: InkLogUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
+    ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
+    paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutOthersItemsAddedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    roleId?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    otherConsumables?: OtherConsumableUncheckedUpdateManyWithoutUserNestedInput
+    inkLogs?: InkLogUncheckedUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUncheckedUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
+    ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUncheckedUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
     othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
     othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
+    paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
   }
 
   export type OthersLogUpsertWithWhereUniqueWithoutOthers_itemInput = {
@@ -58220,8 +60922,8 @@ export namespace Prisma {
     action: string
     notes?: string | null
     created_at?: Date | string
-    user: UserCreateNestedOneWithoutOthersLogsInput
     others_item?: OthersItemCreateNestedOneWithoutLogsInput
+    user: UserCreateNestedOneWithoutOthersLogsInput
   }
 
   export type OthersLogUncheckedCreateWithoutOthers_requestInput = {
@@ -58243,87 +60945,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type UserCreateWithoutOthersRequestsInput = {
-    id?: string
-    name: string
-    email: string
-    password: string
-    isActive?: boolean
-    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
-    role: RoleCreateNestedOneWithoutUsersInput
-    inkLogs?: InkLogCreateNestedManyWithoutUserInput
-    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
-    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
-    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
-    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
-    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
-    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
-    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
-    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
-    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
-    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
-    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
-    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
-    ordersPress?: OrderCreateNestedManyWithoutPressInput
-    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
-    ordersCreated?: OrderCreateNestedManyWithoutUserInput
-    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
-    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
-    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
-    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
-    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
-    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
-    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
-  }
-
-  export type UserUncheckedCreateWithoutOthersRequestsInput = {
-    id?: string
-    name: string
-    email: string
-    password: string
-    roleId: string
-    isActive?: boolean
-    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
-    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
-    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
-    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
-    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
-    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
-    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
-    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
-    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
-    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
-    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
-    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
-    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
-    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
-    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
-    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
-    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
-    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
-    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
-    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
-    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
-    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
-    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
-  }
-
-  export type UserCreateOrConnectWithoutOthersRequestsInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
-  }
-
   export type UserCreateWithoutOthersApprovalsInput = {
     id?: string
     name: string
@@ -58339,6 +60960,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -58348,6 +60970,11 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -58355,11 +60982,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
   }
 
   export type UserUncheckedCreateWithoutOthersApprovalsInput = {
@@ -58377,6 +60999,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -58386,6 +61009,11 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -58393,11 +61021,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
   }
 
   export type UserCreateOrConnectWithoutOthersApprovalsInput = {
@@ -58420,6 +61043,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
     ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderCreateNestedManyWithoutDtfInput
@@ -58429,6 +61053,11 @@ export namespace Prisma {
     ordersPress?: OrderCreateNestedManyWithoutPressInput
     ordersPrint?: OrderCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
@@ -58436,11 +61065,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
   }
 
   export type UserUncheckedCreateWithoutOthersRejectionsInput = {
@@ -58458,6 +61082,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
     inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
     inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
     ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
     ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
     ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
@@ -58467,6 +61092,11 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
     ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
     ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
     paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
     paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
     paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
@@ -58474,16 +61104,94 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
   }
 
   export type UserCreateOrConnectWithoutOthersRejectionsInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutOthersRejectionsInput, UserUncheckedCreateWithoutOthersRejectionsInput>
+  }
+
+  export type UserCreateWithoutOthersRequestsInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
+    role: RoleCreateNestedOneWithoutUsersInput
+    inkLogs?: InkLogCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserUncheckedCreateWithoutOthersRequestsInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    roleId: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
+    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserCreateOrConnectWithoutOthersRequestsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
   }
 
   export type OthersLogUpsertWithWhereUniqueWithoutOthers_requestInput = {
@@ -58500,93 +61208,6 @@ export namespace Prisma {
   export type OthersLogUpdateManyWithWhereWithoutOthers_requestInput = {
     where: OthersLogScalarWhereInput
     data: XOR<OthersLogUpdateManyMutationInput, OthersLogUncheckedUpdateManyWithoutOthers_requestInput>
-  }
-
-  export type UserUpsertWithoutOthersRequestsInput = {
-    update: XOR<UserUpdateWithoutOthersRequestsInput, UserUncheckedUpdateWithoutOthersRequestsInput>
-    create: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
-    where?: UserWhereInput
-  }
-
-  export type UserUpdateToOneWithWhereWithoutOthersRequestsInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutOthersRequestsInput, UserUncheckedUpdateWithoutOthersRequestsInput>
-  }
-
-  export type UserUpdateWithoutOthersRequestsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    otherConsumables?: OtherConsumableUpdateManyWithoutUserNestedInput
-    role?: RoleUpdateOneRequiredWithoutUsersNestedInput
-    inkLogs?: InkLogUpdateManyWithoutUserNestedInput
-    inkApprovals?: InkRequestUpdateManyWithoutApproverNestedInput
-    inkRejections?: InkRequestUpdateManyWithoutRejecterNestedInput
-    inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
-    inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
-    inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
-    inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
-    ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
-    ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
-    ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
-    ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
-    ordersOperated?: OrderUpdateManyWithoutOperatorNestedInput
-    ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
-    ordersPress?: OrderUpdateManyWithoutPressNestedInput
-    ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
-    ordersCreated?: OrderUpdateManyWithoutUserNestedInput
-    paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
-    paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
-    paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
-    paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
-    paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
-    paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
-    paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutOthersRequestsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
-    roleId?: StringFieldUpdateOperationsInput | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
-    otherConsumables?: OtherConsumableUncheckedUpdateManyWithoutUserNestedInput
-    inkLogs?: InkLogUncheckedUpdateManyWithoutUserNestedInput
-    inkApprovals?: InkRequestUncheckedUpdateManyWithoutApproverNestedInput
-    inkRejections?: InkRequestUncheckedUpdateManyWithoutRejecterNestedInput
-    inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
-    inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
-    inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
-    inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
-    ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
-    ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
-    ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
-    ordersOperated?: OrderUncheckedUpdateManyWithoutOperatorNestedInput
-    ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
-    ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
-    ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
-    ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
-    paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
-    paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
-    paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
-    paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
-    paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
-    paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
-    paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOthersApprovalsInput = {
@@ -58615,6 +61236,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -58624,6 +61246,11 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -58631,11 +61258,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersApprovalsInput = {
@@ -58653,6 +61275,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -58662,6 +61285,11 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -58669,11 +61297,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUpsertWithoutOthersRejectionsInput = {
@@ -58702,6 +61325,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -58711,6 +61335,11 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -58718,11 +61347,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersRejectionsInput = {
@@ -58740,6 +61364,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -58749,6 +61374,11 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -58756,92 +61386,136 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUpsertWithoutOthersRequestsInput = {
+    update: XOR<UserUpdateWithoutOthersRequestsInput, UserUncheckedUpdateWithoutOthersRequestsInput>
+    create: XOR<UserCreateWithoutOthersRequestsInput, UserUncheckedCreateWithoutOthersRequestsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutOthersRequestsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutOthersRequestsInput, UserUncheckedUpdateWithoutOthersRequestsInput>
+  }
+
+  export type UserUpdateWithoutOthersRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    otherConsumables?: OtherConsumableUpdateManyWithoutUserNestedInput
+    role?: RoleUpdateOneRequiredWithoutUsersNestedInput
+    inkLogs?: InkLogUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
+    ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutOthersRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    roleId?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    otherConsumables?: OtherConsumableUncheckedUpdateManyWithoutUserNestedInput
+    inkLogs?: InkLogUncheckedUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUncheckedUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
+    ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUncheckedUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
     othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
     othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
   }
 
-  export type UserCreateWithoutOthersLogsInput = {
+  export type OthersItemCreateWithoutLogsInput = {
     id?: string
-    name: string
-    email: string
-    password: string
-    isActive?: boolean
-    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
-    role: RoleCreateNestedOneWithoutUsersInput
-    inkLogs?: InkLogCreateNestedManyWithoutUserInput
-    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
-    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
-    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
-    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
-    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
-    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
-    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
-    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
-    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
-    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
-    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
-    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
-    ordersPress?: OrderCreateNestedManyWithoutPressInput
-    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
-    ordersCreated?: OrderCreateNestedManyWithoutUserInput
-    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
-    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
-    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
-    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
-    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
-    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
-    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
-    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    taken_by_user?: UserCreateNestedOneWithoutOthersItemsTakenInput
+    user: UserCreateNestedOneWithoutOthersItemsAddedInput
   }
 
-  export type UserUncheckedCreateWithoutOthersLogsInput = {
+  export type OthersItemUncheckedCreateWithoutLogsInput = {
     id?: string
-    name: string
-    email: string
-    password: string
-    roleId: string
-    isActive?: boolean
-    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
-    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
-    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
-    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
-    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
-    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
-    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
-    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
-    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
-    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
-    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
-    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
-    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
-    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
-    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
-    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
-    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
-    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
-    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
-    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
-    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
-    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
-    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
-    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
-    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
-    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
-    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
-    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    user_id: string
+    taken_by_user_id?: string | null
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
   }
 
-  export type UserCreateOrConnectWithoutOthersLogsInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutOthersLogsInput, UserUncheckedCreateWithoutOthersLogsInput>
+  export type OthersItemCreateOrConnectWithoutLogsInput = {
+    where: OthersItemWhereUniqueInput
+    create: XOR<OthersItemCreateWithoutLogsInput, OthersItemUncheckedCreateWithoutLogsInput>
   }
 
   export type OthersRequestCreateWithoutLogsInput = {
@@ -58858,9 +61532,9 @@ export namespace Prisma {
     rejection_reason?: string | null
     created_at?: Date | string
     updated_at?: Date | string
-    user: UserCreateNestedOneWithoutOthersRequestsInput
     approver?: UserCreateNestedOneWithoutOthersApprovalsInput
     rejector?: UserCreateNestedOneWithoutOthersRejectionsInput
+    user: UserCreateNestedOneWithoutOthersRequestsInput
   }
 
   export type OthersRequestUncheckedCreateWithoutLogsInput = {
@@ -58887,45 +61561,183 @@ export namespace Prisma {
     create: XOR<OthersRequestCreateWithoutLogsInput, OthersRequestUncheckedCreateWithoutLogsInput>
   }
 
-  export type OthersItemCreateWithoutLogsInput = {
+  export type UserCreateWithoutOthersLogsInput = {
     id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-    user: UserCreateNestedOneWithoutOthersItemsAddedInput
-    taken_by_user?: UserCreateNestedOneWithoutOthersItemsTakenInput
+    name: string
+    email: string
+    password: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
+    role: RoleCreateNestedOneWithoutUsersInput
+    inkLogs?: InkLogCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
   }
 
-  export type OthersItemUncheckedCreateWithoutLogsInput = {
+  export type UserUncheckedCreateWithoutOthersLogsInput = {
     id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    user_id: string
-    taken_by_user_id?: string | null
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
+    name: string
+    email: string
+    password: string
+    roleId: string
+    isActive?: boolean
+    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
+    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
   }
 
-  export type OthersItemCreateOrConnectWithoutLogsInput = {
-    where: OthersItemWhereUniqueInput
+  export type UserCreateOrConnectWithoutOthersLogsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutOthersLogsInput, UserUncheckedCreateWithoutOthersLogsInput>
+  }
+
+  export type OthersItemUpsertWithoutLogsInput = {
+    update: XOR<OthersItemUpdateWithoutLogsInput, OthersItemUncheckedUpdateWithoutLogsInput>
     create: XOR<OthersItemCreateWithoutLogsInput, OthersItemUncheckedCreateWithoutLogsInput>
+    where?: OthersItemWhereInput
+  }
+
+  export type OthersItemUpdateToOneWithWhereWithoutLogsInput = {
+    where?: OthersItemWhereInput
+    data: XOR<OthersItemUpdateWithoutLogsInput, OthersItemUncheckedUpdateWithoutLogsInput>
+  }
+
+  export type OthersItemUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    taken_by_user?: UserUpdateOneWithoutOthersItemsTakenNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput
+  }
+
+  export type OthersItemUncheckedUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    user_id?: StringFieldUpdateOperationsInput | string
+    taken_by_user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OthersRequestUpsertWithoutLogsInput = {
+    update: XOR<OthersRequestUpdateWithoutLogsInput, OthersRequestUncheckedUpdateWithoutLogsInput>
+    create: XOR<OthersRequestCreateWithoutLogsInput, OthersRequestUncheckedCreateWithoutLogsInput>
+    where?: OthersRequestWhereInput
+  }
+
+  export type OthersRequestUpdateToOneWithWhereWithoutLogsInput = {
+    where?: OthersRequestWhereInput
+    data: XOR<OthersRequestUpdateWithoutLogsInput, OthersRequestUncheckedUpdateWithoutLogsInput>
+  }
+
+  export type OthersRequestUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    approver?: UserUpdateOneWithoutOthersApprovalsNestedInput
+    rejector?: UserUpdateOneWithoutOthersRejectionsNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
+  }
+
+  export type OthersRequestUncheckedUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
+    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserUpsertWithoutOthersLogsInput = {
@@ -58954,6 +61766,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -58963,6 +61776,11 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -58970,11 +61788,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersLogsInput = {
@@ -58992,6 +61805,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -59001,6 +61815,11 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -59008,107 +61827,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
-  }
-
-  export type OthersRequestUpsertWithoutLogsInput = {
-    update: XOR<OthersRequestUpdateWithoutLogsInput, OthersRequestUncheckedUpdateWithoutLogsInput>
-    create: XOR<OthersRequestCreateWithoutLogsInput, OthersRequestUncheckedCreateWithoutLogsInput>
-    where?: OthersRequestWhereInput
-  }
-
-  export type OthersRequestUpdateToOneWithWhereWithoutLogsInput = {
-    where?: OthersRequestWhereInput
-    data: XOR<OthersRequestUpdateWithoutLogsInput, OthersRequestUncheckedUpdateWithoutLogsInput>
-  }
-
-  export type OthersRequestUpdateWithoutLogsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
-    approver?: UserUpdateOneWithoutOthersApprovalsNestedInput
-    rejector?: UserUpdateOneWithoutOthersRejectionsNestedInput
-  }
-
-  export type OthersRequestUncheckedUpdateWithoutLogsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    user_id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
-    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type OthersItemUpsertWithoutLogsInput = {
-    update: XOR<OthersItemUpdateWithoutLogsInput, OthersItemUncheckedUpdateWithoutLogsInput>
-    create: XOR<OthersItemCreateWithoutLogsInput, OthersItemUncheckedCreateWithoutLogsInput>
-    where?: OthersItemWhereInput
-  }
-
-  export type OthersItemUpdateToOneWithWhereWithoutLogsInput = {
-    where?: OthersItemWhereInput
-    data: XOR<OthersItemUpdateWithoutLogsInput, OthersItemUncheckedUpdateWithoutLogsInput>
-  }
-
-  export type OthersItemUpdateWithoutLogsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput
-    taken_by_user?: UserUpdateOneWithoutOthersItemsTakenNestedInput
-  }
-
-  export type OthersItemUncheckedUpdateWithoutLogsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    user_id?: StringFieldUpdateOperationsInput | string
-    taken_by_user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OtherConsumableCreateManyUserInput = {
@@ -59236,6 +61954,14 @@ export namespace Prisma {
     approved?: boolean
     availability?: $Enums.InventoryAvailability
     inkRequestId?: string | null
+  }
+
+  export type OrderLogCreateManyUserInput = {
+    id?: string
+    orderId: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
   }
 
   export type OrderCreateManyCuttingInput = {
@@ -59385,6 +62111,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyDesignerInput = {
@@ -59534,6 +62262,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyDtfInput = {
@@ -59683,6 +62413,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyManagerInput = {
@@ -59832,6 +62564,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyOperatorInput = {
@@ -59981,6 +62715,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyPenyerahanInput = {
@@ -60130,6 +62866,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyPressInput = {
@@ -60279,6 +63017,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyPrintInput = {
@@ -60428,6 +63168,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyUserInput = {
@@ -60577,6 +63319,105 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
+  }
+
+  export type OthersItemCreateManyTaken_by_userInput = {
+    id?: string
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    user_id: string
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type OthersItemCreateManyUserInput = {
+    id?: string
+    qr_code?: string | null
+    category: string
+    item_name: string
+    description?: string | null
+    quantity: number
+    unit: string
+    location?: string | null
+    notes?: string | null
+    availability?: boolean
+    taken_by_user_id?: string | null
+    taken_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type OthersLogCreateManyUserInput = {
+    id?: string
+    action: string
+    others_request_id?: string | null
+    others_item_id?: string | null
+    notes?: string | null
+    created_at?: Date | string
+  }
+
+  export type OthersRequestCreateManyApproverInput = {
+    id?: string
+    user_id: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    rejector_id?: string | null
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type OthersRequestCreateManyRejectorInput = {
+    id?: string
+    user_id: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    approver_id?: string | null
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type OthersRequestCreateManyUserInput = {
+    id?: string
+    category: string
+    item_name: string
+    quantity: number
+    unit: string
+    user_notes?: string | null
+    status?: string
+    approver_id?: string | null
+    rejector_id?: string | null
+    approved_at?: Date | string | null
+    rejected_at?: Date | string | null
+    approver_notes?: string | null
+    rejection_reason?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type PaperLogCreateManyUserInput = {
@@ -60700,103 +63541,6 @@ export namespace Prisma {
     qrCode?: string | null
     paperRequestId?: string | null
     availability?: $Enums.InventoryAvailability
-  }
-
-  export type OthersItemCreateManyUserInput = {
-    id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    taken_by_user_id?: string | null
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-  }
-
-  export type OthersItemCreateManyTaken_by_userInput = {
-    id?: string
-    qr_code?: string | null
-    category: string
-    item_name: string
-    description?: string | null
-    quantity: number
-    unit: string
-    location?: string | null
-    notes?: string | null
-    availability?: boolean
-    user_id: string
-    taken_at?: Date | string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-  }
-
-  export type OthersLogCreateManyUserInput = {
-    id?: string
-    action: string
-    others_request_id?: string | null
-    others_item_id?: string | null
-    notes?: string | null
-    created_at?: Date | string
-  }
-
-  export type OthersRequestCreateManyUserInput = {
-    id?: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    approver_id?: string | null
-    rejector_id?: string | null
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-  }
-
-  export type OthersRequestCreateManyApproverInput = {
-    id?: string
-    user_id: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    rejector_id?: string | null
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
-  }
-
-  export type OthersRequestCreateManyRejectorInput = {
-    id?: string
-    user_id: string
-    category: string
-    item_name: string
-    quantity: number
-    unit: string
-    user_notes?: string | null
-    status?: string
-    approver_id?: string | null
-    approved_at?: Date | string | null
-    rejected_at?: Date | string | null
-    approver_notes?: string | null
-    rejection_reason?: string | null
-    created_at?: Date | string
-    updated_at?: Date | string
   }
 
   export type OtherConsumableUpdateWithoutUserInput = {
@@ -61198,6 +63942,30 @@ export namespace Prisma {
     inkRequestId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type OrderLogUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    order?: OrderUpdateOneRequiredWithoutLogsNestedInput
+  }
+
+  export type OrderLogUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrderLogUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    orderId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrderUpdateWithoutCuttingInput = {
     id?: StringFieldUpdateOperationsInput | string
     tanggal?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -61334,6 +64102,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     designer?: UserUpdateOneWithoutOrdersDesignedNestedInput
@@ -61494,6 +64265,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutCuttingInput = {
@@ -61643,6 +64417,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutDesignerInput = {
@@ -61781,6 +64557,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -61941,6 +64720,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutDesignerInput = {
@@ -62090,6 +64872,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutDtfInput = {
@@ -62228,6 +65012,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -62388,6 +65175,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutDtfInput = {
@@ -62537,6 +65327,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutManagerInput = {
@@ -62675,6 +65467,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -62835,6 +65630,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutManagerInput = {
@@ -62984,6 +65782,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutOperatorInput = {
@@ -63122,6 +65922,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -63282,6 +66085,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutOperatorInput = {
@@ -63431,6 +66237,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutPenyerahanInput = {
@@ -63569,6 +66377,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -63729,6 +66540,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutPenyerahanInput = {
@@ -63878,6 +66692,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutPressInput = {
@@ -64016,6 +66832,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -64176,6 +66995,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutPressInput = {
@@ -64325,6 +67147,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutPrintInput = {
@@ -64463,6 +67287,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -64623,6 +67450,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutPrintInput = {
@@ -64772,6 +67602,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutUserInput = {
@@ -64910,6 +67742,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -65070,6 +67905,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutUserInput = {
@@ -65219,6 +68057,309 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type OthersItemUpdateWithoutTaken_by_userInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput
+    logs?: OthersLogUpdateManyWithoutOthers_itemNestedInput
+  }
+
+  export type OthersItemUncheckedUpdateWithoutTaken_by_userInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    user_id?: StringFieldUpdateOperationsInput | string
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUncheckedUpdateManyWithoutOthers_itemNestedInput
+  }
+
+  export type OthersItemUncheckedUpdateManyWithoutTaken_by_userInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    user_id?: StringFieldUpdateOperationsInput | string
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OthersItemUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    taken_by_user?: UserUpdateOneWithoutOthersItemsTakenNestedInput
+    logs?: OthersLogUpdateManyWithoutOthers_itemNestedInput
+  }
+
+  export type OthersItemUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    taken_by_user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUncheckedUpdateManyWithoutOthers_itemNestedInput
+  }
+
+  export type OthersItemUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    availability?: BoolFieldUpdateOperationsInput | boolean
+    taken_by_user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OthersLogUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    others_item?: OthersItemUpdateOneWithoutLogsNestedInput
+    others_request?: OthersRequestUpdateOneWithoutLogsNestedInput
+  }
+
+  export type OthersLogUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    others_request_id?: NullableStringFieldUpdateOperationsInput | string | null
+    others_item_id?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OthersLogUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    others_request_id?: NullableStringFieldUpdateOperationsInput | string | null
+    others_item_id?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OthersRequestUpdateWithoutApproverInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUpdateManyWithoutOthers_requestNestedInput
+    rejector?: UserUpdateOneWithoutOthersRejectionsNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
+  }
+
+  export type OthersRequestUncheckedUpdateWithoutApproverInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUncheckedUpdateManyWithoutOthers_requestNestedInput
+  }
+
+  export type OthersRequestUncheckedUpdateManyWithoutApproverInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OthersRequestUpdateWithoutRejectorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUpdateManyWithoutOthers_requestNestedInput
+    approver?: UserUpdateOneWithoutOthersApprovalsNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
+  }
+
+  export type OthersRequestUncheckedUpdateWithoutRejectorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUncheckedUpdateManyWithoutOthers_requestNestedInput
+  }
+
+  export type OthersRequestUncheckedUpdateManyWithoutRejectorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OthersRequestUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUpdateManyWithoutOthers_requestNestedInput
+    approver?: UserUpdateOneWithoutOthersApprovalsNestedInput
+    rejector?: UserUpdateOneWithoutOthersRejectionsNestedInput
+  }
+
+  export type OthersRequestUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
+    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: OthersLogUncheckedUpdateManyWithoutOthers_requestNestedInput
+  }
+
+  export type OthersRequestUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    item_name?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unit?: StringFieldUpdateOperationsInput | string
+    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
+    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
+    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PaperLogUpdateWithoutUserInput = {
@@ -65608,307 +68749,6 @@ export namespace Prisma {
     availability?: EnumInventoryAvailabilityFieldUpdateOperationsInput | $Enums.InventoryAvailability
   }
 
-  export type OthersItemUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    taken_by_user?: UserUpdateOneWithoutOthersItemsTakenNestedInput
-    logs?: OthersLogUpdateManyWithoutOthers_itemNestedInput
-  }
-
-  export type OthersItemUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    taken_by_user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUncheckedUpdateManyWithoutOthers_itemNestedInput
-  }
-
-  export type OthersItemUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    taken_by_user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type OthersItemUpdateWithoutTaken_by_userInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutOthersItemsAddedNestedInput
-    logs?: OthersLogUpdateManyWithoutOthers_itemNestedInput
-  }
-
-  export type OthersItemUncheckedUpdateWithoutTaken_by_userInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    user_id?: StringFieldUpdateOperationsInput | string
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUncheckedUpdateManyWithoutOthers_itemNestedInput
-  }
-
-  export type OthersItemUncheckedUpdateManyWithoutTaken_by_userInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    qr_code?: NullableStringFieldUpdateOperationsInput | string | null
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    location?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    availability?: BoolFieldUpdateOperationsInput | boolean
-    user_id?: StringFieldUpdateOperationsInput | string
-    taken_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type OthersLogUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    others_request?: OthersRequestUpdateOneWithoutLogsNestedInput
-    others_item?: OthersItemUpdateOneWithoutLogsNestedInput
-  }
-
-  export type OthersLogUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    others_request_id?: NullableStringFieldUpdateOperationsInput | string | null
-    others_item_id?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type OthersLogUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    others_request_id?: NullableStringFieldUpdateOperationsInput | string | null
-    others_item_id?: NullableStringFieldUpdateOperationsInput | string | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type OthersRequestUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUpdateManyWithoutOthers_requestNestedInput
-    approver?: UserUpdateOneWithoutOthersApprovalsNestedInput
-    rejector?: UserUpdateOneWithoutOthersRejectionsNestedInput
-  }
-
-  export type OthersRequestUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
-    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUncheckedUpdateManyWithoutOthers_requestNestedInput
-  }
-
-  export type OthersRequestUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
-    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type OthersRequestUpdateWithoutApproverInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUpdateManyWithoutOthers_requestNestedInput
-    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
-    rejector?: UserUpdateOneWithoutOthersRejectionsNestedInput
-  }
-
-  export type OthersRequestUncheckedUpdateWithoutApproverInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    user_id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUncheckedUpdateManyWithoutOthers_requestNestedInput
-  }
-
-  export type OthersRequestUncheckedUpdateManyWithoutApproverInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    user_id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    rejector_id?: NullableStringFieldUpdateOperationsInput | string | null
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type OthersRequestUpdateWithoutRejectorInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUpdateManyWithoutOthers_requestNestedInput
-    user?: UserUpdateOneRequiredWithoutOthersRequestsNestedInput
-    approver?: UserUpdateOneWithoutOthersApprovalsNestedInput
-  }
-
-  export type OthersRequestUncheckedUpdateWithoutRejectorInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    user_id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    logs?: OthersLogUncheckedUpdateManyWithoutOthers_requestNestedInput
-  }
-
-  export type OthersRequestUncheckedUpdateManyWithoutRejectorInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    user_id?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    item_name?: StringFieldUpdateOperationsInput | string
-    quantity?: IntFieldUpdateOperationsInput | number
-    unit?: StringFieldUpdateOperationsInput | string
-    user_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    status?: StringFieldUpdateOperationsInput | string
-    approver_id?: NullableStringFieldUpdateOperationsInput | string | null
-    approved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejected_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    approver_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
   export type UserCreateManyRoleInput = {
     id?: string
     name: string
@@ -65931,6 +68771,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
@@ -65940,6 +68781,12 @@ export namespace Prisma {
     ordersPress?: OrderUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
@@ -65947,12 +68794,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRoleInput = {
@@ -65969,6 +68810,7 @@ export namespace Prisma {
     inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
     ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
     ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
     ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
@@ -65978,6 +68820,12 @@ export namespace Prisma {
     ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
     ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
     ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
     paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
     paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
     paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
@@ -65985,12 +68833,6 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
-    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
-    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
-    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
-    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
-    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
-    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutRoleInput = {
@@ -66293,6 +69135,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderCreateManyCustomerInput = {
@@ -66442,6 +69286,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type ChatMessageUpdateWithoutCustomerInput = {
@@ -66658,6 +69504,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
     designer?: UserUpdateOneWithoutOrdersDesignedNestedInput
@@ -66818,6 +69667,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutAsal_bahan_relInput = {
@@ -66967,6 +69819,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OrderUpdateWithoutCustomerInput = {
@@ -67105,6 +69959,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
     designer?: UserUpdateOneWithoutOrdersDesignedNestedInput
@@ -67265,6 +70122,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutCustomerInput = {
@@ -67414,6 +70274,40 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type OrderLogCreateManyOrderInput = {
+    id?: string
+    userId: string
+    action: string
+    notes?: string | null
+    timestamp?: Date | string
+  }
+
+  export type OrderLogUpdateWithoutOrderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutOrderLogsNestedInput
+  }
+
+  export type OrderLogUncheckedUpdateWithoutOrderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrderLogUncheckedUpdateManyWithoutOrderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OrderCreateManyProduk_relInput = {
@@ -67563,6 +70457,8 @@ export namespace Prisma {
     dtf_done?: Date | string | null
     press_done?: Date | string | null
     print_done?: Date | string | null
+    holdReason?: string | null
+    previousStatus?: string | null
   }
 
   export type OrderUpdateWithoutProduk_relInput = {
@@ -67701,6 +70597,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUpdateManyWithoutOrderNestedInput
     asal_bahan_rel?: customerUpdateOneWithoutAsalBahanForNestedInput
     customer?: customerUpdateOneWithoutOrdersNestedInput
     cutting?: UserUpdateOneWithoutOrdersCuttingNestedInput
@@ -67861,6 +70760,9 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    logs?: OrderLogUncheckedUpdateManyWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutProduk_relInput = {
@@ -68010,6 +70912,8 @@ export namespace Prisma {
     dtf_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     press_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     print_done?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    holdReason?: NullableStringFieldUpdateOperationsInput | string | null
+    previousStatus?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PaperLogCreateManyPaper_stockInput = {
@@ -68170,8 +71074,8 @@ export namespace Prisma {
     action?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutOthersLogsNestedInput
     others_request?: OthersRequestUpdateOneWithoutLogsNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersLogsNestedInput
   }
 
   export type OthersLogUncheckedUpdateWithoutOthers_itemInput = {
@@ -68206,8 +71110,8 @@ export namespace Prisma {
     action?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutOthersLogsNestedInput
     others_item?: OthersItemUpdateOneWithoutLogsNestedInput
+    user?: UserUpdateOneRequiredWithoutOthersLogsNestedInput
   }
 
   export type OthersLogUncheckedUpdateWithoutOthers_requestInput = {

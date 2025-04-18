@@ -32,6 +32,8 @@ export function PaperInfoSection({
   const lebarKertas = form.watch("lebarKertas");
   const matchingColor = form.watch("matchingColor");
   const fileWidth = form.watch("fileWidth");
+  const lebarKain = form.watch("lebarKain");
+  const isDtfSelected = form.watch("jenisProduk")?.DTF === true;
   
   console.log("Paper Info Section - Current values:", { 
     gsmKertas, 
@@ -39,7 +41,9 @@ export function PaperInfoSection({
     matchingColor,
     fileWidth,
     paperGsmOptions,
-    paperWidthOptions
+    paperWidthOptions,
+    lebarKain,
+    isDtfSelected
   });
 
   // Check if quantity exceeds available fabric length
@@ -57,9 +61,39 @@ export function PaperInfoSection({
     return qtyInMeters > available;
   };
 
+  // Check if file width has enough margin from fabric width (at least 4cm)
+  const hasInsufficientWidthMargin = (): boolean => {
+    if (!fileWidth || !lebarKain) return false;
+    
+    const fileWidthNum = parseFloat(fileWidth);
+    const fabricWidthNum = parseFloat(lebarKain);
+    
+    if (isNaN(fileWidthNum) || isNaN(fabricWidthNum)) return false;
+    
+    // File width should be at least 4cm less than fabric width
+    return fileWidthNum > fabricWidthNum - 4;
+  };
+
+  // Calculate the maximum allowed file width based on fabric width
+  const getMaxFileWidth = (): number | null => {
+    if (!lebarKain) return null;
+    
+    const fabricWidthNum = parseFloat(lebarKain);
+    if (isNaN(fabricWidthNum)) return null;
+    
+    return fabricWidthNum - 4;
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Design and Paper Information</h3>
+      <h3 className="text-lg font-medium">
+        Design and Paper Information
+        {isDtfSelected && (
+          <span className="ml-2 text-sm text-blue-500 font-normal">
+            (DTF Film paper will be used)
+          </span>
+        )}
+      </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Paper GSM */}
         <FormField
@@ -67,7 +101,13 @@ export function PaperInfoSection({
           name="gsmKertas"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Paper GSM</FormLabel>
+              <FormLabel>
+                Paper GSM
+                {isDtfSelected ? 
+                  <span className="ml-2 text-xs text-blue-500">(DTF Film)</span> : 
+                  <span className="ml-2 text-xs text-muted-foreground">(Regular)</span>
+                }
+              </FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value || ""}
@@ -81,12 +121,12 @@ export function PaperInfoSection({
                 <SelectContent>
                   {paperGsmOptions.length === 0 ? (
                     <SelectItem value="no-options" disabled>
-                      No GSM options available
+                      No {isDtfSelected ? "DTF Film" : "regular"} paper GSM options available
                     </SelectItem>
                   ) : (
                     paperGsmOptions.map((option) => (
                       <SelectItem key={option.gsm} value={option.gsm.toString()}>
-                        {option.gsm} g/m² (Available: {option.remainingLength.toFixed(2)}m)
+                        {option.gsm} gsm {isDtfSelected && "(DTF Film)"}
                       </SelectItem>
                     ))
                   )}
@@ -103,7 +143,13 @@ export function PaperInfoSection({
           name="lebarKertas"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Paper Width</FormLabel>
+              <FormLabel>
+                Paper Width
+                {isDtfSelected ? 
+                  <span className="ml-2 text-xs text-blue-500">(DTF Film)</span> : 
+                  <span className="ml-2 text-xs text-muted-foreground">(Regular)</span>
+                }
+              </FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value || ""}
@@ -125,12 +171,12 @@ export function PaperInfoSection({
                 <SelectContent>
                   {paperWidthOptions.length === 0 ? (
                     <SelectItem value="no-options" disabled>
-                      No width options available
+                      No {isDtfSelected ? "DTF Film" : "regular"} paper width options available
                     </SelectItem>
                   ) : (
                     paperWidthOptions.map((width) => (
                       <SelectItem key={width} value={width}>
-                        {width} cm
+                        {width} cm {isDtfSelected && "(DTF Film)"}
                       </SelectItem>
                     ))
                   )}
@@ -152,8 +198,21 @@ export function PaperInfoSection({
                 <Input
                   placeholder="Enter file width"
                   {...field}
+                  onChange={(e) => {
+                    // Only allow numbers and decimal point
+                    const value = e.target.value;
+                    if (value === "" || /^(\d+)?\.?\d*$/.test(value)) {
+                      field.onChange(value);
+                    }
+                  }}
                 />
               </FormControl>
+              {hasInsufficientWidthMargin() && (
+                <p className="text-sm text-orange-500 mt-1">
+                  Warning: File width should be at least 4cm less than fabric width.
+                  {getMaxFileWidth() && ` Maximum allowed: ${getMaxFileWidth()} cm`}
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -197,7 +256,7 @@ export function PaperInfoSection({
               <FormLabel>Design File</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter design file URL"
+                  placeholder="Enter design file PATH"
                   {...field}
                 />
               </FormControl>

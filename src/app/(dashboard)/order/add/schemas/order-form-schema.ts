@@ -23,18 +23,18 @@ export const orderFormSchema = z.object({
   dtfPass: z.enum(["4 PASS", "6 PASS"]).optional(),
   jumlah: z.string(),
   unit: z.enum(["meter", "yard"]),
-  asalBahan: z.string().min(1, {
-    message: "Please select fabric origin",
-  }),
+  asalBahan: z.string().optional(),
   asalBahanId: z.string().optional(),
   statusProduksi: z.enum(["NEW", "REPEAT"]),
   kategori: z.enum(["REGULAR ORDER", "ONE DAY SERVICE", "PROJECT"]),
   targetSelesai: z.union([z.date(), z.string().transform(val => new Date(val))]),
   namaBahan: z.string().optional(),
   aplikasiProduk: z.string().optional(),
+  fabricLength: z.string().optional(),
   gsmKertas: z.string().optional(),
   lebarKertas: z.string().optional(),
   fileWidth: z.string().optional(),
+  lebarKain: z.string().optional(),
   matchingColor: z.enum(["YES", "NO"]).default("NO"),
   notes: z.string().optional(),
   harga: z.string().min(1, { message: "Price is required" }),
@@ -55,6 +55,16 @@ export const orderFormSchema = z.object({
     })
   ).default([]),
   priority: z.boolean().default(false),
+})
+.superRefine((data, ctx) => {
+  // Only validate asalBahan if DTF is not selected
+  if (!data.jenisProduk?.DTF && (!data.asalBahan || data.asalBahan.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Please select fabric origin",
+      path: ["asalBahan"]
+    });
+  }
 })
 
 // Define form values type
@@ -79,9 +89,11 @@ export const defaultValues: OrderFormValues = {
   asalBahanId: "",
   namaBahan: "",
   aplikasiProduk: "",
+  fabricLength: "",
   gsmKertas: "",
   lebarKertas: "",
   fileWidth: "",
+  lebarKain: "",
   matchingColor: "NO",
   notes: "",
   statusProduksi: "NEW",

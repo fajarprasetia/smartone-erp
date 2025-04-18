@@ -167,7 +167,7 @@ export function CustomerSection({
                       )}
                     >
                       {field.value
-                        ? marketingUsers.find((user) => user.name === field.value)?.name ||
+                        ? marketingUsers.find((user) => user.id === field.value)?.name ||
                           "Select marketing"
                         : "Select marketing"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -184,14 +184,14 @@ export function CustomerSection({
                           key={user.id}
                           value={user.name}
                           onSelect={() => {
-                            form.setValue("marketing", user.name)
+                            form.setValue("marketing", user.id)
                             setIsMarketingOpen(false)
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              user.name === field.value
+                              user.id === field.value
                                 ? "opacity-100"
                                 : "opacity-0"
                             )}

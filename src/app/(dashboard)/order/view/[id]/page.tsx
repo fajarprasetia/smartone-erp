@@ -12,7 +12,6 @@ interface OrderWithCustomer {
   id: string;
   spk?: string | null;
   no_project?: string | null;
-  tanggal?: Date | string | null;
   created_at?: Date | string | null;
   produk?: string | null;
   asal_bahan?: string | null;
@@ -55,7 +54,6 @@ interface OrderWithCustomer {
     nama: string;
     telp?: string | null;
   } | null;
-  targetSelesai?: Date | string | null;
   user_id?: { 
     name: string;
   } | null;
@@ -68,12 +66,7 @@ interface OrderWithCustomer {
   manager_id?: {
     name: string;
   } | null;
-  keterangan?: string | null;
   prioritas?: string | null;
-  tipe_produk?: string | null;
-  harga_satuan?: string | number | null;
-  diskon?: string | number | null;
-  nominal?: string | number | null;
 }
 
 // Main component
@@ -85,144 +78,7 @@ export default function ViewOrderPage() {
   const [order, setOrder] = useState<OrderWithCustomer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Only fetch when we have an orderId
-    if (!orderId) return;
     
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log(`Attempting to fetch order with ID: ${orderId}`);
-        
-        // Check if the ID is in the format of a UUID, numeric ID, or SPK
-        // UUID pattern: 8-4-4-4-12 characters separated by hyphens
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-        // Check if it's a pure numeric ID
-        const isNumericId = /^\d+$/.test(orderId) && orderId.length <= 6; // Typical database IDs are shorter
-        
-        let response;
-        let failedAttempts = [];
-        
-        // Try multiple approaches to fetch the order
-        
-        // Attempt 1: Direct order ID endpoint
-        try {
-          console.log(`Attempt 1: Fetching by direct ID: ${orderId}`);
-          const directResponse = await fetch(`/api/orders/${orderId}`);
-          
-          if (directResponse.ok) {
-            console.log('Direct ID fetch successful');
-            response = directResponse;
-          } else {
-            const errorText = await directResponse.text();
-            failedAttempts.push({method: 'direct ID', status: directResponse.status, error: errorText});
-            console.log(`Direct ID fetch failed: ${directResponse.status}`, errorText);
-          }
-        } catch (err) {
-          failedAttempts.push({method: 'direct ID', error: String(err)});
-          console.error('Error in direct ID fetch:', err);
-        }
-        
-        // Attempt 2: Numeric ID endpoint (if numeric and first attempt failed)
-        if (!response && isNumericId) {
-          try {
-            console.log(`Attempt 2: Fetching as numeric ID: ${orderId}`);
-            const numericResponse = await fetch(`/api/orders/id?id=${encodeURIComponent(orderId)}`);
-            
-            console.log('Numeric ID fetch response status:', numericResponse.status);
-            const responseText = await numericResponse.text();
-            console.log('Numeric ID fetch response text:', responseText);
-            
-            // We need to re-parse the text since we read it
-            if (numericResponse.ok) {
-              console.log('Numeric ID fetch successful');
-              try {
-                const responseData = JSON.parse(responseText);
-                setOrder(responseData);
-                return; // Exit early since we've set the order
-              } catch (parseError) {
-                console.error('Error parsing numeric ID response:', parseError);
-                failedAttempts.push({method: 'numeric ID parse', error: String(parseError)});
-              }
-            } else {
-              failedAttempts.push({method: 'numeric ID', status: numericResponse.status, error: responseText});
-              console.log(`Numeric ID fetch failed: ${numericResponse.status}`, responseText);
-            }
-          } catch (err) {
-            failedAttempts.push({method: 'numeric ID', error: String(err)});
-            console.error('Error in numeric ID fetch:', err);
-          }
-        }
-        
-        // Attempt 3: SPK endpoint (if first two attempts failed)
-        if (!response) {
-          try {
-            console.log(`Attempt 3: Fetching by SPK: ${orderId}`);
-            const spkResponse = await fetch(`/api/orders/spk?spk=${encodeURIComponent(orderId)}`);
-            
-            console.log('SPK fetch response status:', spkResponse.status);
-            const responseText = await spkResponse.text();
-            console.log('SPK fetch response text:', responseText);
-            
-            // We need to re-parse the text since we read it
-            if (spkResponse.ok) {
-              console.log('SPK fetch successful');
-              try {
-                const responseData = JSON.parse(responseText);
-                setOrder(responseData);
-                return; // Exit early since we've set the order
-              } catch (parseError) {
-                console.error('Error parsing SPK response:', parseError);
-                failedAttempts.push({method: 'SPK parse', error: String(parseError)});
-              }
-            } else {
-              failedAttempts.push({method: 'SPK', status: spkResponse.status, error: responseText});
-              console.log(`SPK fetch failed: ${spkResponse.status}`, responseText);
-            }
-          } catch (err) {
-            failedAttempts.push({method: 'SPK', error: String(err)});
-            console.error('Error in SPK fetch:', err);
-          }
-        }
-        
-        // If we got a response from the first attempt, process it
-        if (response) {
-          try {
-            const data = await response.json();
-            console.log("Successfully fetched order data");
-            setOrder(data);
-          } catch (parseError) {
-            console.error("Error parsing response:", parseError);
-            setError(`Error parsing response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
-          }
-        } else {
-          // If all attempts failed, throw a comprehensive error
-          console.error('All fetch attempts failed:', failedAttempts);
-          throw new Error(`Failed to fetch order after multiple attempts. Details: ${JSON.stringify(failedAttempts)}`);
-        }
-      } catch (err) {
-        console.error("Error fetching order:", err);
-        setError(err instanceof Error ? err.message : "Failed to load order details");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchOrder();
-  }, [orderId]);
-
-  const formatDate = (dateString: string | Date | null | undefined) => {
-    if (!dateString) return "N/A";
-    try {
-      return format(new Date(dateString), "dd/MM/yyyy");
-    } catch (error) {
-      return "Invalid date";
-    }
-  };
-
   const handlePrint = () => {
     // Set specific print settings
     const originalTitle = document.title;
@@ -265,6 +121,61 @@ export default function ViewOrderPage() {
     document.head.removeChild(style);
     document.title = originalTitle;
   };
+
+  // Format date values
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return "-";
+    
+    try {
+      // Handle various date formats
+      if (typeof date === 'string') {
+        // Check if it's an ISO string or other format
+        if (date === 'Invalid Date' || date === 'null') return "-";
+        
+        // Try to create a valid date from string
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) return "-";
+        
+        return format(parsedDate, 'dd/MM/yyyy');
+      } 
+      
+      // If it's already a Date object
+      if (date instanceof Date) {
+        if (isNaN(date.getTime())) return "-";
+        return format(date, 'dd/MM/yyyy');
+      }
+      
+      return "-";
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "-";
+    }
+  };
+
+  useEffect(() => {
+    // Fetch order data
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/orders/${orderId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch order: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setOrder(data);
+        setLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setLoading(false);
+      }
+    };
+    
+    if (orderId) {
+      fetchOrder();
+    }
+  }, [orderId]);
 
   if (loading) {
     return (
@@ -355,251 +266,187 @@ export default function ViewOrderPage() {
       </div>
 
       {/* SPK Document - styled to match the PHP template */}
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-8">
-        {/* Header with back button */}
-        <div className="flex justify-between items-center mb-6">
-          <Button
-            onClick={() => router.back()}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
-          {order && !loading && !error && (
-            <Button
-              onClick={handlePrint}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              Print
-            </Button>
-          )}
+      <div className="bg-white p-4 rounded-md shadow-sm border print:shadow-none print:border-0 print:p-0 print:a4 print-container overflow-auto">
+  {/* 1. Header Table */}
+  <table className="w-full table-fixed border-collapse border mb-4">
+    <colgroup>
+      <col className="w-[80px]" />
+      <col className="w-[20%]" />
+      <col className="w-[25%]" />
+      <col className="w-[20%]" />
+      <col className="w-[25%]" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colSpan={5} className="text-center border py-1.5 px-2 bg-muted/20">
+          <h2 className="text-lg font-bold">Surat Perintah Kerja</h2>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowSpan={3} className="text-center border p-1.5">
+          <div className="relative h-[70px] w-[70px] mx-auto">
+            <Image src="/logo.png" alt="SmartOne Logo" width={70} height={70} style={{ objectFit: "contain" }} />
+          </div>
+        </td>
+        <td className="border p-1.5 text-sm font-medium">No Invoice</td>
+        <td className="border p-1.5 text-sm">{order?.invoice || "-"}</td>
+        <td className="border p-1.5 text-sm font-medium">No Project</td>
+        <td className="border p-1.5 text-sm">{order?.no_project || "-"}</td>
+      </tr>
+      <tr>
+        <td className="border p-1.5 text-sm font-medium">Revisi</td>
+        <td className="border p-1.5 text-sm"></td>
+        <td className="border p-1.5 text-sm font-medium">No. SPK</td>
+        <td className="border p-1.5 text-sm">{order?.spk || "-"}</td>
+      </tr>
+      <tr>
+        <td className="border p-1.5 text-sm font-medium">Estimasi</td>
+        <td className="border p-1.5 text-sm">{formatDate(order?.est_order)}</td>
+        <td className="border p-1.5 text-sm font-medium">Tanggal</td>
+        <td className="border p-1.5 text-sm">{formatDate(order?.created_at)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {/* 2. Detail Order Table */}
+  <h1 className="text-base font-bold mb-1.5">1. Detail Order</h1>
+  <table className="w-full border-collapse border mb-4 table-fixed">
+    <colgroup>
+      <col className="w-[30%]" />
+      <col className="w-[40%]" />
+      <col className="w-[30%]" />
+    </colgroup>
+    <thead>
+      <tr className="bg-muted/20">
+        <th className="border p-1.5 text-center text-sm font-medium">KETERANGAN</th>
+        <th className="border p-1.5 text-center text-sm font-medium">DESKRIPSI</th>
+        <th className="border p-1.5 text-center text-sm font-medium">CATATAN</th>
+      </tr>
+    </thead>
+    <tbody className="text-sm">
+      <tr><td className="border p-1.5">1. Asal Bahan</td><td className="border p-1.5">{order?.asal_bahan_rel?.nama || order?.asal_bahan || "-"}</td><td rowSpan={8} className="border p-1.5 align-top">
+        {order?.catatan_design && (
+          <>
+            <span className="text-xs font-medium">Catatan Designer:</span>
+            <p className="text-sm font-bold text-red-600 mt-1">{order?.catatan_design}</p>
+          </>
+        )}
+      </td></tr>
+      <tr><td className="border p-1.5">2. Nama Kain</td><td className="border p-1.5">{order?.nama_kain || "-"}</td></tr>
+      <tr><td className="border p-1.5">3. Jumlah Kain</td><td className="border p-1.5">{order?.jumlah_kain || "-"}</td></tr>
+      <tr><td className="border p-1.5">4. Lebar Kertas</td><td className="border p-1.5">{order?.lebar_kertas || "-"}</td></tr>
+      <tr><td className="border p-1.5">5. Aplikasi Produk</td><td className="border p-1.5">{order?.nama_produk || order?.produk || "-"}</td></tr>
+      <tr><td className="border p-1.5">6. Quantity Produksi</td><td className="border p-1.5">{order?.qty || "-"}</td></tr>
+      <tr><td className="border p-1.5">7. Panjang Layout</td><td className="border p-1.5">
+        {order?.lebar_file && order?.qty ? `${order?.lebar_file} X ${order?.qty}` : "-"}
+      </td></tr>
+      <tr><td className="border p-1.5">8. Nama File</td><td className="border p-1.5">{order?.path || "-"}</td></tr>
+    </tbody>
+  </table>
+
+  {/* 3. Preview Project Table */}
+<h1 className="text-base font-bold mb-1.5">2. Preview Project</h1>
+<table className="w-full border-collapse border mb-4 preview-project-table">
+  <colgroup>
+    <col className="w-[70%]" />
+    <col className="w-[30%]" />
+  </colgroup>
+  <tbody className="text-sm">
+    <tr>
+      <td rowSpan={2} className="border p-1.5 text-center">
+        <p className="text-base font-medium">{order?.customer?.nama || "-"}</p>
+        <p className="text-base font-bold text-red-600">
+          {order?.prioritas === "YES" ? "PRIORITAS" : ""}
+        </p>
+      </td>
+      <td className="border p-1.5 font-medium">Marketing</td>
+    </tr>
+    <tr>
+      <td className="border p-1.5">{order?.marketingInfo?.name || order?.marketing || "-"}</td>
+    </tr>
+    <tr>
+      <td className="border p-1.5 text-center align-middle">
+        <div className="min-h-[220px] flex flex-col justify-center items-center">
+          <p className="text-base font-bold text-red-600">{order?.produk || "-"}</p>
+          <p className="text-sm font-bold text-red-600 mt-0.5">{order?.kategori || "-"}</p>
+          <div className="flex justify-center gap-3 mt-3 flex-wrap">
+            {order?.capture && (
+              <div className="relative h-[150px] w-[200px] flex-shrink-0">
+                <Image
+                  src={`/uploads/${order?.capture}`}
+                  alt="Design preview"
+                  width={200}
+                  height={150}
+                  style={{ objectFit: "contain" }}
+                />
+              </div>
+            )}
+            {order?.capture_name && (
+              <div className="relative h-[100px] w-[240px] flex-shrink-0">
+                <Image
+                  src={`/uploads/${order?.capture_name}`}
+                  alt="Name preview"
+                  width={240}
+                  height={100}
+                  style={{ objectFit: "contain" }}
+                />
+              </div>
+            )}
+          </div>
         </div>
+      </td>
+      <td className="border p-1.5 align-top">
+        <table className="w-full border-collapse text-xs min-w-0">
+          <colgroup>
+            <col className="w-[50%]" />
+            <col className="w-[50%]" />
+          </colgroup>
+          <tbody>
+            <tr><td className="pr-1 py-0.5">Lebar Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_kertas || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Gramasi Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.gramasi || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Lebar Kain</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_kain || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Lebar File</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_file || ""} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Warna Acuan</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.warna_acuan === "YES" ? "ADA" : "TIDAK ADA"} disabled /></td></tr>
+            <tr><td className="pr-1 py-0.5">Status Produksi</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.statusprod || order?.status || ""} disabled /></td></tr>
+          </tbody>
+        </table>
+        <div className="mt-2">
+          <p className="text-xs font-medium">Catatan:</p>
+          <p className="text-sm font-medium text-red-600 break-words mt-0.5">{order?.catatan || ""}</p>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-        {/* Loading state */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
-            <p className="text-lg font-medium">Loading Order...</p>
-          </div>
-        )}
 
-        {/* Error state */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
-            <h2 className="text-red-600 text-xl font-semibold mb-4">Error Loading Order</h2>
-            <p className="text-gray-700 mb-4">
-              We couldn't load the order you're looking for. Please check if the order ID is correct.
-            </p>
-            <div className="mt-4 text-sm text-red-800 p-3 bg-red-100 rounded">
-              <p>{error}</p>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <Button onClick={() => router.back()} variant="outline">
-                Go Back
-              </Button>
-              <Button onClick={() => router.push('/order')} variant="default">
-                Return to Orders
-              </Button>
-            </div>
-          </div>
-        )}
+  {/* 3. Approvals */}
+  <h1 className="text-base font-bold mb-1.5 mt-4">3. Approval</h1>
+  <table className="w-full approval-table border-collapse border mb-4">
+  <thead>
+    <tr className="bg-green-100 text-green-700 text-xs text-center">
+      <th className="border p-1">Created by</th>
+      <th className="border p-1">Designed by</th>
+      <th className="border p-1">Operation Approval by</th>
+      <th className="border p-1">Approved by</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr className="text-center h-10 align-center">
+      <td className="border p-1 text-[10px]">{order?.user_id?.name}</td>
+      <td className="border p-1 text-[10px]">{order?.designer_id?.name}</td>
+      <td className="border p-1 text-[10px]">{order?.opr_id?.name}</td>
+      <td className="border p-1 text-[10px]">{order?.manager_id?.name}</td>
+    </tr>
+  </tbody>
+</table>
 
-        {/* When there's no order but also no error - likely means the order was not found */}
-        {!loading && !error && !order && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
-            <h2 className="text-yellow-600 text-xl font-semibold mb-4">Order Not Found</h2>
-            <p className="text-gray-700 mb-4">
-              We couldn't find an order with ID: <span className="font-mono bg-gray-100 p-1 rounded">{orderId}</span>
-            </p>
-            <p className="text-gray-700 mb-4">
-              The order may have been deleted or you might have entered an incorrect ID.
-            </p>
-            <div className="flex gap-3 mt-6">
-              <Button onClick={() => router.back()} variant="outline">
-                Go Back
-              </Button>
-              <Button onClick={() => router.push('/order')} variant="default">
-                Return to Orders
-              </Button>
-            </div>
-          </div>
-        )}
+  {/* Footer */}
+  <p className="text-center text-xs mt-4 print:mt-2">smartone.id</p>
+</div>
 
-        {/* Order details content - only shown when there's an order and no loading/error */}
-        {order && !loading && !error && (
-          <div className="print:mt-0" id="printable-content">
-            {/* Order header */}
-            <div className="mb-8 print:mb-6">
-              <h1 className="text-2xl font-bold mb-2 print:text-xl">
-                {order.spk ? `Order: ${order.spk}` : `Order #${order.id}`}
-              </h1>
-              <div className="text-sm text-gray-500 print:text-xs">
-                {order.no_project && (
-                  <span className="mr-4">Project: {order.no_project}</span>
-                )}
-                <span className="mr-4">
-                  Date: {formatDate(order.tanggal || order.created_at)}
-                </span>
-                {order.est_order && (
-                  <span>Target: {formatDate(order.est_order)}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Order information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:gap-4 mb-8 print:text-sm">
-              {/* Customer and Marketing */}
-              <div className="space-y-4 print:space-y-2">
-                <div>
-                  <h2 className="text-lg font-semibold mb-2 print:text-base">Customer</h2>
-                  <p>{order.customer?.nama || 'N/A'}</p>
-                  {order.customer?.telp && <p className="text-gray-600">{order.customer.telp}</p>}
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold mb-2 print:text-base">Marketing</h2>
-                  <p>{order.marketingInfo?.name || order.marketing || 'N/A'}</p>
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold mb-2 print:text-base">Category</h2>
-                  <p>{order.kategori || 'N/A'}</p>
-                </div>
-              </div>
-
-              {/* Statuses */}
-              <div className="space-y-4 print:space-y-2">
-                <div>
-                  <h2 className="text-lg font-semibold mb-2 print:text-base">Status</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {order.status && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-                        {order.status}
-                      </span>
-                    )}
-                    {order.statusm && (
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-                        {order.statusm}
-                      </span>
-                    )}
-                    {order.statusprod && (
-                      <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm">
-                        {order.statusprod}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold mb-2 print:text-base">Invoice Status</h2>
-                  <p>{order.keterangan || 'N/A'}</p>
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold mb-2 print:text-base">Priority</h2>
-                  <p>{order.prioritas === 'YES' ? '⭐ High Priority' : 'Standard'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Product Information */}
-            <div className="mb-8 print:mb-4">
-              <h2 className="text-lg font-semibold mb-4 print:text-base border-b pb-2">
-                Product Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:text-sm">
-                <div>
-                  <p className="mb-2"><strong>Product Type:</strong> {order.produk || 'N/A'}</p>
-                  {order.tipe_produk && (
-                    <p className="mb-2"><strong>Specific Type:</strong> {order.tipe_produk}</p>
-                  )}
-                  <p className="mb-2"><strong>Application:</strong> {order.nama_produk || 'N/A'}</p>
-                  <p className="mb-2"><strong>Fabric Origin:</strong> {
-                    order.asal_bahan_rel ? order.asal_bahan_rel.nama : 
-                    (order.asal_bahan || 'N/A')
-                  }</p>
-                  <p className="mb-2"><strong>Fabric Name:</strong> {order.nama_kain || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="mb-2"><strong>Quantity:</strong> {order.qty || 'N/A'}</p>
-                  <p className="mb-2"><strong>GSM:</strong> {order.gramasi || 'N/A'}</p>
-                  <p className="mb-2"><strong>Paper Width:</strong> {order.lebar_kertas || 'N/A'}</p>
-                  <p className="mb-2"><strong>File Width:</strong> {order.lebar_file || 'N/A'}</p>
-                  <p className="mb-2"><strong>Color Matching:</strong> {order.warna_acuan || 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Design File */}
-            {order.path && (
-              <div className="mb-8 print:mb-4">
-                <h2 className="text-lg font-semibold mb-4 print:text-base border-b pb-2">
-                  Design File
-                </h2>
-                <div className="max-w-sm print:max-w-xs">
-                  <Image
-                    src={order.path}
-                    alt="Design Preview"
-                    width={300}
-                    height={200}
-                    className="object-contain rounded-lg border border-gray-200"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Pricing Information */}
-            <div className="mb-8 print:mb-4">
-              <h2 className="text-lg font-semibold mb-4 print:text-base border-b pb-2">
-                Pricing Information
-              </h2>
-              <div className="space-y-2 print:text-sm">
-                <p><strong>Unit Price:</strong> {order.harga_satuan ? `Rp ${order.harga_satuan}` : 'N/A'}</p>
-                {order.diskon && order.diskon !== "0" && (
-                  <p><strong>Discount:</strong> {order.diskon}</p>
-                )}
-                <p className="text-lg font-semibold">
-                  <strong>Total Price:</strong> {order.nominal ? `Rp ${order.nominal}` : 'N/A'}
-                </p>
-              </div>
-            </div>
-
-            {/* Notes */}
-            {order.catatan && (
-              <div className="mb-8 print:mb-4">
-                <h2 className="text-lg font-semibold mb-4 print:text-base border-b pb-2">
-                  Notes
-                </h2>
-                <div className="p-4 bg-gray-50 rounded-lg print:bg-gray-100 print:text-sm">
-                  <p>{order.catatan}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Design Notes */}
-            {order.catatan_design && (
-              <div className="mb-8 print:mb-4">
-                <h2 className="text-lg font-semibold mb-4 print:text-base border-b pb-2">
-                  Design Notes
-                </h2>
-                <div className="p-4 bg-gray-50 rounded-lg print:bg-gray-100 print:text-sm">
-                  <p>{order.catatan_design}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Created By */}
-            <div className="text-sm text-gray-500 mt-8 print:mt-4 print:text-xs">
-              <p>Created by: {order.createdBy?.name || 'Unknown'}</p>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Add styles for printing */}
       <style jsx global>{`

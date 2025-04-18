@@ -18,6 +18,7 @@ import { PaperInfoSection } from "./paper-info-section"
 import { PricingSection } from "./pricing-section"
 import { NotesSection } from "./notes-section"
 import { useOrderData } from "../hooks/use-order-data"
+import { Customer, OrderFormValues } from "../schemas/order-form-schema"
 
 interface MainOrderPageProps {
   mode?: 'create' | 'edit';
@@ -59,7 +60,8 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
     paperWidthOptions,
     isLoadingPaperGsm,
     isLoadingPaperWidth,
-    setInitialData
+    setInitialData,
+    fetchSpkNumber
   } = useOrderData()
 
   // Initialize with data if in edit mode
@@ -68,6 +70,19 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
       setInitialData(initialData);
     }
   }, [mode, initialData, setInitialData]);
+
+  // Display SPK number in title for easy identification
+  useEffect(() => {
+    // Update document title with SPK number when available
+    if (spkNumber) {
+      document.title = `Order ${spkNumber} - ${mode === 'create' ? 'Add' : 'Edit'} | SmartOne ERP`;
+    }
+    
+    // Reset title when component unmounts
+    return () => {
+      document.title = 'Order | SmartOne ERP';
+    };
+  }, [spkNumber, mode]);
 
   const onCancel = () => {
     if (confirm("Are you sure you want to cancel? All changes will be lost.")) {
@@ -117,13 +132,18 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
               {/* Customer and Marketing Section */}
               <CustomerSection
                 form={form}
-                customers={customers}
+                customers={customers.map(c => ({
+                  id: c.id,
+                  nama: c.nama,
+                  telp: c.telp || undefined
+                }))}
                 marketingUsers={marketingUsers}
                 isCustomerOpen={isCustomerOpen}
                 setIsCustomerOpen={setIsCustomerOpen}
                 isMarketingOpen={isMarketingOpen}
                 setIsMarketingOpen={setIsMarketingOpen}
                 spkNumber={spkNumber}
+                fetchSpkNumber={fetchSpkNumber}
               />
 
               {/* Order Detail Section */}
@@ -138,7 +158,9 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
               {/* Product Type Section */}
               <ProductTypeSection
                 form={form}
-                handleProductTypeChange={handleProductTypeChange}
+                handleProductTypeChange={(type: any, checked: boolean) => 
+                  handleProductTypeChange(type, checked)
+                }
                 handleDTFPassChange={handleDTFPassChange}
               />
 

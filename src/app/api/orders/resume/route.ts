@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // Helper function to serialize data (handle BigInt)
 function serializeData(data: any): any {
@@ -11,7 +11,7 @@ function serializeData(data: any): any {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     
     // Check if user is authenticated
     if (!session?.user) {
@@ -31,6 +31,13 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // First query to get the actual value of previousStatus directly from the database
+    const result = await prisma.$queryRaw`
+      SELECT "previousStatus" FROM "orders" WHERE "id" = ${orderId}
+    `;
+    
+    console.log("Raw previousStatus query result:", result);
+    
     // Check if order exists
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -44,6 +51,13 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    console.log("Order before resume:", {
+      id: order.id,
+      status: order.status,
+      previousStatus: order.previousStatus,
+      holdReason: order.holdReason
+    });
+    
     // Check if order is actually on hold
     if (order.status !== "ON_HOLD") {
       return NextResponse.json(
@@ -52,37 +66,60 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Check if the order has a previous status saved
-    if (!order.previousStatus) {
-      return NextResponse.json(
-        { error: "Cannot resume order: previous status is not available" },
-        { status: 400 }
-      );
+    // Get the previousStatus from the raw query result
+    let previousStatus = "PENDING";
+    
+    if (result && result[0] && result[0].previousStatus) {
+      previousStatus = result[0].previousStatus;
+      console.log("Using previousStatus from database:", previousStatus);
+    } else if (order.previousStatus) {
+      previousStatus = order.previousStatus;
+      console.log("Using previousStatus from order object:", previousStatus);
+    } else {
+      console.log("No previousStatus found, using default:", previousStatus);
     }
     
-    // Update order status to the previous status
-    const updatedOrder = await prisma.order.update({
+    // Update using Prisma's executeRawUnsafe which allows more direct SQL control
+    await prisma.$executeRawUnsafe(`
+      UPDATE "orders"
+      SET "status" = '${previousStatus}',
+          "previousStatus" = NULL,
+          "holdReason" = NULL
+      WHERE "id" = '${orderId}'
+    `);
+    
+    // Fetch the updated order
+    const updatedOrder = await prisma.order.findUnique({
       where: { id: orderId },
-      data: { 
-        status: order.previousStatus,
-        previousStatus: null // Clear the previous status field
-      },
       include: { customer: true }
     });
     
-    // Log the resume action
-    await prisma.orderLog.create({
-      data: {
-        orderId,
-        userId: session.user.id,
-        action: "RESUME",
-        notes: `Order resumed by ${session.user.name || session.user.email}. Status restored to ${order.previousStatus}`
-      }
+    console.log("Order after resume:", {
+      id: updatedOrder.id,
+      status: updatedOrder.status,
+      previousStatus: updatedOrder.previousStatus,
+      holdReason: updatedOrder.holdReason
     });
+    
+    // Log the action without using raw SQL since it's causing issues
+    try {
+      await prisma.orderLog.create({
+        data: {
+          id: crypto.randomUUID(),
+          orderId,
+          userId: session.user.id,
+          action: "RESUME",
+          notes: `Order resumed by ${session.user.name || session.user.email}. Status restored to ${previousStatus}`
+        }
+      });
+    } catch (logError) {
+      console.error("Error creating order log:", logError);
+      // Continue without failing the whole request if logging fails
+    }
     
     return NextResponse.json({
       order: serializeData(updatedOrder),
-      message: `Order has been resumed and status restored to ${order.previousStatus}`
+      message: `Order has been resumed and status restored to ${previousStatus}`
     });
     
   } catch (error) {

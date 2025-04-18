@@ -90,7 +90,7 @@ export function PricingSection({
                 <Input
                   type="number"
                   min="0"
-                  step="1"
+                  step="500"
                   placeholder="Enter unit price"
                   {...field}
                   onChange={(e) => {
@@ -151,6 +151,8 @@ export function PricingSection({
                 <div className="col-span-2">
                   <Input 
                     type="number" 
+                    step="500"
+                    min="0"
                     placeholder="Price" 
                     value={cost.pricePerUnit} 
                     onChange={(e) => {

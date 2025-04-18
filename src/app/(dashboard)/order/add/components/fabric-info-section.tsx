@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
-import { ChevronsUpDown } from "lucide-react"
+import { AlertCircle, ChevronsUpDown } from "lucide-react"
 import { yardToMeter } from "../utils/order-form-utils"
 
 interface FabricInfoSectionProps {
@@ -31,12 +31,14 @@ export function FabricInfoSection({
   const asalBahan = form.watch("asalBahan");
   const namaBahan = form.watch("namaBahan");
   const aplikasiProduk = form.watch("aplikasiProduk");
+  const isDtfSelected = form.watch("jenisProduk")?.DTF === true;
   
   console.log("Fabric Info Section - Current values:", { 
     asalBahan, 
     namaBahan, 
     aplikasiProduk, 
-    selectedFabric 
+    selectedFabric,
+    isDtfSelected
   });
 
   // Check if quantity exceeds available fabric length
@@ -56,19 +58,35 @@ export function FabricInfoSection({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Fabric Information</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <h3 className="text-lg font-medium">
+        Fabric Information
+        {isDtfSelected && (
+          <span className="ml-2 text-sm text-muted-foreground font-normal">
+            (Not required for DTF products)
+          </span>
+        )}
+      </h3>
+      
+      {isDtfSelected && (
+        <div className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700 mb-4">
+          <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+          <p className="text-sm">When DTF is selected, fabric information is not required and will not be used in processing the order.</p>
+        </div>
+      )}
+      
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isDtfSelected ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Fabric Origins */}
         <FormField
           control={form.control}
           name="asalBahan"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Fabric Origin*</FormLabel>
+              <FormLabel>Fabric Origin{!isDtfSelected && "*"}</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value}
                 defaultValue={field.value}
+                disabled={isDtfSelected}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -94,7 +112,10 @@ export function FabricInfoSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Fabric Name</FormLabel>
-              <Popover open={isFabricNameOpen} onOpenChange={setIsFabricNameOpen}>
+              <Popover 
+                open={isFabricNameOpen && !isDtfSelected} 
+                onOpenChange={(open) => !isDtfSelected && setIsFabricNameOpen(open)}
+              >
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -102,7 +123,7 @@ export function FabricInfoSection({
                       role="combobox"
                       aria-expanded={isFabricNameOpen}
                       className="justify-between w-full"
-                      disabled={!form.watch("asalBahan") || fabricNames.length === 0}
+                      disabled={isDtfSelected || !form.watch("asalBahan") || fabricNames.length === 0}
                     >
                       {field.value
                         ? fabricNames.find((fabric) => fabric.name === field.value)?.name || "Select Fabric"
@@ -124,6 +145,14 @@ export function FabricInfoSection({
                             form.setValue("namaBahan", fabric.name);
                             // Set the selected fabric for display of details
                             setSelectedFabric(fabric);
+                            // Set fabric width if available
+                            if (fabric.width) {
+                              form.setValue("lebarKain", fabric.width);
+                            }
+                            // Set fabric length if available
+                            if (fabric.length) {
+                              form.setValue("fabricLength", fabric.length);
+                            }
                             setIsFabricNameOpen(false);
                           }}
                         >
@@ -156,7 +185,45 @@ export function FabricInfoSection({
         />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isDtfSelected ? 'opacity-50 pointer-events-none' : ''}`}>
+                
+        {/* Fabric Width */}
+        <FormField
+          control={form.control}
+          name="lebarKain"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fabric Width</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter fabric width"
+                  {...field}
+                  disabled={isDtfSelected}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Fabric Length */}
+        <FormField
+          control={form.control}
+          name="fabricLength"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fabric Length</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter fabric length"
+                  {...field}
+                  disabled={isDtfSelected}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         {/* Product Application */}
         <FormField
           control={form.control}

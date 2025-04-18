@@ -7,9 +7,21 @@ import { yardToMeter } from "@/app/(dashboard)/order/add/utils/order-form-utils"
 // Helper function to handle BigInt serialization in JSON responses
 function serializeData(data: any): any {
   return JSON.parse(
-    JSON.stringify(data, (key, value) =>
-      typeof value === "bigint" ? value.toString() : value
-    )
+    JSON.stringify(data, (key, value) => {
+      if (typeof value === "bigint") {
+        return value.toString();
+      }
+      
+      // Handle Date objects
+      if (value instanceof Date) {
+        if (isNaN(value.getTime())) {
+          return null; // Invalid date
+        }
+        return value.toISOString(); // Return as ISO string
+      }
+      
+      return value;
+    })
   );
 }
 
@@ -323,6 +335,10 @@ export async function POST(req: NextRequest) {
     // Process asalBahanId
     console.log("[API] Processing Asal Bahan - ID:", data.asalBahanId, "Name:", data.asalBahan);
     
+    // Check if this is a DTF order
+    const isDtfOrder = data.jenisProduk?.DTF === true || productType === "DTF";
+    console.log("[API] Is DTF order:", isDtfOrder);
+
     // Prepare order data
     let orderData: any = {
       // Use the processed customerIdValue
@@ -332,9 +348,10 @@ export async function POST(req: NextRequest) {
       statusprod: data.statusProduksi, // NEW or REPEAT
       kategori: data.kategori,
       est_order: data.targetSelesai, // Target completion date
-      nama_kain: data.namaBahan || "",
-      jumlah_kain: data.selectedFabric?.length || "", // Estimated length from inventory
-      lebar_kain: data.lebarKain || "", // Fabric width
+      // For DTF orders, clear all fabric-related fields
+      nama_kain: isDtfOrder ? "" : (data.namaBahan || ""),
+      jumlah_kain: isDtfOrder ? "" : (data.selectedFabric?.length || data.fabricLength || ""), // Use fabric length from the form
+      lebar_kain: isDtfOrder ? "" : (data.lebarKain || ""), // Fabric width
       nama_produk: data.aplikasiProduk || "", // Product application
       gramasi: data.gsmKertas || "", // Paper GSM
       lebar_kertas: data.lebarKertas || "", // Paper width
@@ -364,34 +381,42 @@ export async function POST(req: NextRequest) {
       created_at: new Date(), // Current timestamp
       prioritas: data.priority ? "YES" : "NO", // Priority status
       no_project: projectNumber, // Generated project number
+      // For DTF orders, add DTF pass information to notes if not already there
+      ...(isDtfOrder && data.dtfPass && !data.notes?.includes(data.dtfPass) ? {
+        catatan: `${data.notes ? data.notes + ", " : ""}${data.dtfPass}`
+      } : {})
     };
 
-    // Handle asalBahanId based on the data
-    if (data.asalBahanId) {
-      try {
-        if (/^\d+$/.test(data.asalBahanId)) {
-          orderData.asal_bahan_id = BigInt(data.asalBahanId);
-          console.log("[API] Set asal_bahan_id to BigInt:", orderData.asal_bahan_id.toString());
-        } else {
-          console.log("[API] asalBahanId is not numeric, setting as null");
-          orderData.asal_bahan = data.asalBahanId;
+    // Handle asalBahanId based on the data - skip for DTF orders
+    if (!isDtfOrder) {
+      if (data.asalBahanId) {
+        try {
+          if (/^\d+$/.test(data.asalBahanId)) {
+            orderData.asal_bahan_id = BigInt(data.asalBahanId);
+            console.log("[API] Set asal_bahan_id to BigInt:", orderData.asal_bahan_id.toString());
+          } else {
+            console.log("[API] asalBahanId is not numeric, setting as null");
+            orderData.asal_bahan = data.asalBahanId;
+          }
+        } catch (error) {
+          console.error("[API] Error converting asalBahanId to BigInt:", error);
         }
-      } catch (error) {
-        console.error("[API] Error converting asalBahanId to BigInt:", error);
-      }
-    } else if (data.asalBahan) {
-      try {
-        if (/^\d+$/.test(data.asalBahan)) {
-          orderData.asal_bahan_id = BigInt(data.asalBahan);
-          console.log("[API] Used asalBahan as asal_bahan_id:", orderData.asal_bahan_id.toString());
-        } else {
+      } else if (data.asalBahan) {
+        try {
+          if (/^\d+$/.test(data.asalBahan)) {
+            orderData.asal_bahan_id = BigInt(data.asalBahan);
+            console.log("[API] Used asalBahan as asal_bahan_id:", orderData.asal_bahan_id.toString());
+          } else {
+            orderData.asal_bahan = data.asalBahan;
+            console.log("[API] Set asal_bahan to string value:", data.asalBahan);
+          }
+        } catch (error) {
+          console.error("[API] Error processing asalBahan:", error);
           orderData.asal_bahan = data.asalBahan;
-          console.log("[API] Set asal_bahan to string value:", data.asalBahan);
         }
-      } catch (error) {
-        console.error("[API] Error processing asalBahan:", error);
-        orderData.asal_bahan = data.asalBahan;
       }
+    } else {
+      console.log("[API] DTF order detected: skipping fabric origin processing");
     }
 
     console.log("[API] Final order data for creation:", JSON.stringify(orderData, (key, value) => 
@@ -400,7 +425,79 @@ export async function POST(req: NextRequest) {
 
     // Create order in database
     const order = await db.order.create({
-      data: orderData
+      data: {
+        // Replace customerId with proper customer relation
+        customer: customerIdValue ? {
+          connect: { id: customerIdValue }
+        } : undefined,
+        spk: orderData.spk,
+        marketing: orderData.marketing,
+        statusprod: orderData.statusprod,
+        kategori: orderData.kategori,
+        est_order: orderData.est_order,
+        nama_kain: orderData.nama_kain,
+        jumlah_kain: orderData.jumlah_kain,
+        lebar_kain: orderData.lebar_kain,
+        nama_produk: orderData.nama_produk,
+        gramasi: orderData.gramasi,
+        lebar_kertas: orderData.lebar_kertas,
+        lebar_file: orderData.lebar_file,
+        warna_acuan: orderData.warna_acuan,
+        produk: orderData.produk,
+        tipe_produk: orderData.tipe_produk,
+        path: orderData.path,
+        qty: orderData.qty,
+        panjang_order: orderData.panjang_order,
+        harga_satuan: orderData.harga_satuan,
+        tambah_cutting: orderData.tambah_cutting,
+        satuan_cutting: orderData.satuan_cutting,
+        qty_cutting: orderData.qty_cutting,
+        total_cutting: orderData.total_cutting,
+        tambah_bahan: orderData.tambah_bahan,
+        diskon: orderData.diskon,
+        nominal: orderData.nominal,
+        catatan: orderData.catatan,
+        statusm: orderData.statusm,
+        status: orderData.status,
+        // Replace userId with proper user relation
+        user: {
+          connect: { id: session.user.id }
+        },
+        keterangan: orderData.keterangan,
+        created_at: orderData.created_at,
+        prioritas: orderData.prioritas,
+        no_project: orderData.no_project,
+        // Handle asal_bahan connection correctly - only use the relation if we have an ID 
+        // and it's not a DTF order
+        ...(!isDtfOrder && orderData.asal_bahan_id ? { 
+          asal_bahan_rel: { 
+            connect: { id: orderData.asal_bahan_id } 
+          } 
+        } : {}), // Don't set asal_bahan at all if no ID or DTF order
+        // Include additional costs fields 1-5
+        tambah_cutting1: orderData.tambah_cutting1 || null,
+        satuan_cutting1: orderData.satuan_cutting1 || null,
+        qty_cutting1: orderData.qty_cutting1 || null,
+        total_cutting1: orderData.total_cutting1 || null,
+        tambah_cutting2: orderData.tambah_cutting2 || null,
+        satuan_cutting2: orderData.satuan_cutting2 || null,
+        qty_cutting2: orderData.qty_cutting2 || null,
+        total_cutting2: orderData.total_cutting2 || null,
+        tambah_cutting3: orderData.tambah_cutting3 || null,
+        satuan_cutting3: orderData.satuan_cutting3 || null,
+        qty_cutting3: orderData.qty_cutting3 || null,
+        total_cutting3: orderData.total_cutting3 || null,
+        tambah_cutting4: orderData.tambah_cutting4 || null,
+        satuan_cutting4: orderData.satuan_cutting4 || null,
+        qty_cutting4: orderData.qty_cutting4 || null,
+        total_cutting4: orderData.total_cutting4 || null,
+        tambah_cutting5: orderData.tambah_cutting5 || null,
+        satuan_cutting5: orderData.satuan_cutting5 || null,
+        qty_cutting5: orderData.qty_cutting5 || null,
+        total_cutting5: orderData.total_cutting5 || null,
+        // Add the unit field as satuan_bahan
+        satuan_bahan: data.unit
+      }
     });
 
     console.log(`[API] Created order with ID: ${order.id}`);

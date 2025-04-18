@@ -15,8 +15,14 @@ function generateFallbackSpk() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const year = String(now.getFullYear()).slice(-2);
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `${month}${year}${random}`;
+  
+  // Generate a random 3-digit number for fallback
+  const random = Math.floor(100 + Math.random() * 900);
+  
+  // Format as MMYYXXX (ensuring 3 digits with leading zeros)
+  const formattedNumber = String(random).padStart(3, '0');
+  
+  return `${month}${year}${formattedNumber}`;
 }
 
 // GET: Generate a new SPK number or fetch order by SPK

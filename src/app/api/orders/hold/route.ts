@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // Helper function to serialize data (handle BigInt)
 function serializeData(data: any): any {
@@ -11,7 +11,7 @@ function serializeData(data: any): any {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     
     // Check if user is authenticated
     if (!session?.user) {
@@ -67,26 +67,73 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Update order status to ON_HOLD and store previous status
-    const updatedOrder = await prisma.order.update({
+    // Store the current status for debugging
+    console.log("Current order status before hold:", order.status);
+    
+    // Use direct database query to update the order fields
+    // Ensure we have a valid status to save as previousStatus
+    const currentStatus = order.status || "PENDING"; // Use a fallback status if null
+    
+    console.log("Saving previousStatus as:", currentStatus);
+    
+    // Double check in the database if the column exists
+    try {
+      const columnExists = await prisma.$queryRaw`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'orders' 
+        AND column_name = 'previousStatus'
+      `;
+      console.log("previousStatus column check:", columnExists);
+    } catch (e) {
+      console.error("Error checking column:", e);
+    }
+    
+    // Update using Prisma's executeRawUnsafe which allows more direct SQL control
+    await prisma.$executeRawUnsafe(`
+      UPDATE "orders"
+      SET "status" = 'ON_HOLD',
+          "previousStatus" = '${currentStatus}',
+          "holdReason" = '${holdReason.replace(/'/g, "''")}'
+      WHERE "id" = '${orderId}'
+    `);
+    
+    // Verify the update worked
+    const verifyUpdate = await prisma.$queryRaw`
+      SELECT "status", "previousStatus", "holdReason" 
+      FROM "orders" 
+      WHERE "id" = ${orderId}
+    `;
+    console.log("Verification after hold update:", verifyUpdate);
+    
+    // Fetch the updated order
+    const updatedOrder = await prisma.order.findUnique({
       where: { id: orderId },
-      data: { 
-        status: "ON_HOLD",
-        previousStatus: order.status, // Store current status for resuming later
-        holdReason: holdReason
-      },
       include: { customer: true }
     });
     
-    // Log the hold action
-    await prisma.orderLog.create({
-      data: {
-        orderId,
-        userId: session.user.id,
-        action: "HOLD",
-        notes: `Order put on hold by ${session.user.name || session.user.email}. Reason: ${holdReason}`
-      }
+    console.log("Order after update:", {
+      id: updatedOrder.id,
+      status: updatedOrder.status,
+      previousStatus: updatedOrder.previousStatus,
+      holdReason: updatedOrder.holdReason
     });
+    
+    // Log the action without using raw SQL since it's causing issues
+    try {
+      await prisma.orderLog.create({
+        data: {
+          id: crypto.randomUUID(),
+          orderId,
+          userId: session.user.id,
+          action: "HOLD",
+          notes: `Order put on hold by ${session.user.name || session.user.email}. Reason: ${holdReason}. Previous status: ${currentStatus}`
+        }
+      });
+    } catch (logError) {
+      console.error("Error creating order log:", logError);
+      // Continue without failing the whole request if logging fails
+    }
     
     return NextResponse.json({
       order: serializeData(updatedOrder),

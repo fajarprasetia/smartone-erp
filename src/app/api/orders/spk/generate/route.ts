@@ -10,7 +10,7 @@ function serializeData(data: any): any {
   );
 }
 
-// Generate a new SPK number based on current date and time
+// Generate a new SPK number based on current date
 function generateNewSpk() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -52,18 +52,44 @@ export async function GET() {
     // If there's an existing SPK with this prefix, increment its number
     if (latestOrders.length > 0 && latestOrders[0].spk) {
       const latestSpk = latestOrders[0].spk;
-      // Extract the numeric part (last 4 characters)
+      console.log(`[API] Found latest SPK with prefix ${spkPrefix}: ${latestSpk}`);
+      
+      // Extract the numeric part (last 3 characters)
       const numericPart = latestSpk.substring(4);
+      
       if (!isNaN(parseInt(numericPart))) {
         nextNumber = parseInt(numericPart) + 1;
+        console.log(`[API] Extracted numeric part: ${numericPart}, Next number: ${nextNumber}`);
+      } else {
+        console.log(`[API] Could not extract valid numeric part from ${latestSpk}, using default next number: 1`);
       }
+    } else {
+      console.log(`[API] No existing SPK with prefix ${spkPrefix} found, using initial number: 1`);
     }
     
-    // Format the number part to have 4 digits with leading zeros
-    const formattedNumber = String(nextNumber).padStart(4, '0');
+    // Format the number part to have 3 digits with leading zeros
+    const formattedNumber = String(nextNumber).padStart(3, '0');
     
     // Create the complete SPK
     const newSpk = `${spkPrefix}${formattedNumber}`;
+    
+    // Verify that the generated SPK doesn't already exist (as an additional safety check)
+    const existingOrder = await db.order.findFirst({
+      where: {
+        spk: newSpk,
+      },
+    });
+    
+    // If the SPK already exists (which should not happen normally), increment again
+    if (existingOrder) {
+      console.log(`[API] SPK ${newSpk} already exists, incrementing further`);
+      const incrementedNumber = nextNumber + 1;
+      const incrementedFormattedNumber = String(incrementedNumber).padStart(3, '0');
+      const incrementedNewSpk = `${spkPrefix}${incrementedFormattedNumber}`;
+      
+      console.log(`[API] Generated new incremented SPK: ${incrementedNewSpk}`);
+      return NextResponse.json(serializeData({ spk: incrementedNewSpk }));
+    }
     
     console.log(`[API] Generated new SPK: ${newSpk}`);
     

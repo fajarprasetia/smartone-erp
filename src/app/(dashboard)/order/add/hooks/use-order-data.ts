@@ -197,8 +197,14 @@ export function useOrderData() {
   useEffect(() => {
     const fetchPaperGsm = async () => {
       setIsLoadingPaperGsm(true);
+      
+      // Check if DTF is selected to filter paper type
+      const isDtfSelected = form.watch("jenisProduk")?.DTF === true;
+      const paperType = isDtfSelected ? "DTF Film" : "regular";
+      
       try {
-        const response = await fetch('/api/inventory/paper-stock/gsm');
+        // Add paperType as query parameter
+        const response = await fetch(`/api/inventory/paper-stock/gsm?type=${paperType}`);
         if (!response.ok) {
           throw new Error('Failed to fetch paper GSM options');
         }
@@ -258,7 +264,7 @@ export function useOrderData() {
     };
     
     fetchPaperGsm();
-  }, []);
+  }, [form.watch("jenisProduk")?.DTF]); // Add explicit dependency on DTF selection
   
   // Fetch paper width options based on selected GSM
   useEffect(() => {
@@ -268,9 +274,13 @@ export function useOrderData() {
         return
       }
       
+      // Check if DTF is selected to filter paper type
+      const isDtfSelected = form.watch("jenisProduk")?.DTF === true;
+      const paperType = isDtfSelected ? "DTF Film" : "regular";
+      
       setIsLoadingPaperWidth(true)
       try {
-        const response = await fetch(`/api/inventory/paper-stock/width?gsm=${watchedGsmKertas}`)
+        const response = await fetch(`/api/inventory/paper-stock/width?gsm=${watchedGsmKertas}&type=${paperType}`)
         if (!response.ok) {
           throw new Error('Failed to fetch paper width options')
         }
@@ -312,7 +322,7 @@ export function useOrderData() {
     }
     
     fetchPaperWidth()
-  }, [watchedGsmKertas])
+  }, [watchedGsmKertas, form.watch("jenisProduk")?.DTF]) // Add dependency on DTF selection
   
   // Fetch repeat orders when status changes to REPEAT
   useEffect(() => {
@@ -460,6 +470,14 @@ export function useOrderData() {
         form.setValue("jenisProduk.PRESS", false)
         form.setValue("jenisProduk.CUTTING", false)
         form.setValue("jenisProduk.SEWING", false)
+        
+        // Clear fabric-related fields when DTF is selected
+        form.setValue("asalBahan", "")
+        form.setValue("asalBahanId", "")
+        form.setValue("namaBahan", "")
+        form.setValue("fabricLength", "")
+        form.setValue("lebarKain", "")
+        setSelectedFabric(null)
       } else if (checked) {
         // If any other product type is checked, uncheck DTF
         form.setValue("jenisProduk.DTF", false)
@@ -478,7 +496,7 @@ export function useOrderData() {
       )
       form.setValue("notes", updatedNotes)
     },
-    [form.setValue, form.getValues, form, updateNotesWithProductTypes]
+    [form.setValue, form.getValues, form, updateNotesWithProductTypes, setSelectedFabric]
   )
   
   // Handle DTF pass changes
@@ -494,114 +512,193 @@ export function useOrderData() {
     form.setValue("notes", updatedNotes)
   }
   
-  // Utility function to prepare form data for API submission
-  const prepareFormDataForSubmission = (formData: OrderFormValues): Record<string, unknown> => {
-    // Format additional costs for submission
-    const validAdditionalCosts = (formData.additionalCosts || [])
-      .filter(cost => Boolean(cost.item) || Boolean(cost.pricePerUnit) || Boolean(cost.unitQuantity) || Boolean(cost.total));
+  // Helper function to safely format date fields
+  const formatDateField = (value: Date | string | null | undefined): string | null => {
+    if (!value) return null;
     
-    const productTypes = formatProductTypes(formData.jenisProduk, formData.dtfPass);
-    
-    // Helper function to safely format date fields
-    const formatDateField = (value: Date | string | null | undefined): string | null => {
-      if (!value) return null;
-      
-      try {
-        // If it's already a Date object, format it
-        if (value instanceof Date && !isNaN(value.getTime())) {
-          return value.toISOString();
-        }
-        
-        // If it's a string that might represent a date, try to parse and format it
-        if (typeof value === 'string') {
-          const parsedDate = new Date(value);
-          if (!isNaN(parsedDate.getTime())) {
-            return parsedDate.toISOString();
-          }
-        }
-        
-        // If we couldn't format it as a date, return null
-        return null;
-      } catch (err) {
-        console.error("Error formatting date:", err);
-        return null;
-      }
-    };
-    
-    // Helper function to safely format numeric IDs
-    const formatNumericId = (id: string | undefined): string | undefined => {
-      if (!id) return undefined;
-      
-      // Ensure the ID is a properly formatted numeric string
-      if (/^\d+$/.test(id)) {
-        return id; // It's already a numeric string
+    try {
+      // If it's already a Date object, format it
+      if (value instanceof Date && !isNaN(value.getTime())) {
+        return value.toISOString();
       }
       
-      try {
-        // Try to convert to a valid number
-        const numericId = parseInt(id, 10);
-        if (!isNaN(numericId)) {
-          return String(numericId);
+      // If it's a string that might represent a date, try to parse and format it
+      if (typeof value === 'string') {
+        const parsedDate = new Date(value);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.toISOString();
         }
-      } catch (err) {
-        console.error("Error formatting numeric ID:", err);
       }
       
-      return id; // Return original if we can't format
-    };
+      // If we couldn't format it as a date, return null
+      return null;
+    } catch (err) {
+      console.error("Error formatting date:", err);
+      return null;
+    }
+  };
+  
+  // Helper function to safely format numeric IDs
+  const formatNumericId = (id: string | undefined): string | undefined => {
+    if (!id) return undefined;
     
-    // Format targetSelesai if it exists
-    const formattedTargetDate = formData.targetSelesai ? formatDateField(formData.targetSelesai) : undefined;
-    console.log("Formatted target date:", formattedTargetDate);
+    // Ensure the ID is a properly formatted numeric string
+    if (/^\d+$/.test(id)) {
+      return id; // It's already a numeric string
+    }
     
-    // Handle tax information in the right format
-    // Instead of sending tax and taxPercentage as separate fields,
-    // we'll handle them in the API by setting tambah_bahan field
-    const isTaxEnabled = formData.tax === true;
-    const taxPercentage = isTaxEnabled ? (formData.taxPercentage || "11") : null;
+    try {
+      // Try to convert to a valid number
+      const numericId = parseInt(id, 10);
+      if (!isNaN(numericId)) {
+        return String(numericId);
+      }
+    } catch (err) {
+      console.error("Error formatting numeric ID:", err);
+    }
     
-    // Create a compatible object with both camelCase for TypeScript and snake_case for API
+    return id; // Return original if we can't format
+  };
+
+  // Process additional costs for API submission
+  const processAdditionalCosts = (data: OrderFormValues): any[] => {
+    const additionalCosts: any[] = [];
+    
+    // Process additional costs if they exist
+    if (data.additionalCosts && data.additionalCosts.length > 0) {
+      data.additionalCosts.forEach(cost => {
+        if (cost.item || cost.pricePerUnit || cost.unitQuantity || cost.total) {
+          additionalCosts.push({
+            item: cost.item || "",
+            pricePerUnit: cost.pricePerUnit || "",
+            unitQuantity: cost.unitQuantity || "",
+            total: cost.total || ""
+          });
+        }
+      });
+    }
+    
+    // Also check for legacy additional costs structure (cutting1, cutting2, etc.)
+    for (let i = 0; i < 6; i++) {
+      const suffix = i === 0 ? '' : i.toString();
+      const itemField = `tambah_cutting${suffix}`;
+      const priceField = `satuan_cutting${suffix}`;
+      const qtyField = `qty_cutting${suffix}`;
+      const totalField = `total_cutting${suffix}`;
+      
+      // Type assertion to allow string indexing
+      const formData = data as any;
+      
+      if (formData[itemField] || formData[priceField] || formData[qtyField] || formData[totalField]) {
+        additionalCosts.push({
+          item: formData[itemField] || "",
+          pricePerUnit: formData[priceField] || "",
+          unitQuantity: formData[qtyField] || "",
+          total: formData[totalField] || ""
+        });
+      }
+    }
+    
+    return additionalCosts;
+  };
+
+  const prepareFormDataForSubmission = (data: OrderFormValues): Record<string, unknown> => {
+    console.log("Preparing form data for submission:", data);
+
+    // Process dates properly
+    const formattedTargetSelesai = formatDateField(data.targetSelesai);
+    
+    // Format numeric IDs correctly
+    const formattedCustomerId = formatNumericId(data.customerId);
+    
+    // Process the discount value
+    let discountValue: string | number | undefined = undefined;
+    if (data.discountType === "percentage" || data.discountType === "fixed") {
+      discountValue = data.discountValue ? parseFloat(data.discountValue) : 0;
+    }
+    
+    // Determine asalBahanId based on asalBahan value
+    let asalBahanId: string | undefined = undefined;
+    if (data.asalBahan === "SMARTONE") {
+      asalBahanId = "22"; // Fixed ID for SMARTONE
+      console.log("Setting asalBahanId to 22 for SMARTONE");
+    } else if (data.asalBahan === "CUSTOMER" && data.customerId) {
+      asalBahanId = data.customerId; // Use customer's ID
+      console.log(`Setting asalBahanId to customer ID: ${data.customerId}`);
+    }
+    
+    // Process tax data
+    const isTaxEnabled = data.tax === true;
+    const taxPercentage = isTaxEnabled && data.taxPercentage ? data.taxPercentage : '0';
+    
+    // Process additional costs for the expected API format (individual fields)
+    const additionalCostsArray = processAdditionalCosts(data);
+    
+    // Create an object to store additional costs in the proper field format
+    const additionalCostFields: Record<string, string> = {};
+    
+    // Map additional costs to the specific field names expected by the API
+    additionalCostsArray.forEach((cost, index) => {
+      if (index === 0) {
+        additionalCostFields.tambah_cutting = cost.item || "";
+        additionalCostFields.satuan_cutting = cost.pricePerUnit || "";
+        additionalCostFields.qty_cutting = cost.unitQuantity || "";
+        additionalCostFields.total_cutting = cost.total || "";
+      } else if (index < 6) { // Up to 5 additional costs (1-5)
+        additionalCostFields[`tambah_cutting${index}`] = cost.item || "";
+        additionalCostFields[`satuan_cutting${index}`] = cost.pricePerUnit || "";
+        additionalCostFields[`qty_cutting${index}`] = cost.unitQuantity || "";
+        additionalCostFields[`total_cutting${index}`] = cost.total || "";
+      }
+    });
+    
+    console.log("Formatted additional costs:", additionalCostFields);
+    
+    // Construct the final form data
     const formDataForSubmission: Record<string, unknown> = {
-      ...formData, // Keep all original fields for type compatibility
-      targetSelesai: formattedTargetDate, // Override with formatted date
+      ...data,
+      // Basic info
+      spk: data.spk,
+      customerId: formattedCustomerId,
+      // Use marketing ID directly (previously stored user name)
+      marketing: data.marketing, // This is now the user ID, not the name
+      // Process asalBahan
+      asalBahan: data.asalBahan,
+      asalBahanId: asalBahanId, // Set asalBahanId based on asalBahan
+      // Dates - Target Completion Date maps to est_order in DB
+      targetSelesai: formattedTargetSelesai,
+      est_order: formattedTargetSelesai, // Ensure target date goes to est_order field
+      // Numeric fields need conversion
+      jumlah: data.jumlah,
+      // Always send harga as string for database compatibility
+      harga: data.harga ? String(data.harga) : "",
+      harga_satuan: data.harga ? String(data.harga) : "", // Ensure harga_satuan is sent as string
+      // Process discount
+      discountType: data.discountType,
+      discountValue: discountValue,
+      // Process tax
+      tax: data.tax,
+      taxPercentage: taxPercentage,
+      // Process total price - convert to string to ensure database compatibility
+      totalPrice: data.totalPrice ? String(data.totalPrice) : "",
+      nominal: data.totalPrice ? String(data.totalPrice) : "", // Ensure nominal is sent as string
+      // Include additional costs as individual fields rather than a JSON string
+      ...additionalCostFields,
+      // Process status fields - but only include if they have values
+      statusProduksi: data.statusProduksi,
+      status: "PENDING", // Default status for new/edited orders
       
-      // Add relations using Prisma's connect syntax
-      customer: formData.customerId ? {
-        connect: { 
-          id: formatNumericId(formData.customerId) 
-        }
-      } : undefined,
+      // For backend compatibility, convert matchingColor to warna_acuan
+      matchingColor: data.matchingColor,
       
-      // Handle asal_bahan_rel correctly based on its value
-      asal_bahan_rel: formData.asalBahan === "CUSTOMER" ? 
-        {
-          connect: { 
-            id: formatNumericId(formData.customerId) 
-          }
-        } : 
-        (formData.asalBahan === "SMARTONE" ? 
-          {
-            connect: { 
-              id: formatNumericId(customers.find(c => c.nama.toUpperCase() === "SMARTONE")?.id) 
-            }
-          } : 
-          undefined),
-      
-      // Set tipe_produk string value if neither CUSTOMER nor SMARTONE
-      tipe_produk: formData.asalBahan !== "CUSTOMER" && formData.asalBahan !== "SMARTONE" ? 
-                  formData.asalBahan : undefined,
-      
-      // Include other fields needed for API processing
-      additionalCosts: validAdditionalCosts,
-      productTypes,
-      
-      // Set tambah_bahan field directly with tax information if tax is enabled
+      // Store tax percentage in tambah_bahan field if tax is applied
       tambah_bahan: isTaxEnabled ? `Tax: ${taxPercentage}%` : undefined,
     };
     
     // Remove fields that don't exist in the database schema
     delete formDataForSubmission.tax;
     delete formDataForSubmission.taxPercentage;
+    delete formDataForSubmission.additionalCosts; // Remove the array, since we've already processed it
 
     console.log("Formatted data for form:", formDataForSubmission);
 
@@ -859,13 +956,29 @@ export function useOrderData() {
         const now = new Date()
         const month = String(now.getMonth() + 1).padStart(2, '0')
         const year = String(now.getFullYear()).slice(-2)
-        const fallbackSpk = `${month}${year}0000`
+        const randomNumber = Math.floor(100 + Math.random() * 900)
+        const formattedNumber = String(randomNumber).padStart(3, '0')
+        const fallbackSpk = `${month}${year}${formattedNumber}`
+        
+        console.log('Using fallback SPK:', fallbackSpk)
         setSpkNumber(fallbackSpk)
         form.setValue('spk', fallbackSpk)
       }
     } catch (error) {
       console.error('Error fetching SPK:', error)
       toast.error('Failed to generate SPK number')
+      
+      // Even if there was an error, still generate a fallback SPK
+      const now = new Date()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const year = String(now.getFullYear()).slice(-2)
+      const randomNumber = Math.floor(100 + Math.random() * 900)
+      const formattedNumber = String(randomNumber).padStart(3, '0')
+      const fallbackSpk = `${month}${year}${formattedNumber}`
+      
+      console.log('Using fallback SPK after error:', fallbackSpk)
+      setSpkNumber(fallbackSpk)
+      form.setValue('spk', fallbackSpk)
     } finally {
       setIsSubmitting(false)
     }
@@ -876,351 +989,115 @@ export function useOrderData() {
     fetchSpkNumber()
   }, [])
   
-  /**
-   * Sets initial data for editing an existing order
-   */
-  const setInitialData = useCallback((data: OrderFormValues & { 
-    id?: string | number;
-    produk?: string;
-    asal_bahan_id?: string;
-    asal_bahan?: string;
-    warna_acuan?: string;
-    tambah_cutting?: string;
-    satuan_cutting?: string;
-    qty_cutting?: string;
-    total_cutting?: string;
-    tambah_cutting1?: string;
-    satuan_cutting1?: string;
-    qty_cutting1?: string;
-    total_cutting1?: string;
-    tambah_cutting2?: string;
-    satuan_cutting2?: string;
-    qty_cutting2?: string;
-    total_cutting2?: string;
-    tambah_cutting3?: string;
-    satuan_cutting3?: string;
-    qty_cutting3?: string;
-    total_cutting3?: string;
-    tambah_cutting4?: string;
-    satuan_cutting4?: string;
-    qty_cutting4?: string;
-    total_cutting4?: string;
-    tambah_cutting5?: string;
-    satuan_cutting5?: string;
-    qty_cutting5?: string;
-    total_cutting5?: string;
-    dtf_pass?: string;
-    tipe_produk?: string;
-    statusprod?: string;
-    diskon?: string | number;
-    tax?: string | boolean;
-    tax_percentage?: string | number;
-    tambah_bahan?: string;
-    customer_id?: string | number;
-    est_order?: string | Date;
-    target_selesai?: string | Date;
-    repeat_order_spk?: string;
-    repeatOrderSpk?: string;
-    nama_kain?: string;
-    nama_produk?: string;
-    gramasi?: string;
-    lebar_kertas?: string;
-    lebar_file?: string;
-    path?: string;
-    qty?: string | number;
-    satuan_bahan?: string;
-    harga_satuan?: string | number;
-    nominal?: string | number;
-    total_price?: string | number;
-    catatan?: string;
-    prioritas?: string;
-    priority?: boolean;
-    customer?: { id?: string | number };
-    marketingInfo?: { name?: string };
-  }) => {
+  // Set initial data for edit mode
+  const setInitialData = useCallback((data: any) => {
     if (!data) return;
     
     console.log("Setting initial data:", data);
     
-    // Store the order ID for edit operations
-    setOrderId(data.id ? data.id.toString() : null);
-    
-    // Helper function to determine if a string contains a product type
-    const hasProductType = (tipe: string, productTypes?: string) => {
-      if (!productTypes) return false;
-      return productTypes.toUpperCase().includes(tipe);
-    };
-
-    // Process product types (from 'produk' field which is comma-separated)
-    const productTypes = {
-      PRINT: false,
-      PRESS: false,
-      CUTTING: false,
-      DTF: false,
-      SEWING: false
-    };
-    
-    if (data.produk) {
-      const produkArray = data.produk.split(',').map((p: string) => p.trim().toUpperCase());
-      produkArray.forEach((produk: string) => {
-        if (produk === 'PRINT') productTypes.PRINT = true;
-        if (produk === 'PRESS') productTypes.PRESS = true;
-        if (produk === 'CUTTING') productTypes.CUTTING = true;
-        if (produk === 'DTF') productTypes.DTF = true;
-        if (produk === 'SEWING') productTypes.SEWING = true;
-      });
-    }
-
-    // Process fabric origin (asal_bahan) - Simplify logic as requested
-    let fabricOrigin = "CUSTOMER"; // Default to CUSTOMER
-    
-    // If value is "22" then set it to "SMARTONE" else set it to "CUSTOMER"
-    if (data.asal_bahan_id === "22" || data.asal_bahan === "22") {
-      fabricOrigin = "SMARTONE";
-    }
-    
-    console.log("Processed fabric origin:", fabricOrigin, "from:", data.asal_bahan_id || data.asal_bahan);
-
-    // Process matching color (warna_acuan) - Simplify logic as requested
-    const matchingColor = (data.warna_acuan === "ADA") ? "YES" : "NO";
-    
-    console.log("Processed matching color:", matchingColor, "from:", data.warna_acuan);
-
-    // Process additional costs
-    const additionalCosts = [];
-    
-    // Process primary additional cost
-    if (data.tambah_cutting || data.satuan_cutting || data.qty_cutting || data.total_cutting) {
-      additionalCosts.push({
-        item: data.tambah_cutting || "",
-        pricePerUnit: data.satuan_cutting || "",
-        unitQuantity: data.qty_cutting || "",
-        total: data.total_cutting || ""
-      });
-    }
-    
-    // Process additional costs 1-5
-    for (let i = 1; i <= 5; i++) {
-      const itemField = `tambah_cutting${i}`;
-      const priceField = `satuan_cutting${i}`;
-      const qtyField = `qty_cutting${i}`;
-      const totalField = `total_cutting${i}`;
+    try {
+      // Reset form with defaults first to clear any previous values
+      form.reset(defaultValues);
       
-      if (data[itemField] || data[priceField] || data[qtyField] || data[totalField]) {
-        additionalCosts.push({
-          item: data[itemField] || "",
-          pricePerUnit: data[priceField] || "",
-          unitQuantity: data[qtyField] || "",
-          total: data[totalField] || ""
+      // Extract and format product types
+      const productTypes = {
+        PRINT: false,
+        PRESS: false,
+        CUTTING: false,
+        DTF: false,
+        SEWING: false
+      };
+      
+      if (data.produk) {
+        const productArr = data.produk.split(",");
+        productArr.forEach((type: string) => {
+          const trimmedType = type.trim().toUpperCase();
+          if (Object.keys(productTypes).includes(trimmedType)) {
+            productTypes[trimmedType as keyof typeof productTypes] = true;
+          }
         });
       }
-    }
-
-    // Extract dtf_pass based on the product types
-    let dtfPass: "4 PASS" | "6 PASS" | undefined = undefined;
-    if (data.dtf_pass) {
-      // Ensure that we only assign valid values to dtfPass
-      const pass = data.dtf_pass.toString().trim().toUpperCase();
-      if (pass === "4 PASS") {
-        dtfPass = "4 PASS";
-      } else if (pass === "6 PASS") {
-        dtfPass = "6 PASS";
-      }
-    } else if (hasProductType("DTF", data.tipe_produk)) {
-      // Default to 4 PASS if DTF is selected but no pass is specified
-      dtfPass = "4 PASS";
-    }
-    
-    // Ensure proper status value
-    const statusProduksi = data.statusprod === "REPEAT" ? "REPEAT" : "NEW";
-    
-    // Ensure kategori is valid
-    const kategori = data.kategori === "ONE DAY SERVICE" ? "ONE DAY SERVICE" :
-                     data.kategori === "PROJECT" ? "PROJECT" : "REGULAR ORDER";
-
-    // Determine discount type and value from the diskon field
-    let discountType: "none" | "fixed" | "percentage" = "none";
-    let discountValue = "";
-    
-    if (data.diskon) {
-      const diskonStr = data.diskon.toString();
-      console.log("Raw discount value:", diskonStr);
       
-      if (diskonStr.includes('%')) {
-        discountType = "percentage";
-        discountValue = diskonStr.replace('%', '');
-        console.log("Detected percentage discount:", discountValue, "%");
-      } else if (diskonStr !== "0") {
-        discountType = "fixed";
-        discountValue = diskonStr;
-        console.log("Detected fixed discount:", discountValue);
-      }
-    }
-    
-    // Extract tax percentage from tambah_bahan field if it exists
-    let taxEnabled = false;
-    let taxPercentage = "11"; // Default tax percentage
-    
-    // Check if tax information is stored in tambah_bahan field
-    if (data.tambah_bahan && data.tambah_bahan.toString().includes("Tax:")) {
-      taxEnabled = true;
-      const taxMatch = data.tambah_bahan.toString().match(/Tax:\s*(\d+(?:\.\d+)?)%/);
-      if (taxMatch && taxMatch[1]) {
-        taxPercentage = taxMatch[1];
-        console.log("Extracted tax percentage from tambah_bahan:", taxPercentage);
-      }
-    }
-
-    // Map the data from API format to form format
-    const formattedData: OrderFormValues = {
-      // Customer section
-      customerId: data.customer_id?.toString() || "",
-      spk: data.spk || "",
-      marketing: data.marketing || (data.marketingInfo?.name || ""),
+      // Format dates properly
+      const targetSelesai = data.est_order ? new Date(data.est_order) : new Date();
       
-      // Order detail section
-      statusProduksi: statusProduksi,
-      kategori: kategori,
-      targetSelesai: data.est_order ? new Date(data.est_order) : 
-                    (data.target_selesai ? new Date(data.target_selesai) : new Date()),
-      repeatOrderSpk: data.repeat_order_spk || data.repeatOrderSpk || "",
+      // Set the order ID
+      setOrderId(data.id);
       
-      // Product type section
-      jenisProduk: productTypes,
-      dtfPass: dtfPass,
+      // Set SPK number
+      setSpkNumber(data.spk || "");
       
-      // Fabric info section
-      asalBahan: fabricOrigin,
-      namaBahan: data.nama_kain || "",
-      aplikasiProduk: data.nama_produk || data.produk || "",
+      // Set form values
+      form.setValue("customerId", data.customerId || data.customer_id || "");
+      form.setValue("spk", data.spk || "");
+      form.setValue("marketing", data.marketing || ""); // This is now the user ID
+      form.setValue("jenisProduk", productTypes);
+      form.setValue("tipe_produk", data.tipe_produk || "SUBLIM");
       
-      // Paper info section
-      gsmKertas: data.gramasi || "",
-      lebarKertas: data.lebar_kertas || "",
-      fileWidth: data.lebar_file || "",
-      matchingColor: matchingColor as "YES" | "NO",
-      fileDesain: data.path || "",
-      jumlah: data.qty?.toString() || "",
-      unit: data.satuan_bahan === "yard" ? "yard" : "meter",
-      
-      // Pricing section
-      harga: data.harga_satuan?.toString() || "",
-      additionalCosts: additionalCosts,
-      // Use the pre-determined discount type and value
-      discountType: discountType,
-      discountValue: discountValue,
-      tax: taxEnabled,
-      taxPercentage: taxPercentage,
-      totalPrice: data.nominal?.toString() || data.total_price?.toString() || "",
-      
-      // Notes section
-      notes: data.catatan || "",
-      priority: data.prioritas === "YES" || data.priority === true
-    };
-
-    console.log("Formatted data for form:", formattedData);
-
-    // Reset the form with the formatted data
-    form.reset(formattedData);
-    
-    // Set related data for dropdowns and selects
-    if (data.customer) {
-      const matchedCustomer = customers.find(c => 
-        c.id.toString() === data.customer_id?.toString() || 
-        c.id.toString() === data.customer.id?.toString()
-      );
-      if (matchedCustomer) {
-        console.log("Setting customer:", matchedCustomer);
-        form.setValue("customerId", matchedCustomer.id.toString());
-      }
-      setIsCustomerOpen(false);
-    }
-    
-    if (data.marketing || data.marketingInfo) {
-      const marketer = data.marketingInfo?.name || data.marketing;
-      const matchedMarketing = marketingUsers.find(u => u.name === marketer);
-      if (matchedMarketing) {
-        console.log("Setting marketing:", matchedMarketing);
-        form.setValue("marketing", matchedMarketing.name);
-      } else if (marketer) {
-        form.setValue("marketing", marketer);
-      }
-      setIsMarketingOpen(false);
-    }
-    
-    // Set fabric name directly
-    if (data.nama_kain) {
-      console.log("Setting fabric name:", data.nama_kain);
-      
-      // Directly set the fabric name field
-      form.setValue("namaBahan", data.nama_kain);
-      
-      // Look for matching fabric in fabricNames
-      const matchedFabric = fabricNames.find(f => f.name === data.nama_kain);
-      if (matchedFabric) {
-        console.log("Found matching fabric in fabricNames:", matchedFabric);
-        setSelectedFabric(matchedFabric);
-      } else {
-        // Create a placeholder fabric object if exact match not found
-        const fabricData = {
-          id: data.fabric_id || "",
-          name: data.nama_kain,
-          composition: data.composition || null,
-          length: data.length || null,
-          width: data.lebar_kain || null,
-          remainingLength: data.remaining_length || null
-        };
-        console.log("Created placeholder fabric data:", fabricData);
-        setSelectedFabric(fabricData);
-      }
-      setIsFabricNameOpen(false);
-    }
-    
-    // Set product application directly
-    if (data.nama_produk) {
-      console.log("Setting product application:", data.nama_produk);
-      form.setValue("aplikasiProduk", data.nama_produk);
-    }
-    
-    // Fetch paper width options if GSM is set
-    if (data.gramasi) {
-      console.log("Setting GSM and fetching widths:", data.gramasi);
-      const gsmValue = data.gramasi.toString();
-      form.setValue("gsmKertas", gsmValue);
-      // The useEffect will automatically fetch the paper width options
-    }
-    
-    // Set product types and update notes if needed
-    if (data.produk) {
-      console.log("Setting product types from produk field:", data.produk);
-      
-      // Make sure DTF pass is set if DTF is selected
-      if (productTypes.DTF && !dtfPass) {
-        form.setValue("dtfPass", "4 PASS");
+      // Handle DTF pass if available
+      if (data.dtfPass) {
+        form.setValue("dtfPass", data.dtfPass);
       }
       
-      // Update notes with product types if needed
-      const notes = form.getValues("notes") || "";
-      const updatedNotes = updateNotesWithProductTypes(notes, productTypes, dtfPass);
-      if (updatedNotes !== notes) {
-        form.setValue("notes", updatedNotes);
+      form.setValue("jumlah", data.jumlah || data.qty || "");
+      form.setValue("unit", data.unit || "meter");
+      form.setValue("asalBahan", data.asalBahan || "");
+      form.setValue("asalBahanId", data.asalBahanId || data.asal_bahan || "");
+      form.setValue("namaBahan", data.namaBahan || data.nama_kain || "");
+      form.setValue("aplikasiProduk", data.aplikasiProduk || "");
+      form.setValue("fabricLength", data.fabricLength || data.panjang_order || "");
+      form.setValue("gsmKertas", data.gsmKertas || data.gramasi || "");
+      form.setValue("lebarKertas", data.lebarKertas || "");
+      form.setValue("fileWidth", data.fileWidth || data.lebar_file || "");
+      form.setValue("lebarKain", data.lebarKain || data.lebar_kain || "");
+      form.setValue("matchingColor", data.matchingColor || data.warna_acuan || "NO");
+      form.setValue("notes", data.notes || data.catatan || "");
+      form.setValue("statusProduksi", data.statusProduksi || "NEW");
+      form.setValue("kategori", data.kategori || "REGULAR ORDER");
+      form.setValue("targetSelesai", targetSelesai);
+      form.setValue("harga", data.harga || data.harga_satuan || "");
+      form.setValue("priority", data.priority || data.prioritas === "YES" || false);
+      
+      // Handle additional costs
+      const additionalCosts = [];
+      
+      // First set
+      if (data.tambah_cutting && data.satuan_cutting) {
+        additionalCosts.push({
+          item: data.tambah_cutting || "",
+          pricePerUnit: data.satuan_cutting || "",
+          unitQuantity: data.qty_cutting || "",
+          total: data.total_cutting || ""
+        });
       }
+      
+      // Additional sets 1-5
+      for (let i = 1; i <= 5; i++) {
+        const itemField = `tambah_cutting${i}`;
+        const priceField = `satuan_cutting${i}`;
+        const qtyField = `qty_cutting${i}`;
+        const totalField = `total_cutting${i}`;
+        
+        if (data[itemField] && data[priceField]) {
+          additionalCosts.push({
+            item: data[itemField] || "",
+            pricePerUnit: data[priceField] || "",
+            unitQuantity: data[qtyField] || "",
+            total: data[totalField] || ""
+          });
+        }
+      }
+      
+      if (additionalCosts.length > 0) {
+        form.setValue("additionalCosts", additionalCosts);
+      }
+      
+      console.log("Form initialized with data successfully");
+    } catch (error) {
+      console.error("Error setting initial form data:", error);
+      toast.error("Failed to load order data");
     }
-    
-  }, [
-    form,
-    customers,
-    marketingUsers,
-    fabricNames,
-    setIsCustomerOpen,
-    setIsMarketingOpen,
-    setIsFabricNameOpen,
-    setSelectedFabric,
-    updateNotesWithProductTypes,
-    form.reset,
-    form.setValue,
-    form.getValues
-  ]);
+  }, [form, setOrderId]);
   
   return {
     form,

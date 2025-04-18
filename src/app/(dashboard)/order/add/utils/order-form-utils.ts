@@ -1,5 +1,8 @@
 import { OrderFormValues } from "@/models/order";
 import { z } from "zod";
+import { Order } from "@prisma/client";
+import { UseFormReturn } from "react-hook-form";
+import { format } from "date-fns";
 
 export interface AdditionalCostItem {
   item: string;
@@ -15,6 +18,15 @@ export interface AdditionalCostItem {
  */
 export const yardToMeter = (yards: number): number => {
   return yards * 0.9144; // 1 yard = 0.9144 meters
+};
+
+/**
+ * Converts meters to yards
+ * @param meters - Value in meters
+ * @returns Value in yards
+ */
+export const meterToYard = (meters: number): number => {
+  return meters / 0.9144; // 1 meter = 1.0936 yards
 };
 
 /**
@@ -214,4 +226,87 @@ export const formatDate = (date: Date): string => {
     month: "short",
     day: "numeric",
   });
-}; 
+};
+
+export function formatIdrCurrency(value: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+export function setInitialData(form: UseFormReturn<OrderFormValues>, data: Order): void {
+  console.log("Setting initial data:", data)
+  
+  try {
+    // Parse JSON fields if they exist
+    const parsedImages = data.images ? JSON.parse(data.images as string) : []
+    const parsedDesignImages = data.design_images ? JSON.parse(data.design_images as string) : []
+    
+    const mappedValues: Partial<OrderFormValues> = {
+      // Customer Information
+      customerId: data.customer_id ? data.customer_id.toString() : "",
+      companyName: data.company_name || "",
+      contactName: data.contact_name || "",
+      phoneNumber: data.phone_number || "",
+      email: data.email || "",
+      
+      // Order Information
+      productType: data.product_type || "",
+      orderNumber: data.order_number || "",
+      estOrder: data.est_order ? new Date(data.est_order) : undefined,
+      
+      // Fabric Information
+      asalBahan: data.asal_bahan || "",
+      namaBahan: data.nama_bahan || "",
+      aplikasiProduk: data.aplikasi_produk || "",
+      lebarKain: data.lebar_kain || "",
+      fabricLength: data.jumlah_kain || "",
+      
+      // Paper Information
+      namaPaper: data.nama_paper || "",
+      lebarKertas: data.lebar_kertas || "",
+      kuantitas: data.kuantitas ? data.kuantitas.toString() : "",
+      satuan: data.satuan || "meter",
+      
+      // Print Information
+      jumlahWarna: data.jumlah_warna ? data.jumlah_warna.toString() : "",
+      repeatedPrint: data.repeated_print || "",
+      tipeRibbon: data.tipe_ribbon || "",
+      
+      // Design Information
+      isCanvasAvailable: data.is_canvas_available ? "yes" : "no",
+      designImages: parsedDesignImages,
+      designDetails: data.design_details || "",
+      
+      // Delivery Information
+      deliveryAddress: data.delivery_address || "",
+      isSuratJalan: data.is_surat_jalan ? "yes" : "no",
+      deliveryNotes: data.delivery_notes || "",
+      
+      // Payment Information
+      paymentTerm: data.payment_term || "",
+      totalPrice: data.total_price ? data.total_price.toString() : "",
+      
+      // Additional Information
+      externalJobId: data.external_job_id || "",
+      additionalNotes: data.additional_notes || "",
+      
+      // Images
+      images: parsedImages
+    }
+    
+    // Set form values
+    Object.entries(mappedValues).forEach(([key, value]) => {
+      if (value !== undefined) {
+        form.setValue(key as keyof OrderFormValues, value)
+      }
+    })
+    
+    console.log("Form values set:", mappedValues)
+  } catch (error) {
+    console.error("Error setting initial data:", error)
+  }
+} 
