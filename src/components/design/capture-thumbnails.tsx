@@ -5,6 +5,7 @@ import Image from "next/image"
 import { MoveUpRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { FallbackImage } from "@/components/ui/fallback-image"
 
 interface CaptureThumbnailsProps {
   capture?: string | null
@@ -13,6 +14,7 @@ interface CaptureThumbnailsProps {
   tf_pelunasan?: string | null
   altText?: string
   className?: string
+  useFallback?: boolean
 }
 
 export function CaptureThumbnails({
@@ -21,7 +23,8 @@ export function CaptureThumbnails({
   tf_dp,
   tf_pelunasan,
   altText = "Design",
-  className
+  className,
+  useFallback = false
 }: CaptureThumbnailsProps) {
   const [activeImage, setActiveImage] = useState<{ url: string, title: string } | null>(null)
   
@@ -70,13 +73,23 @@ export function CaptureThumbnails({
           onClick={() => openImage(captureUrl, "Design Preview")}
           title="Design Preview"
         >
-          <Image
-            src={captureUrl}
-            alt={`${altText} preview`}
-            width={32}
-            height={32}
-            className="object-contain"
-          />
+          {useFallback ? (
+            <FallbackImage
+              src={captureUrl}
+              alt={`${altText} preview`}
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          ) : (
+            <Image
+              src={captureUrl}
+              alt={`${altText} preview`}
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
             <MoveUpRight className="h-3 w-3 text-white drop-shadow-md" />
           </div>
@@ -90,13 +103,23 @@ export function CaptureThumbnails({
           onClick={() => openImage(captureNameUrl, "File Name Preview")}
           title="File Name Preview"
         >
-          <Image
-            src={captureNameUrl}
-            alt={`${altText} file name`}
-            width={32}
-            height={32}
-            className="object-contain"
-          />
+          {useFallback ? (
+            <FallbackImage
+              src={captureNameUrl}
+              alt={`${altText} file name`}
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          ) : (
+            <Image
+              src={captureNameUrl}
+              alt={`${altText} file name`}
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
             <MoveUpRight className="h-3 w-3 text-white drop-shadow-md" />
           </div>
@@ -110,13 +133,23 @@ export function CaptureThumbnails({
           onClick={() => openImage(dpReceiptUrl, "Down Payment Receipt")}
           title="Down Payment Receipt"
         >
-          <Image
-            src={dpReceiptUrl}
-            alt="DP Receipt"
-            width={32}
-            height={32}
-            className="object-contain"
-          />
+          {useFallback ? (
+            <FallbackImage
+              src={dpReceiptUrl}
+              alt="Down payment receipt"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          ) : (
+            <Image
+              src={dpReceiptUrl}
+              alt="Down payment receipt"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
             <MoveUpRight className="h-3 w-3 text-white drop-shadow-md" />
           </div>
@@ -130,13 +163,23 @@ export function CaptureThumbnails({
           onClick={() => openImage(settlementReceiptUrl, "Settlement Receipt")}
           title="Settlement Receipt"
         >
-          <Image
-            src={settlementReceiptUrl}
-            alt="Settlement Receipt"
-            width={32}
-            height={32}
-            className="object-contain"
-          />
+          {useFallback ? (
+            <FallbackImage
+              src={settlementReceiptUrl}
+              alt="Settlement receipt"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          ) : (
+            <Image
+              src={settlementReceiptUrl}
+              alt="Settlement receipt"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
             <MoveUpRight className="h-3 w-3 text-white drop-shadow-md" />
           </div>
@@ -167,17 +210,27 @@ export function CaptureThumbnails({
             </div>
             
             <div className="relative aspect-video w-full">
-              <Image
-                src={activeImage.url}
-                alt={activeImage.title}
-                fill
-                className="object-contain p-4"
-                priority
-              />
+              {useFallback ? (
+                <FallbackImage
+                  src={activeImage.url}
+                  alt="Preview"
+                  width={800}
+                  height={600}
+                  className="max-w-full max-h-[80vh] object-contain rounded-md"
+                />
+              ) : (
+                <Image
+                  src={activeImage.url}
+                  alt="Preview"
+                  width={800}
+                  height={600}
+                  className="max-w-full max-h-[80vh] object-contain rounded-md"
+                />
+              )}
             </div>
           </div>
         </div>
       )}
     </div>
   )
-} 
+}

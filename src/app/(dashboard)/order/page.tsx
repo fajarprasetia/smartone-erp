@@ -30,6 +30,7 @@ import { format } from "date-fns"
 import { toast } from "sonner"
 import { debounce } from "lodash"
 import Image from "next/image"
+import { FallbackImage } from "@/components/ui/fallback-image"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -379,7 +380,7 @@ const OrderSpkModal = ({ order, open, onOpenChange }: {
                   <p className="text-sm font-medium text-muted-foreground">Design Preview</p>
                   <div className="bg-muted/50 rounded-md p-2 mt-1 flex justify-center print:bg-gray-100">
                     <div className="relative h-[150px] w-[200px]">
-                      <Image
+                      <FallbackImage
                         src={`/uploads/${order.capture}`}
                         alt="Design preview"
                         width={200}
@@ -396,7 +397,7 @@ const OrderSpkModal = ({ order, open, onOpenChange }: {
                   <p className="text-sm font-medium text-muted-foreground">Name Preview</p>
                   <div className="bg-muted/50 rounded-md p-2 mt-1 flex justify-center print:bg-gray-100">
                     <div className="relative h-[100px] w-[240px]">
-                      <Image
+                      <FallbackImage
                         src={`/uploads/${order.capture_name}`}
                         alt="Name preview"
                         width={240}
@@ -1038,7 +1039,7 @@ const NoDpForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => voi
 }
 
 // Image Thumbnail component for displaying payment receipts
-const ImageThumbnail = ({ src, alt, onClick }: { src: string | null | undefined, alt: string, onClick?: () => void }) => {
+const ImageThumbnail = ({ src, alt, onClick, useFallback = false }: { src: string | null | undefined, alt: string, onClick?: () => void, useFallback?: boolean }) => {
   if (!src) return null
   
   // Ensure the src URL is properly formatted with a leading slash if it's a relative path
@@ -1046,9 +1047,9 @@ const ImageThumbnail = ({ src, alt, onClick }: { src: string | null | undefined,
   
   // Determine which prop to pass based on the alt text
   if (alt.includes("DP")) {
-    return <CaptureThumbnails tf_dp={formattedSrc} altText={alt} />;
+    return <CaptureThumbnails tf_dp={formattedSrc} altText={alt} useFallback={useFallback} />;
   } else if (alt.includes("Settlement") || alt.includes("Pelunasan")) {
-    return <CaptureThumbnails tf_pelunasan={formattedSrc} altText={alt} />;
+    return <CaptureThumbnails tf_pelunasan={formattedSrc} altText={alt} useFallback={useFallback} />;
   }
   
   // Fallback to old implementation for other cases
@@ -2493,8 +2494,8 @@ export default function OrderPage() {
                                     <TableCell>{formatCurrency(order.nominal || 0)}</TableCell>
                                     <TableCell>
                                       <div className="flex items-center space-x-1">
-                                        <ImageThumbnail src={order.tf_dp} alt="DP Receipt" onClick={() => handleOpenReceiptModal(order.tf_dp)} />
-                                        <ImageThumbnail src={order.tf_pelunasan} alt="Settle Receipt" onClick={() => handleOpenReceiptModal(order.tf_pelunasan)} />
+                                        <ImageThumbnail src={order.tf_dp} alt="DP Receipt" onClick={() => handleOpenReceiptModal(order.tf_dp)} useFallback />
+                                        <ImageThumbnail src={order.tf_pelunasan} alt="Settle Receipt" onClick={() => handleOpenReceiptModal(order.tf_pelunasan)} useFallback />
                                       </div>
                                     </TableCell>
                                     <TableCell>
