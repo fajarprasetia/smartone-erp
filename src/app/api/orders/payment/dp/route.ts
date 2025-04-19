@@ -73,6 +73,7 @@ export async function POST(request: Request) {
         biaya_tambahan: "DP",
         catatan_tf: notes || "",
         tf_dp: receiptPath || null,
+        approval: "APPROVED"
       },
     });
 

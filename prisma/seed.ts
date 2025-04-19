@@ -68,6 +68,61 @@ async function main() {
       },
     });
 
+    // Create Manager role if it doesn't exist
+    const managerRole = await prisma.role.upsert({
+      where: { name: 'Manager' },
+      update: {
+        permissions: {
+          connect: createdPermissions.map((p) => ({ id: p.id })),
+        },
+      },
+      create: {
+        name: 'Manager',
+        description: 'Approval access',
+        isSystem: true,
+        isAdmin: true,
+        permissions: {
+          connect: createdPermissions.map((p) => ({ id: p.id })),
+        },
+      },
+    });
+
+    const OpManagerRole = await prisma.role.upsert({
+      where: { name: 'Operation Manager' },
+      update: {
+        permissions: {
+          connect: createdPermissions.map((p) => ({ id: p.id })),
+        },
+      },
+      create: {
+        name: 'Operation Manager',
+        description: 'Approval access',
+        isSystem: true,
+        isAdmin: true,
+        permissions: {
+          connect: createdPermissions.map((p) => ({ id: p.id })),
+        },
+      },
+    });
+
+    const Marketing = await prisma.role.upsert({
+      where: { name: 'Marketing' },
+      update: {
+        permissions: {
+          connect: createdPermissions.map((p) => ({ id: p.id })),
+        },
+      },
+      create: {
+        name: 'Marketing',
+        description: 'Marketing access',
+        isSystem: true,
+        isAdmin: true,
+        permissions: {
+          connect: createdPermissions.map((p) => ({ id: p.id })),
+        },
+      },
+    });
+
     // Create System Administrator user if it doesn't exist
     const hashedPassword = await bcrypt.hash('smartone#2025', 10);
     
@@ -86,6 +141,9 @@ async function main() {
     console.log('Seed data created:');
     console.log(`- System Administrator Role: ${systemAdminRole.id}`);
     console.log(`- Administrator Role: ${adminRole.id}`);
+    console.log(`- Manager Role: ${managerRole.id}`);
+    console.log(`- Operation Manager Role: ${OpManagerRole.id}`);
+    console.log(`- Marketing Role: ${Marketing.id}`);
     console.log(`- System Administrator User: ${systemAdminUser.id}`);
   } catch (error) {
     console.error('Error seeding data:', error);

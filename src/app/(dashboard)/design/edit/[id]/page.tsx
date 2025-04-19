@@ -150,7 +150,7 @@ export default function EditDesignPage() {
           // Populate form with order data
           form.reset({
             fileWidth: data.lebar_file || "",
-            matchingColor: (data.warna_acuan === "YES" ? "YES" : "NO") as "YES" | "NO",
+            matchingColor: (data.warna_acuan === "ADA" ? "YES" : "NO") as "YES" | "NO",
             qty: data.qty || undefined,
             notes: data.catatan || "",
           })

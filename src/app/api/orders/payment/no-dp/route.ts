@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       data: {
         biaya_tambahan: "NO DP",
         catatan_tf: "NO DP",
+        approval: "APPROVED"
       },
     });
 

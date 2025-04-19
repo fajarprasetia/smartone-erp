@@ -57,6 +57,7 @@ interface ProductionOrderItem {
   catatan?: string | null
   lebar_kain?: string | null
   lebar_kertas?: string | null
+  lebar_file?: string | null
   gramasi?: string | null
   warna_acuan?: string | null
   path?: string | null
@@ -94,7 +95,7 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-export function PendingPrintTab() {
+export default function ProductionListPage() {
   const router = useRouter()
   
   const [orders, setOrders] = useState<ProductionOrderItem[]>([])
@@ -114,7 +115,7 @@ export function PendingPrintTab() {
   const fetchProductionOrders = useCallback(async (page = 1, search = searchQuery) => {
     setIsLoading(true);
     try {
-      const apiUrl = `/api/production/orders?page=${page}&pageSize=${pageSize}&search=${search}&filter=PENDINGPRINT`;
+      const apiUrl = `/api/production/orders?page=${page}&pageSize=${pageSize}&search=${search}&filter=READYFORPROD`;
       const response = await fetch(apiUrl);
       
       if (!response.ok) {
@@ -204,9 +205,9 @@ export function PendingPrintTab() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Pending Print Jobs</CardTitle>
+          <CardTitle>Production List</CardTitle>
           <CardDescription>
-            Orders waiting to be printed
+            Orders ready for production with payment details
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -306,9 +307,10 @@ export function PendingPrintTab() {
                     <TableHead>Color Matching</TableHead>
                     <TableHead>Paper GSM</TableHead>
                     <TableHead>Paper Width</TableHead>
+                    <TableHead>File Width</TableHead>
+                    <TableHead>Fabric Width</TableHead>
                     <TableHead>Fabric Origins</TableHead>
                     <TableHead>Fabric Name</TableHead>
-                    <TableHead>Fabric Width</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Notes</TableHead>
                   </TableRow>
@@ -360,13 +362,16 @@ export function PendingPrintTab() {
                         {order.lebar_kertas || "N/A"}
                       </TableCell>
                       <TableCell>
+                        {order.lebar_file || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {order.lebar_kain || "N/A"}
+                      </TableCell>
+                      <TableCell>
                         {order.asal_bahan || "N/A"}
                       </TableCell>
                       <TableCell>
                         {order.nama_kain || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {order.lebar_kain || "N/A"}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">

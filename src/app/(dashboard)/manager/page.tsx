@@ -1,5 +1,5 @@
 import { Tabs, TabsList as TabList, TabsTrigger as TabTrigger, TabsContent as TabContent } from '@/components/ui/tabs'
-import { OrderTable } from '@/components/order-table'
+import { OrderTable } from '@/components/approval-table'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -37,28 +37,12 @@ export default async function ManagerPage() {
         </TabContent>
 
         <TabContent value="rejects">
-          <Tabs defaultValue="pending-rejects" className="w-full">
-            <TabList className="bg-transparent border-b border-border w-full">
-              <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="pending-rejects">Pending Approval</TabTrigger>
-              <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="approved-rejects">Approved</TabTrigger>
-            </TabList>
-            
-            <TabContent value="pending-rejects">
-              <OrderTable
-                rejectionStatus="pending"
-                role={role}
-                showRejectActions
-              />
+          <OrderTable 
+            approvalStatus="rejects"
+            role={role}
+            showStatus
+          />
             </TabContent>
-
-            <TabContent value="approved-rejects">
-              <OrderTable
-                rejectionStatus="approved"
-                role={role}
-              />
-            </TabContent>
-          </Tabs>
-        </TabContent>
       </Tabs>
     </div>
   )

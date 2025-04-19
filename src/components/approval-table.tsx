@@ -10,6 +10,8 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronDown,
+  Check,
+  X,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -35,10 +37,12 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { CaptureThumbnails } from "@/components/design/capture-thumbnails"
+import { timeStamp } from "console"
 
-interface ProductionOrderItem {
+interface ApprovalOrderItem  {
   id: string
   spk?: string | null
   no_project?: string | null
@@ -54,11 +58,19 @@ interface ProductionOrderItem {
   status?: string | null
   statusm?: string | null
   qty?: number | null
+  nominal?: string | null
+  sisa?: string | null
+  tf_dp?: string | null
+  tf_pelunasan?: string | null
   catatan?: string | null
   lebar_kain?: string | null
   lebar_kertas?: string | null
+  lebar_file?: string | null
   gramasi?: string | null
   warna_acuan?: string | null
+  approval?: string | null
+  approval_mng?: string | null
+  approval_opr?: string | null
   path?: string | null
   capture?: string | null
   capture_name?: string | null
@@ -94,10 +106,11 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-export function PendingPrintTab() {
+export function OrderTable() {
+  // Renamed component to match import in ManagerPage
   const router = useRouter()
   
-  const [orders, setOrders] = useState<ProductionOrderItem[]>([])
+  const [orders, setOrders] = useState<ApprovalOrderItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [pagination, setPagination] = useState<Pagination>({
@@ -111,14 +124,14 @@ export function PendingPrintTab() {
     order: "desc"
   })
 
-  const fetchProductionOrders = useCallback(async (page = 1, search = searchQuery) => {
+  const fetchApprovalOrders = useCallback(async (page = 1, search = searchQuery) => {
     setIsLoading(true);
     try {
-      const apiUrl = `/api/production/orders?page=${page}&pageSize=${pageSize}&search=${search}&filter=PENDINGPRINT`;
+      const apiUrl = `/api/manager/approval?page=${page}&pageSize=${pageSize}&search=${search}&filter=READYFORPROD`;
       const response = await fetch(apiUrl);
       
       if (!response.ok) {
-        throw new Error("Failed to fetch production orders");
+        throw new Error("Failed to fetch Approval orders");
       }
       
       const data = await response.json();
@@ -130,8 +143,8 @@ export function PendingPrintTab() {
         currentPage: data.currentPage || 1
       });
     } catch (error) {
-      console.error("Error fetching production orders:", error);
-      toast.error(`Failed to fetch production orders: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error fetching Approval orders:", error);
+      toast.error(`Failed to fetch Approval orders: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setOrders([]);
       setPagination({
         totalCount: 0,
@@ -148,15 +161,15 @@ export function PendingPrintTab() {
   }, [searchQuery])
 
   useEffect(() => {
-    fetchProductionOrders(pagination.currentPage, searchQuery)
-  }, [pagination.currentPage, pageSize, searchQuery, fetchProductionOrders])
+    fetchApprovalOrders(pagination.currentPage, searchQuery)
+  }, [pagination.currentPage, pageSize, searchQuery, fetchApprovalOrders])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchQuery(value)
     
     debounce(() => {
-      fetchProductionOrders(1, value)
+      fetchApprovalOrders(1, value)
     }, 500)()
   }
 
@@ -174,18 +187,124 @@ export function PendingPrintTab() {
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
-    fetchProductionOrders(newPage, searchQuery)
+    fetchApprovalOrders(newPage, searchQuery)
   }
 
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
-    fetchProductionOrders(1, searchQuery);
+    fetchApprovalOrders(1, searchQuery);
   }
 
-  const handleViewOrder = (order: ProductionOrderItem) => {
+  const handleViewOrder = (order: ApprovalOrderItem) => {
     router.push(`/order/view/${order.id}`)
   }
+const handleApproveOrder = async (order: ApprovalOrderItem) => {
+  try {
+    const response = await fetch('/api/auth/session');
+    if (!response.ok) {
+      throw new Error('Failed to fetch user session');
+    }
 
+    const session = await response.json();
+    const currentTime = new Date().toISOString();
+
+    if (session.user?.role === "Manager") {
+      const approvalResponse = await fetch(`/api/manager/approval/${order.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          approval_mng: "APPROVED",
+          manager_id: session.user.id,
+          tgl_app_manager: currentTime
+        })
+      });
+
+      if (!approvalResponse.ok) {
+        throw new Error('Failed to update manager approval');
+      }
+    } else if (session.user?.role === "Operation Manager") {
+      const approvalResponse = await fetch(`/api/manager/approval/${order.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          approval_opr: "APPROVED",
+          opr_id: session.user.id,
+          tgl_app_prod: currentTime
+        })
+      });
+
+      if (!approvalResponse.ok) {
+        throw new Error('Failed to update operation manager approval');
+      }
+    } else {
+      throw new Error('Unauthorized user role');
+    }
+
+    toast.success("Order approved successfully");
+  } catch (error) {
+    console.error("Error approving order:", error);
+    toast.error(`Failed to approve order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+const handleRejectOrder = async (order: ApprovalOrderItem) => {
+  try {
+    const response = await fetch('/api/auth/session');
+    if (!response.ok) {
+      throw new Error('Failed to fetch user session');
+    }
+
+    const session = await response.json();
+    const currentTime = new Date().toISOString();
+
+    if (session.user?.role === "Manager") {
+      const rejectResponse = await fetch(`/api/manager/approval/${order.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          approval_mng: "REJECTED",
+          manager_id: session.user.id,
+          tgl_app_manager: currentTime
+        })
+      });
+
+      if (!rejectResponse.ok) {
+        throw new Error('Failed to update manager rejection');
+      }
+    } else if (session.user?.role === "Operation Manager") {
+      const rejectResponse = await fetch(`/api/manager/approval/${order.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          approval_opr: "REJECTED",
+          opr_id: session.user.id,
+          tgl_app_prod: currentTime
+        })
+      });
+
+      if (!rejectResponse.ok) {
+        throw new Error('Failed to update operation manager rejection');
+      }
+    } else {
+      throw new Error('Unauthorized user role');
+    }
+
+    toast.success("Order rejected successfully");
+  } catch (error) {
+    console.error("Error rejecting order:", error);
+    toast.error(`Failed to reject order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+  
+           
   const getSortIcon = (field: string) => {
     if (ordersSorting.field !== field) return null
     return ordersSorting.order === "asc" ? 
@@ -202,11 +321,11 @@ export function PendingPrintTab() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="bg-transparent">
         <CardHeader>
-          <CardTitle>Pending Print Jobs</CardTitle>
+          <CardTitle>Approval List</CardTitle>
           <CardDescription>
-            Orders waiting to be printed
+            Orders ready for Approval with payment details
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -222,7 +341,7 @@ export function PendingPrintTab() {
                   onChange={handleSearchChange}
                 />
               </div>
-              <Button variant="outline" size="sm" onClick={() => fetchProductionOrders(pagination.currentPage, searchQuery)}>
+              <Button variant="outline" size="sm" onClick={() => fetchApprovalOrders(pagination.currentPage, searchQuery)}>
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Refresh
               </Button>
@@ -306,11 +425,19 @@ export function PendingPrintTab() {
                     <TableHead>Color Matching</TableHead>
                     <TableHead>Paper GSM</TableHead>
                     <TableHead>Paper Width</TableHead>
-                    <TableHead>Fabric Origins</TableHead>
-                    <TableHead>Fabric Name</TableHead>
+                    <TableHead>File Width</TableHead>
                     <TableHead>Fabric Width</TableHead>
+                    <TableHead>Fabric Origins</TableHead>
+                    <TableHead>Fabric Name</TableHead>                    
                     <TableHead>Status</TableHead>
+                    <TableHead>Capture</TableHead>
                     <TableHead>Notes</TableHead>
+                    <TableHead>DP</TableHead>
+                    <TableHead>Balance</TableHead>                    
+                    <TableHead>Total Price</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Payment Info</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -360,23 +487,83 @@ export function PendingPrintTab() {
                         {order.lebar_kertas || "N/A"}
                       </TableCell>
                       <TableCell>
-                        {order.asal_bahan || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {order.nama_kain || "N/A"}
+                        {order.lebar_file || "N/A"}
                       </TableCell>
                       <TableCell>
                         {order.lebar_kain || "N/A"}
                       </TableCell>
+                      <TableCell>
+                        {order.asal_bahan || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {order.nama_kain || "N/A"}
+                      </TableCell>                      
                       <TableCell>
                         <Badge variant="outline">
                           {order.status || "N/A"}
                         </Badge>
                       </TableCell>
                       <TableCell>
+                            <CaptureThumbnails
+                              capture={order.capture}
+                              captureName={order.capture_name}
+                              altText={order.nama_produk || "Design"}
+                            />
+                          </TableCell>
+                      <TableCell>
                         {order.catatan || "N/A"}
                       </TableCell>
+                      <TableCell>
+                        {(formatCurrency(order.dp)) || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {(formatCurrency(order.sisa)) || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {(formatCurrency(order.nominal)) || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                            <CaptureThumbnails
+                              tf_dp={order.tf_dp}
+                              tf_pelunasan={order.tf_pelunasan}
+                              altText={order.nama_produk || "Transfer"}
+                            />
+                          </TableCell>
+                      <TableCell>
+                        {order.biaya_tambahan || "N/A"}
+                      </TableCell>
+                          
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-32 h-8 bg-blue-500 text-white"
+                          onClick={() => handleViewOrder(order)}
+                        >
+                          <Eye className="h-4 w-4" />
+                          VIEW SPK
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-32 h-8 bg-green-500 text-white"
+                          onClick={() => handleApproveOrder(order)}
+                        >
+                          <Check className="h-4 w-4" />
+                          APPROVE
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-32 h-8 bg-red-500 text-white"
+                          onClick={() => handleRejectOrder(order)}
+                        >
+                          <X className="h-4 w-4" />
+                          REJECT
+                        </Button>
+                      </TableCell>
                     </TableRow>
+                    
                   ))}
                 </TableBody>
               </Table>

@@ -125,6 +125,7 @@ interface OrderItem {
   tf_pelunasan?: string | null
   catatan_tf?: string | null
   biaya_tambahan?: string | null
+  approval?: string | null
 }
 
 // Payment Form Data interface
@@ -514,7 +515,8 @@ const DpPaymentForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () =
           paymentMethod: formData.paymentMethod,
           payment: formData.payment,
           notes: formData.notes,
-          receiptPath: uploadedFilePath
+          receiptPath: uploadedFilePath,
+          approval: "APPROVED" // Set approval status when payment is made
         })
       })
       
@@ -978,7 +980,8 @@ const NoDpForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => voi
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          orderId: order.id
+          orderId: order.id,
+          approval: "APPROVED"
         })
       })
       

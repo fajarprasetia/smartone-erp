@@ -2,7 +2,7 @@
 const nextConfig = {
   /* config options here */
   images: {
-    domains: ['smartone.id'],
+    domains: ['smartone.id', 'erp.smartone.id'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -10,8 +10,14 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'erp.smartone.id',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
 
-export default nextConfig; 
+export default nextConfig;

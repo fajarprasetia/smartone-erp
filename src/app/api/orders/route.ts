@@ -153,6 +153,32 @@ export async function GET(req: NextRequest) {
           marketingUser = { name: order.marketing };
         }
       }
+
+      let designer_id = null;
+      if (order.designer_id) {
+        try {
+          // Try to interpret the designer_id field as a user ID
+          const user = await db.user.findUnique({
+            where: { id: order.designer_id },
+            select: { id: true, name: true, email: true }
+          });
+          
+          if (user) {
+            designer_id = {
+              id: user.id,
+              name: user.name,
+              email: user.email
+            };
+          } else {
+            // Fallback: treat designer as a plain string if not a valid user ID
+            designer_id = { name: order.designer_id };
+          }
+        } catch (error) {
+          console.error('Error fetching designer user:', error);
+          // Fallback to using the designer field as a name
+          designer_id = { name: order.designer_id };
+        }
+      }
       
       // Fetch fabric origin (asal_bahan) customer data
       let originCustomer = null;
@@ -192,6 +218,8 @@ export async function GET(req: NextRequest) {
         marketingUser,
         // Keep the old marketingInfo for backward compatibility
         marketingInfo: marketingUser || (order.marketing ? { name: order.marketing } : null),
+        // Include designer user data
+        designer_id,
         // Include fabric origin customer data
         originCustomer,
         // Override customer with fetched data if available
@@ -348,6 +376,7 @@ export async function POST(req: NextRequest) {
       statusprod: data.statusProduksi, // NEW or REPEAT
       kategori: data.kategori,
       est_order: data.targetSelesai, // Target completion date
+      designer_id: data.designer_id,
       // For DTF orders, clear all fabric-related fields
       nama_kain: isDtfOrder ? "" : (data.namaBahan || ""),
       jumlah_kain: isDtfOrder ? "" : (data.selectedFabric?.length || data.fabricLength || ""), // Use fabric length from the form
@@ -432,6 +461,7 @@ export async function POST(req: NextRequest) {
         } : undefined,
         spk: orderData.spk,
         marketing: orderData.marketing,
+        designer_id: orderData.designer_id,
         statusprod: orderData.statusprod,
         kategori: orderData.kategori,
         est_order: orderData.est_order,
