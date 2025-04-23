@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { PlusCircle, Search, RefreshCw, X, ChevronLeft, ChevronRight, ChevronsUpDown } from "lucide-react"
+import { PlusCircle, Search, RefreshCw, X, ChevronLeft, ChevronRight, ChevronsUpDown, Pencil } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, UseFormReturn } from "react-hook-form"
 import { z } from "zod"
@@ -143,11 +143,17 @@ export default function InventoryInboundPage() {
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [sortConfig, setSortConfig] = useState<{key: string; direction: 'asc' | 'desc'}>({key: '', direction: 'asc'})
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   
   // Handle form submission
   const handleFormSubmit = async (data: FormValues) => {
     try {
       const formData = new FormData();
+      
+      // Add the ID if we're editing
+      if (selectedItem) {
+        formData.append('id', selectedItem.id.toString());
+      }
       
       // Format data to uppercase as required
       formData.append('nama_bahan', data.nama_bahan.toUpperCase());
@@ -176,20 +182,27 @@ export default function InventoryInboundPage() {
         });
       }
       
-      const response = await fetch("/api/inventory/inbound", {
-        method: "POST",
+      const url = selectedItem 
+        ? `/api/inventory/inbound/${selectedItem.id}` 
+        : "/api/inventory/inbound";
+      
+      const method = selectedItem ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method: method,
         body: formData
       });
       
       if (!response.ok) {
-        throw new Error("Failed to create inventory item")
+        throw new Error(selectedItem ? "Failed to update inventory item" : "Failed to create inventory item");
       }
       
       // Show success toast notification
-      toast.success("Inventory item added successfully")
+      toast.success(selectedItem ? "Inventory item updated successfully" : "Fabric added successfully");
       
-      // Close the dialog
-      setIsAddDialogOpen(false)
+      // Close the dialog and reset selected item
+      setIsAddDialogOpen(false);
+      setSelectedItem(null);
       
       // Reset search query to ensure new item appears in the list
       setSearchQuery("");
@@ -197,8 +210,8 @@ export default function InventoryInboundPage() {
       // Refresh the inventory list
       fetchInventory(1, pageSize);
     } catch (error) {
-      console.error("Error creating inventory item:", error)
-      toast.error("Failed to add inventory item")
+      console.error(selectedItem ? "Error updating inventory item:" : "Error creating inventory item:", error);
+      toast.error(selectedItem ? "Failed to update inventory item" : "Failed to add inventory item");
     }
   }
   
@@ -336,6 +349,12 @@ if (!response.ok) {
       pageCount: Math.ceil(filteredItems.length / newSize)
     }));
   }
+
+  // Add handleEditItem function
+  const handleEditItem = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setIsAddDialogOpen(true);
+  };
 
   return (
     <div className="container mx-auto space-y-4 h-full flex flex-col overflow-visible">
@@ -497,6 +516,7 @@ if (!response.ok) {
                       </TableHead>
                       <TableHead className="w-[15%]">Notes</TableHead>
                       <TableHead className="w-[10%]">Capture</TableHead>
+                      <TableHead className="w-[10%] text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -532,6 +552,17 @@ if (!response.ok) {
                                 className="h-10 w-10 object-cover rounded"
                               />
                             ) : "N/A"}
+                          </TableCell>
+                          <TableCell className="py-3 text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditItem(item)}
+                              className="h-8 bg-transparent border-border/50 hover:bg-background/10"
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1" />
+                              Edit
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -623,9 +654,13 @@ if (!response.ok) {
       {/* Add New Item Dialog */}
       <InboundForm
         open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
+        onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) setSelectedItem(null);
+        }}
         customers={customers}
         onSubmit={handleFormSubmit}
+        initialData={selectedItem}
       />
     </div>
   )

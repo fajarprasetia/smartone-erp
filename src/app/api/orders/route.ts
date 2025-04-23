@@ -25,6 +25,21 @@ function serializeData(data: any): any {
   );
 }
 
+// Add a serialization function to handle BigInt values
+function serializeOrderData(data: any) {
+  return JSON.parse(JSON.stringify(data, (key, value) => {
+    // Convert BigInt to string
+    if (typeof value === 'bigint') {
+      return value.toString();
+    }
+    // Handle Date objects
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    return value;
+  }));
+}
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
@@ -263,24 +278,61 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     console.log("[API] Creating order with data:", data);
 
+    // Improve the project number generation with better querying and error handling
     // Generate project number (SO-XXXXXXXX format)
-    const latestOrder = await db.order.findFirst({
-      orderBy: {
-        no_project: 'desc'
-      },
-      select: {
-        no_project: true
-      }
-    });
-
     let nextProjectNumber = 1;
-    if (latestOrder?.no_project) {
-      const match = latestOrder.no_project.match(/SO-(\d+)/);
-      if (match && match[1]) {
-        nextProjectNumber = parseInt(match[1], 10) + 1;
+    try {
+      // Find the most recent order by project number
+      const latestOrders = await db.order.findMany({
+        where: {
+          no_project: {
+            startsWith: 'SO-',
+            not: null
+          }
+        },
+        orderBy: {
+          no_project: 'desc'
+        },
+        take: 10,
+        select: {
+          no_project: true
+        }
+      });
+      
+      console.log(`[API] Found ${latestOrders.length} latest orders with project numbers`);
+      
+      // Analyze each of the latest orders to find the highest number
+      if (latestOrders.length > 0) {
+        let highestNumber = 0;
+        
+        for (const order of latestOrders) {
+          if (!order.no_project) continue;
+          
+          const match = order.no_project.match(/SO-(\d+)/);
+          if (match && match[1]) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > highestNumber) {
+              highestNumber = num;
+            }
+          }
+        }
+        
+        if (highestNumber > 0) {
+          nextProjectNumber = highestNumber + 1;
+          console.log(`[API] Found highest project number: ${highestNumber}, incrementing to ${nextProjectNumber}`);
+        } else {
+          console.log(`[API] Could not find valid project numbers among the latest orders`);
+        }
+      } else {
+        console.log(`[API] No existing project numbers found, starting at 1`);
       }
+    } catch (error) {
+      console.error(`[API] Error finding latest project number:`, error);
     }
+    
+    // Format with 8 digits, padded with zeros
     const projectNumber = `SO-${nextProjectNumber.toString().padStart(8, '0')}`;
+    console.log(`[API] Generated project number: ${projectNumber}`);
 
     // Convert quantity from yards to meters if needed
     const quantity = data.unit === "yard" 
@@ -291,7 +343,7 @@ export async function POST(req: NextRequest) {
     const additionalCosts = data.additionalCosts || [];
     // Prepare additional costs mappings
     const additionalCostFields: Record<string, any> = {};
-    
+
     additionalCosts.forEach((cost: { item?: string; pricePerUnit?: string; unitQuantity?: string; total?: string }, index: number) => {
       if (index === 0) {
         additionalCostFields.tambah_cutting = cost.item || "";
@@ -362,7 +414,7 @@ export async function POST(req: NextRequest) {
 
     // Process asalBahanId
     console.log("[API] Processing Asal Bahan - ID:", data.asalBahanId, "Name:", data.asalBahan);
-    
+
     // Check if this is a DTF order
     const isDtfOrder = data.jenisProduk?.DTF === true || productType === "DTF";
     console.log("[API] Is DTF order:", isDtfOrder);
@@ -386,10 +438,15 @@ export async function POST(req: NextRequest) {
       lebar_kertas: data.lebarKertas || "", // Paper width
       lebar_file: data.fileWidth || "", // File width
       warna_acuan: matchingColorValue, // YES -> ADA, NO -> TIDAK ADA
-      produk: Array.from(Object.entries(data.jenisProduk || {}))
-        .filter(([_, selected]) => selected)
-        .map(([type]) => type)
-        .join(", "), // Selected product types as comma-separated string
+      
+      // Process the product types correctly - for historical reasons, this needs to be the string of keys
+      produk: typeof data.jenisProduk === 'string' 
+        ? data.jenisProduk // Use directly if it's already a string (old format)
+        : Object.entries(data.jenisProduk || {})
+            .filter(([_, selected]) => selected)
+            .map(([type]) => type)
+            .join(", "), // Selected product types as comma-separated string
+            
       tipe_produk: productType, // Store the determined product type
       path: data.fileDesain || "", // Design file URL
       qty: quantity, // Quantity in meters
@@ -416,131 +473,157 @@ export async function POST(req: NextRequest) {
       } : {})
     };
 
-    // Handle asalBahanId based on the data - skip for DTF orders
-    if (!isDtfOrder) {
-      if (data.asalBahanId) {
-        try {
-          if (/^\d+$/.test(data.asalBahanId)) {
-            orderData.asal_bahan_id = BigInt(data.asalBahanId);
-            console.log("[API] Set asal_bahan_id to BigInt:", orderData.asal_bahan_id.toString());
-          } else {
-            console.log("[API] asalBahanId is not numeric, setting as null");
-            orderData.asal_bahan = data.asalBahanId;
-          }
-        } catch (error) {
-          console.error("[API] Error converting asalBahanId to BigInt:", error);
-        }
-      } else if (data.asalBahan) {
-        try {
-          if (/^\d+$/.test(data.asalBahan)) {
-            orderData.asal_bahan_id = BigInt(data.asalBahan);
-            console.log("[API] Used asalBahan as asal_bahan_id:", orderData.asal_bahan_id.toString());
-          } else {
-            orderData.asal_bahan = data.asalBahan;
-            console.log("[API] Set asal_bahan to string value:", data.asalBahan);
-          }
-        } catch (error) {
-          console.error("[API] Error processing asalBahan:", error);
-          orderData.asal_bahan = data.asalBahan;
-        }
-      }
-    } else {
-      console.log("[API] DTF order detected: skipping fabric origin processing");
+    // Handle fabric origin (asal_bahan) based on the selection
+    console.log("[API] Processing fabric origin - asalBahan:", data.asalBahan, "customerId:", data.customerId);
+
+    // If asalBahan is SMARTONE, set asal_bahan_rel as relation
+    if (data.asalBahan === "SMARTONE") {
+      orderData.asalBahanRelId = "22";
+      console.log("[API] Set asal_bahan_rel to 22 for SMARTONE fabric origin");
+    }
+    // If asalBahan is CUSTOMER, use the customer's ID
+    else if (data.asalBahan === "CUSTOMER" && data.customerId) {
+      orderData.asalBahanRelId = data.customerId.toString();
+      console.log("[API] Set asal_bahan_rel to customer ID:", data.customerId);
+    }
+    // Handle legacy or alternative field names
+    else if (data.asalBahanId) {
+      orderData.asalBahanRelId = data.asalBahanId.toString();
+      console.log("[API] Set asal_bahan_rel using asalBahanId:", data.asalBahanId);
+    }
+
+    if (isDtfOrder) {
+      console.log("[API] DTF order detected: fabric origin will still be saved");
     }
 
     console.log("[API] Final order data for creation:", JSON.stringify(orderData, (key, value) => 
       typeof value === "bigint" ? value.toString() : value
     ));
 
-    // Create order in database
-    const order = await db.order.create({
-      data: {
-        // Replace customerId with proper customer relation
-        customer: customerIdValue ? {
-          connect: { id: customerIdValue }
-        } : undefined,
-        spk: orderData.spk,
-        marketing: orderData.marketing,
-        designer_id: orderData.designer_id,
-        statusprod: orderData.statusprod,
-        kategori: orderData.kategori,
-        est_order: orderData.est_order,
-        nama_kain: orderData.nama_kain,
-        jumlah_kain: orderData.jumlah_kain,
-        lebar_kain: orderData.lebar_kain,
-        nama_produk: orderData.nama_produk,
-        gramasi: orderData.gramasi,
-        lebar_kertas: orderData.lebar_kertas,
-        lebar_file: orderData.lebar_file,
-        warna_acuan: orderData.warna_acuan,
-        produk: orderData.produk,
-        tipe_produk: orderData.tipe_produk,
-        path: orderData.path,
-        qty: orderData.qty,
-        panjang_order: orderData.panjang_order,
-        harga_satuan: orderData.harga_satuan,
-        tambah_cutting: orderData.tambah_cutting,
-        satuan_cutting: orderData.satuan_cutting,
-        qty_cutting: orderData.qty_cutting,
-        total_cutting: orderData.total_cutting,
-        tambah_bahan: orderData.tambah_bahan,
-        diskon: orderData.diskon,
-        nominal: orderData.nominal,
-        catatan: orderData.catatan,
-        statusm: orderData.statusm,
-        status: orderData.status,
-        // Replace userId with proper user relation
-        user: {
-          connect: { id: session.user.id }
-        },
-        keterangan: orderData.keterangan,
-        created_at: orderData.created_at,
-        prioritas: orderData.prioritas,
-        no_project: orderData.no_project,
-        // Handle asal_bahan connection correctly - only use the relation if we have an ID 
-        // and it's not a DTF order
-        ...(!isDtfOrder && orderData.asal_bahan_id ? { 
-          asal_bahan_rel: { 
-            connect: { id: orderData.asal_bahan_id } 
-          } 
-        } : {}), // Don't set asal_bahan at all if no ID or DTF order
-        // Include additional costs fields 1-5
-        tambah_cutting1: orderData.tambah_cutting1 || null,
-        satuan_cutting1: orderData.satuan_cutting1 || null,
-        qty_cutting1: orderData.qty_cutting1 || null,
-        total_cutting1: orderData.total_cutting1 || null,
-        tambah_cutting2: orderData.tambah_cutting2 || null,
-        satuan_cutting2: orderData.satuan_cutting2 || null,
-        qty_cutting2: orderData.qty_cutting2 || null,
-        total_cutting2: orderData.total_cutting2 || null,
-        tambah_cutting3: orderData.tambah_cutting3 || null,
-        satuan_cutting3: orderData.satuan_cutting3 || null,
-        qty_cutting3: orderData.qty_cutting3 || null,
-        total_cutting3: orderData.total_cutting3 || null,
-        tambah_cutting4: orderData.tambah_cutting4 || null,
-        satuan_cutting4: orderData.satuan_cutting4 || null,
-        qty_cutting4: orderData.qty_cutting4 || null,
-        total_cutting4: orderData.total_cutting4 || null,
-        tambah_cutting5: orderData.tambah_cutting5 || null,
-        satuan_cutting5: orderData.satuan_cutting5 || null,
-        qty_cutting5: orderData.qty_cutting5 || null,
-        total_cutting5: orderData.total_cutting5 || null,
-        // Add the unit field as satuan_bahan
-        satuan_bahan: data.unit
-      }
-    });
+    // Use a transaction to ensure SPK uniqueness during order creation
+    const result = await db.$transaction(async (tx) => {
+      // First, check if an order with this SPK already exists
+      const existingOrder = await tx.order.findFirst({
+        where: {
+          spk: orderData.spk
+        }
+      });
 
-    console.log(`[API] Created order with ID: ${order.id}`);
+      if (existingOrder) {
+        throw new Error(`An order with SPK ${orderData.spk} already exists. Please generate a new SPK.`);
+      }
+
+      // Create order in database
+      const order = await tx.order.create({
+        data: {
+          // Use 'customer' with connect rather than 'customerId'
+          customer: customerIdValue ? {
+            connect: { id: customerIdValue }
+          } : undefined,
+          
+          // Other fields
+          spk: orderData.spk,
+          marketing: orderData.marketing,
+          designer_id: orderData.designer_id,
+          statusprod: orderData.statusprod,
+          kategori: orderData.kategori,
+          est_order: orderData.est_order,
+          nama_kain: orderData.nama_kain,
+          jumlah_kain: orderData.jumlah_kain,
+          lebar_kain: orderData.lebar_kain,
+          nama_produk: orderData.nama_produk,
+          gramasi: orderData.gramasi,
+          lebar_kertas: orderData.lebar_kertas,
+          lebar_file: orderData.lebar_file,
+          warna_acuan: orderData.warna_acuan,
+          produk: orderData.produk,
+          tipe_produk: orderData.tipe_produk,
+          path: orderData.path,
+          qty: orderData.qty,
+          panjang_order: orderData.panjang_order,
+          harga_satuan: orderData.harga_satuan,
+          tambah_cutting: orderData.tambah_cutting,
+          satuan_cutting: orderData.satuan_cutting,
+          qty_cutting: orderData.qty_cutting,
+          total_cutting: orderData.total_cutting,
+          tambah_bahan: orderData.tambah_bahan,
+          diskon: orderData.diskon,
+          nominal: orderData.nominal,
+          catatan: orderData.catatan,
+          statusm: orderData.statusm,
+          status: orderData.status,
+          
+          // Use direct connection for user
+          user: {
+            connect: { id: session.user.id }
+          },
+          
+          keterangan: orderData.keterangan,
+          created_at: orderData.created_at,
+          prioritas: orderData.prioritas,
+          no_project: orderData.no_project,
+          
+          // Handle asal_bahan_rel correctly using relation syntax
+          asal_bahan_rel: orderData.asalBahanRelId ? {
+            connect: { id: BigInt(orderData.asalBahanRelId) }
+          } : undefined,
+          
+          // Include additional costs fields 1-5
+          tambah_cutting1: orderData.tambah_cutting1 || null,
+          satuan_cutting1: orderData.satuan_cutting1 || null,
+          qty_cutting1: orderData.qty_cutting1 || null,
+          total_cutting1: orderData.total_cutting1 || null,
+          tambah_cutting2: orderData.tambah_cutting2 || null,
+          satuan_cutting2: orderData.satuan_cutting2 || null,
+          qty_cutting2: orderData.qty_cutting2 || null,
+          total_cutting2: orderData.total_cutting2 || null,
+          tambah_cutting3: orderData.tambah_cutting3 || null,
+          satuan_cutting3: orderData.satuan_cutting3 || null,
+          qty_cutting3: orderData.qty_cutting3 || null,
+          total_cutting3: orderData.total_cutting3 || null,
+          tambah_cutting4: orderData.tambah_cutting4 || null,
+          satuan_cutting4: orderData.satuan_cutting4 || null,
+          qty_cutting4: orderData.qty_cutting4 || null,
+          total_cutting4: orderData.total_cutting4 || null,
+          tambah_cutting5: orderData.tambah_cutting5 || null,
+          satuan_cutting5: orderData.satuan_cutting5 || null,
+          qty_cutting5: orderData.qty_cutting5 || null,
+          total_cutting5: orderData.total_cutting5 || null,
+          // Add the unit field as satuan_bahan
+          satuan_bahan: data.unit
+        }
+      });
+
+      // Delete the temporary SPK reservation since it's now being used
+      try {
+        await tx.tempSpkReservation.deleteMany({
+          where: {
+            spk: orderData.spk
+          }
+        });
+        console.log(`[API] Removed temporary reservation for SPK: ${orderData.spk}`);
+      } catch (error) {
+        console.error(`[API] Error removing temporary SPK reservation: ${error}`);
+        // Non-critical, continue with the transaction
+      }
+
+      console.log(`[API] Created order with ID: ${order.id}`);
+      return order;
+    }, {
+      // Longer timeout for complex transactions
+      timeout: 15000
+    });
 
     return NextResponse.json({
-      success: true,
-      message: "Order created successfully",
-      orderId: order.id,
-      projectNumber
-    });
+        success: true,
+        message: "Order created successfully",
+        order: serializeOrderData(result),
+        projectNumber: projectNumber
+      },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("Error creating order:", error);
-    
     return NextResponse.json(
       {
         error: "Failed to create order",

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { customer } from '@prisma/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,7 +31,6 @@ const formSchema = z.object({
     },
     { message: 'Please enter a valid phone number' }
   ),
-
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -38,13 +38,19 @@ type FormValues = z.infer<typeof formSchema>
 interface CustomerFormDialogProps {
   open: boolean
   customer: customer | null
-  onClose: (refresh: boolean) => void
+  onClose: (refresh: boolean, newCustomerId?: string) => void
   isWhatsAppContact?: boolean
 }
 
 export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppContact = false }: CustomerFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
+  // Track mounting state for client-side only code
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
   
   const isEditing = !!customer
   
@@ -97,8 +103,8 @@ export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppConta
       
       // Using the new API endpoints
       const url = isEditing 
-        ? `/api/marketing/customers-new/${customer.id}` 
-        : '/api/marketing/customers-new'
+        ? `/api/marketing/customers/${customer.id}` 
+        : '/api/marketing/customers'
       
       const method = isEditing ? 'PUT' : 'POST'
       
@@ -110,9 +116,32 @@ export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppConta
         body: JSON.stringify(payload),
       })
       
+      // Get the response data early
+      const responseData = await res.json();
+      
       if (!res.ok) {
-        throw new Error('Failed to save customer')
+        const errorMessage = responseData.error || 'Failed to save customer'
+        
+        // Check if it's a phone number already exists error
+        if (errorMessage.includes('phone number registered to')) {
+          toast({
+            title: 'Phone Number Already Exists',
+            description: errorMessage,
+            variant: 'destructive',
+          })
+        } else {
+          toast({
+            title: 'Error',
+            description: errorMessage,
+            variant: 'destructive',
+          })
+        }
+        
+        throw new Error(errorMessage)
       }
+      
+      // Extract the customer ID from the response
+      const customerId = responseData.id || (isEditing ? customer?.id : null);
       
       toast({
         title: isEditing ? 'Customer updated' : 'Customer added',
@@ -121,104 +150,107 @@ export function CustomerFormDialogNew({ open, customer, onClose, isWhatsAppConta
           : `${data.nama} has been added successfully.`,
       })
       
-      onClose(true) // Close dialog and refresh data
+      // Pass the customer ID when closing the dialog
+      onClose(true, customerId)
     } catch (error) {
       console.error('Error saving customer:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to save customer. Please try again.',
-        variant: 'destructive',
-      })
+      // Toast is already shown in the error handling above
     } finally {
       setIsSubmitting(false)
     }
   }
   
-  if (!open) return null
+  // If not mounted or not open, return nothing
+  if (!mounted || !open) return null
   
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50"
+  // Create a modal structure that works well with portals
+  const ModalContent = (
+    <>
+      {/* Backdrop overlay */}
+      <div 
+        className="fixed inset-0 bg-black/50" 
         onClick={() => onClose(false)}
       />
-
-      {/* Modal */}
-      <div className="bg-background z-50 rounded-lg border shadow-lg w-full max-w-lg mx-4 overflow-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <div>
-            <h2 className="text-lg font-semibold">
+      
+      {/* Centering container */}
+      <div className="fixed inset-0 flex items-center justify-center">
+        {/* Modal container */}
+        <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4 overflow-auto max-h-[90vh]">
+          {/* Header */}
+          <div className="sticky top-0 bg-background border-b p-4 flex justify-between items-center">
+            <h2 className="text-xl font-semibold">
               {isEditing ? 'Edit Customer' : 'Add New Customer'}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {isEditing 
-                ? 'Update customer details below' 
-                : 'Fill in the required information to add a new customer'}
-            </p>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onClose(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onClose(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                    control={form.control}
-                    name="nama"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder={isEditing ? customer.nama || 'Enter customer name' : 'Enter customer name'} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="telp"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder={isEditing ? customer.telp || 'Enter phone number' : 'Enter phone number'} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-              <div
-                className={cn(
-                  "flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4"
-                )}
-              >
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onClose(false)}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting 
-                    ? 'Saving...' 
-                    : (isEditing ? 'Save Changes' : 'Add Customer')}
-                </Button>
-              </div>
-            </form>
-          </Form>
+          
+          {/* Form content */}
+          <div className="p-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="nama"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter customer name" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="telp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter phone number" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onClose(false)}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting 
+                      ? 'Saving...' 
+                      : (isEditing ? 'Save Changes' : 'Add Customer')}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
+  
+  // Use portal to render outside of the DOM hierarchy
+  return createPortal(ModalContent, document.getElementById('modal-root') || document.body);
 }

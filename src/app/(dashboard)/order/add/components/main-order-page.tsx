@@ -61,8 +61,57 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
     isLoadingPaperGsm,
     isLoadingPaperWidth,
     setInitialData,
-    fetchSpkNumber
-  } = useOrderData()
+    fetchSpkNumber,
+    refreshCustomers
+  } = useOrderData(mode, initialData)
+
+  // Get special product type if only one is selected
+  const getSpecialProductType = () => {
+    const productTypes = form.getValues("jenisProduk");
+    
+    // Check if only one product type is selected
+    if (productTypes) {
+      const selectedCount = Object.values(productTypes).filter(Boolean).length;
+      
+      if (selectedCount === 1) {
+        if (productTypes.PRINT) return "PRINT ONLY";
+        if (productTypes.PRESS) return "PRESS ONLY";
+        if (productTypes.CUTTING) return "CUTTING ONLY";
+      }
+    }
+    
+    return null;
+  };
+
+  // Modify the submission handler to handle special product types
+  const handleSubmit = async (data: OrderFormValues) => {
+    // Check if a special product type is needed
+    const specialProductType = getSpecialProductType();
+    
+    if (specialProductType) {
+      // Create a copy of the data
+      const modifiedData = { ...data };
+      
+      // Add the special product type to the notes for visibility
+      if (modifiedData.notes) {
+        if (!modifiedData.notes.includes(specialProductType)) {
+          modifiedData.notes = `${modifiedData.notes} [${specialProductType}]`;
+        }
+      } else {
+        modifiedData.notes = `[${specialProductType}]`;
+      }
+      
+      // Set produk field directly for API consumption
+      // @ts-ignore - Adding property for API that's not in the type
+      modifiedData.produk = specialProductType;
+      
+      // Submit with the special product type information
+      await onSubmit(modifiedData);
+    } else {
+      // Normal submission for multiple product types or other scenarios
+      await onSubmit(data);
+    }
+  };
 
   // Initialize with data if in edit mode
   useEffect(() => {
@@ -128,7 +177,7 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 w-full">
               {/* Customer and Marketing Section */}
               <CustomerSection
                 form={form}
@@ -144,6 +193,7 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
                 setIsMarketingOpen={setIsMarketingOpen}
                 spkNumber={spkNumber}
                 fetchSpkNumber={fetchSpkNumber}
+                refreshCustomers={refreshCustomers}
               />
 
               {/* Order Detail Section */}

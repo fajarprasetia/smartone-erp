@@ -126,6 +126,7 @@ interface OrderItem {
   catatan_tf?: string | null
   biaya_tambahan?: string | null
   approval?: string | null
+  keterangan?: string | null // Field used for invoice status (SUDAH/BELUM DIINVOICEKAN)
 }
 
 // Payment Form Data interface
@@ -1226,40 +1227,52 @@ export default function OrderPage() {
   }
   
   // Fetch payments
-  const fetchPayments = async (page = 1, pageSize = 10, searchTerm = "", sorting: SortOption = paymentsSorting) => {
+  const fetchPayments = async (
+    page = 1,
+    pageSize = 10,
+    searchTerm = "",
+    sorting: SortOption = paymentsSorting,
+  ) => {
     try {
-      setIsPaymentsLoading(true)
+      setIsPaymentsLoading(true);
       // Get orders that need payment processing
-      let url = `/api/orders?page=${page}&pageSize=${pageSize}&sortField=${sorting.field}&sortOrder=${sorting.order}&exclude=PENDING`
-      
+      // Add keterangan filter for Settled tab
+      let url = `/api/orders?page=${page}&pageSize=${pageSize}&sortField=${
+        sorting.field
+      }&sortOrder=${sorting.order}&exclude=PENDING`;
+
       if (searchTerm) {
-        url += `&search=${encodeURIComponent(searchTerm)}`
+        url += `&search=${encodeURIComponent(searchTerm)}`;
       }
-      
-      const response = await fetch(url)
-      
+
+      // Add filter for invoiced orders
+      if (activeTab === "payments") {
+        url += "&keterangan=SUDAH%20DIINVOICEKAN";
+      }
+
+      const response = await fetch(url);
+
       if (!response.ok) {
-        throw new Error("Failed to fetch payment orders")
+        throw new Error("Failed to fetch payment orders");
       }
-      
-      const data = await response.json()
-      
-      setPayments(data.orders || [])
-      
+
+      const data = await response.json();
+
+      setPayments(data.orders || []);
+
       // Update pagination with the server-provided counts
       setPaymentsPagination({
         totalCount: data.totalCount || 0,
         totalPages: data.totalPages || 1,
-        currentPage: data.currentPage || 1
-      })
-      
+        currentPage: data.currentPage || 1,
+      });
     } catch (error) {
-      console.error("Error fetching payment orders:", error)
-      toast.error("Failed to load payment orders")
+      console.error("Error fetching payment orders:", error);
+      toast.error("Failed to load payment orders");
     } finally {
-      setIsPaymentsLoading(false)
+      setIsPaymentsLoading(false);
     }
-  }
+  };
   
   // Reset to page 1 when search query changes
   useEffect(() => {
@@ -2153,9 +2166,8 @@ export default function OrderPage() {
         <TabsContent value="payments" className="space-y-4 mt-0">
           {/* Payment Status Tabs */}
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 grid grid-cols-3 w-full md:w-[400px] mb-4">
+            <TabsList className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 grid grid-cols-2 w-full md:w-[400px] mb-4">
               <TabsTrigger value="all">All Payments</TabsTrigger>
-              <TabsTrigger value="settled">Settled</TabsTrigger>
               <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
             </TabsList>
 
@@ -2349,90 +2361,6 @@ export default function OrderPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="settled">
-              <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
-                <CardHeader className="pb-2">
-                  <CardTitle>Settled Orders</CardTitle>
-                  <CardDescription>
-                    Orders with completed payments.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col overflow-visible">
-                  {isPaymentsLoading ? (
-                    <div className="space-y-2">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <div key={index} className="flex space-x-4 items-center">
-                          <Skeleton className="h-12 w-full" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-md border flex-1 flex flex-col">
-                      <div className="overflow-auto flex-1">
-                        <Table>
-                          <TableHeader className="sticky top-0 bg-background/50 z-10">
-                            <TableRow>
-                              <SortableTableHead field="created_at" sorting={paymentsSorting} onSort={handlePaymentsSort}>Date</SortableTableHead>
-                              <SortableTableHead field="no_project" sorting={paymentsSorting} onSort={handlePaymentsSort}>No Project</SortableTableHead>
-                              <SortableTableHead field="spk" sorting={paymentsSorting} onSort={handlePaymentsSort}>SPK</SortableTableHead>
-                              <TableHead>Customer</TableHead>
-                              <SortableTableHead field="produk" sorting={paymentsSorting} onSort={handlePaymentsSort}>Product</SortableTableHead>
-                              <TableHead>Status</TableHead>
-                              <SortableTableHead field="nominal" sorting={paymentsSorting} onSort={handlePaymentsSort}>Total</SortableTableHead>
-                              <SortableTableHead field="tgl_lunas" sorting={paymentsSorting} onSort={handlePaymentsSort}>Payment Date</SortableTableHead>
-                              <TableHead>Payment Method</TableHead>
-                              <TableHead>Receipts</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {payments.filter(order => order.biaya_tambahan === "LUNAS").length === 0 ? (
-                              <TableRow>
-                                <TableCell colSpan={10} className="text-center py-6 text-muted-foreground">
-                                  {paymentsSearchQuery 
-                                    ? "No settled orders match your search criteria" 
-                                    : "No settled orders found"}
-                                </TableCell>
-                              </TableRow>
-                            ) : (
-                              payments
-                                .filter(order => order.biaya_tambahan === "LUNAS")
-                                .map((order) => (
-                                  <TableRow key={order.id} className="hover:bg-muted/50">
-                                    <TableCell>{formatDate(order.created_at || order.tanggal)}</TableCell>
-                                    <TableCell>{order.no_project || "N/A"}</TableCell>
-                                    <TableCell>
-                                      <span 
-                                        className="text-primary hover:text-primary/80 cursor-pointer hover:underline"
-                                        onClick={() => handleSpkClick(order)}
-                                      >
-                                        {order.spk || "N/A"}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell>{order.customer?.nama || "N/A"}</TableCell>
-                                    <TableCell>{order.produk || "N/A"}</TableCell>
-                                    <TableCell>{getStatusBadge(order.status || order.statusm)}</TableCell>
-                                    <TableCell>{formatCurrency(order.nominal || 0)}</TableCell>
-                                    <TableCell>{formatDate(order.tgl_lunas)}</TableCell>
-                                    <TableCell>{order.jenis_pembayaran || "N/A"}</TableCell>
-                                    <TableCell>
-                                      <CaptureThumbnails
-                                        tf_dp={order.tf_dp}
-                                        tf_pelunasan={order.tf_pelunasan}
-                                        altText="Payment"
-                                      />
-                                    </TableCell>
-                                  </TableRow>
-                                ))
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="unpaid">
               <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm mb-6 flex-1 flex flex-col overflow-visible">
                 <CardHeader className="pb-2">
@@ -2468,7 +2396,10 @@ export default function OrderPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {payments.filter(order => order.biaya_tambahan !== "LUNAS" && order.biaya_tambahan !== "DP" && order.biaya_tambahan !== "NO DP").length === 0 ? (
+                            {payments.filter(order => 
+                              // Unpaid orders: orders where 'sisa' value is not "0" including [null]
+                              order.sisa !== 0 || order.sisa === null
+                            ).length === 0 ? (
                               <TableRow>
                                 <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
                                   {paymentsSearchQuery 
@@ -2478,7 +2409,10 @@ export default function OrderPage() {
                               </TableRow>
                             ) : (
                               payments
-                                .filter(order => order.biaya_tambahan !== "LUNAS" && order.biaya_tambahan !== "DP" && order.biaya_tambahan !== "NO DP")
+                                .filter(order => 
+                                  // Unpaid orders: orders where 'sisa' value is not "0" including [null]
+                                  order.sisa !== 0 || order.sisa === null
+                                )
                                 .map((order) => (
                                   <TableRow key={order.id} className="hover:bg-muted/50">
                                     <TableCell>{formatDate(order.created_at || order.tanggal)}</TableCell>

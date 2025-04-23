@@ -15,13 +15,49 @@ export function formatDate(date: Date): string {
   }).format(date)
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+/**
+ * Format a number as Indonesian Rupiah
+ * @param amount The amount to format
+ * @param options Options for formatting
+ * @returns Formatted currency string
+ */
+export function formatCurrency(
+  amount: number | string,
+  options: { 
+    locale?: string, 
+    currency?: string,
+    minimumFractionDigits?: number,
+    maximumFractionDigits?: number
+  } = {}
+): string {
+  const {
+    locale = 'id-ID',
+    currency = 'IDR',
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 0
+  } = options;
+
+  // Convert string to number if needed
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  
+  // Handle NaN or invalid values
+  if (isNaN(numAmount)) {
+    return `${currency} 0`;
+  }
+
+  try {
+    // Format using Intl.NumberFormat
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits,
+      maximumFractionDigits
+    }).format(numAmount);
+  } catch (error) {
+    // Fallback formatting if Intl.NumberFormat fails
+    console.error('Error formatting currency:', error);
+    return `${currency} ${numAmount.toFixed(minimumFractionDigits).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+  }
 }
 
 export function formatNumber(amount: number): string {

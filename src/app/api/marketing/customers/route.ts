@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
       if (existingTelp) {
         return NextResponse.json(
-          { error: 'Customer with this phone number already exists' },
+          { error: `This phone number registered to ${existingTelp.nama}` },
           { status: 400 }
         );
       }

@@ -1,5 +1,4 @@
-import { Tabs, TabsList as TabList, TabsTrigger as TabTrigger, TabsContent as TabContent } from '@/components/ui/tabs'
-import { OrderTable } from '@/components/approval-table'
+import { OrderTable } from '@/components/manager/approval-table'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -13,37 +12,11 @@ export default async function ManagerPage() {
         <h2 className="text-3xl font-bold tracking-tight">Manager Approvals</h2>
       </div>
       
-      <Tabs defaultValue="pending" className="w-full">
-        <TabList className="bg-transparent border-b border-border w-full">
-          <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="pending">Pending Approvals</TabTrigger>
-          <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="approved">Approved</TabTrigger>
-          <TabTrigger className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none" value="rejects">Rejects</TabTrigger>
-        </TabList>
-        
-        <TabContent value="pending">
-          <OrderTable 
-            approvalStatus="pending"
-            role={role}
-            showActions
-          />
-        </TabContent>
-
-        <TabContent value="approved">
-          <OrderTable 
-            approvalStatus="approved"
-            role={role}
-            showStatus
-          />
-        </TabContent>
-
-        <TabContent value="rejects">
-          <OrderTable 
-            approvalStatus="rejects"
-            role={role}
-            showStatus
-          />
-            </TabContent>
-      </Tabs>
+      <OrderTable 
+        approvalStatus="pending"
+        role={role}
+        showActions
+      />
     </div>
   )
 }

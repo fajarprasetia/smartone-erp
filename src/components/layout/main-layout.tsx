@@ -96,6 +96,9 @@ export function MainLayout({ children }: MainLayoutProps) {
           }
         }
       `}</style>
+      
+      {/* Modal portal container - high z-index */}
+      <div id="modal-root" style={{ position: 'fixed', zIndex: 9999 }} />
     </div>
   );
 } 

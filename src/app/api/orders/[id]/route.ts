@@ -44,16 +44,19 @@ const orderUpdateSchema = z.object({
     })
   ).optional(),
   totalPrice: z.string().optional(), // Total price of the order
-  jenisProduk: z.object({
-    PRINT: z.boolean().optional(),
-    PRESS: z.boolean().optional(),
-    CUTTING: z.boolean().optional(),
-    DTF: z.boolean().optional(),
-    SEWING: z.boolean().optional()
-  }).optional(),
+  // Accept both string and object formats for jenisProduk
+  jenisProduk: z.union([
+    z.string(),
+    z.object({
+      PRINT: z.boolean().optional(),
+      PRESS: z.boolean().optional(),
+      CUTTING: z.boolean().optional(),
+      DTF: z.boolean().optional(),
+      SEWING: z.boolean().optional()
+    })
+  ]).optional(),
   dtfPass: z.enum(["4 PASS", "6 PASS"]).optional(),
   unit: z.enum(["meter", "yard"]).optional(), // Unit for fabric measurement
-  repeatOrderSpk: z.string().optional(), // For repeat orders
   namaBahan: z.string().optional(), // Fabric name from form
   nama_kain: z.string().optional(), // DB field name
   jumlah_kain: z.string().optional(), // DB field name for fabric length
@@ -285,6 +288,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Properly await params.id - although in Next.js 14+ this should be automatically awaited
     const orderId = params.id;
     
     // Safely parse request body
@@ -589,9 +593,6 @@ export async function PUT(
       // Handle total price
       if (validatedData.totalPrice) updateData.nominal = validatedData.totalPrice;
       
-      // Handle repeat order info
-      if (validatedData.repeatOrderSpk) updateData.repeat_order_spk = validatedData.repeatOrderSpk;
-      
       // Handle priority field
       if (validatedData.priority !== undefined) {
         updateData.prioritas = validatedData.priority ? "YES" : "NO";
@@ -599,17 +600,29 @@ export async function PUT(
       
       // Handle product types (jenisProduk)
       if (validatedData.jenisProduk) {
-        // Combine product types into a single string, e.g., "PRINT,PRESS"
-        const productTypes = Object.entries(validatedData.jenisProduk)
-          .filter(([_, isSelected]) => isSelected)
-          .map(([type, _]) => type)
-          .join(",");
-        
-        if (productTypes) updateData.produk = productTypes;
+        // If jenisProduk is already a string, use it directly
+        if (typeof validatedData.jenisProduk === 'string') {
+          updateData.produk = validatedData.jenisProduk;
+          console.log("[API] Using jenisProduk directly as string:", validatedData.jenisProduk);
+        } else {
+          // If it's an object, convert it to a string
+          const productTypes = Object.entries(validatedData.jenisProduk)
+            .filter(([_, isSelected]) => isSelected)
+            .map(([type, _]) => type)
+            .join(", ");
+          
+          if (productTypes) {
+            updateData.produk = productTypes;
+            console.log("[API] Converted jenisProduk object to string:", productTypes);
+          }
+        }
         
         // If DTF is selected, also update DTF pass
-        if (validatedData.jenisProduk.DTF && validatedData.dtfPass) {
+        if ((typeof validatedData.jenisProduk === 'string' && validatedData.jenisProduk.includes('DTF')) || 
+            (typeof validatedData.jenisProduk === 'object' && validatedData.jenisProduk.DTF) && 
+            validatedData.dtfPass) {
           updateData.produk = `${updateData.produk || ""} ${validatedData.dtfPass}`;
+          console.log("[API] Added DTF pass to produk:", updateData.produk);
         }
       }
       
@@ -636,6 +649,36 @@ export async function PUT(
       } else if (validatedData.tambah_bahan && validatedData.tambah_bahan.includes("Tax:")) {
         // Keep the existing tambah_bahan if it contains tax information
         updateData.tambah_bahan = validatedData.tambah_bahan;
+      }
+
+      // Add proper handling for additional costs
+      // Handle additionalCosts field
+      if (validatedData.additionalCosts && validatedData.additionalCosts.length > 0) {
+        try {
+          console.log(`[API] Processing ${validatedData.additionalCosts.length} additional costs`);
+          
+          // Process each additional cost and map to the appropriate fields
+          validatedData.additionalCosts.forEach((cost, index) => {
+            if (index === 0) {
+              // First additional cost goes to main fields
+              updateData.tambah_cutting = cost.item || "";
+              updateData.satuan_cutting = cost.pricePerUnit || "";
+              updateData.qty_cutting = cost.unitQuantity || "";
+              updateData.total_cutting = cost.total || "";
+              console.log(`[API] Set primary additional cost: ${cost.item}`);
+            } else if (index < 6) {
+              // Additional costs 1-5
+              const suffix = index;
+              updateData[`tambah_cutting${suffix}`] = cost.item || "";
+              updateData[`satuan_cutting${suffix}`] = cost.pricePerUnit || "";
+              updateData[`qty_cutting${suffix}`] = cost.unitQuantity || "";
+              updateData[`total_cutting${suffix}`] = cost.total || "";
+              console.log(`[API] Set additional cost ${suffix}: ${cost.item}`);
+            }
+          });
+        } catch (error) {
+          console.error(`[API] Error processing additional costs:`, error);
+        }
       }
 
       // Before executing the update, check if we have the right field names
@@ -712,9 +755,32 @@ export async function PUT(
         console.log(`Processing tipe_produk: ${updateData.tipe_produk}`);
       }
 
-      // Clean up fields that aren't in the schema
-      delete updateData.asal_bahan;
-      delete updateData.asalBahan;
+      // Clean up fields that aren't in the schema or might cause issues
+      // List of fields known to possibly cause issues or not exist in the schema
+      const fieldsToRemove = [
+        'asal_bahan', 
+        'asalBahan',
+        'asalBahanId',
+        'tax', 
+        'tax_percentage', 
+        'taxPercentage',
+        'repeat_order_spk', // Not in schema
+        'repeat_spk', // Not in schema
+        'repeatOrderSpk', // Not in schema
+        'fileDesain',
+        'fabricLength',
+        'selectedFabric',
+        'discountType',
+        'additionalCosts' // These are processed separately
+      ];
+      
+      // Remove all known problematic fields
+      fieldsToRemove.forEach(field => {
+        if (field in updateData) {
+          console.warn(`[API] Removing non-schema field '${field}'`);
+          delete updateData[field];
+        }
+      });
       
       console.log('Cleaned update data:', JSON.stringify(updateData, null, 2));
 

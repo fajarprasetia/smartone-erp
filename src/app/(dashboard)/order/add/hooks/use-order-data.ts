@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import { useForm, Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -16,7 +16,7 @@ import {
 } from "../schemas/order-form-schema"
 import { formatProductTypes, yardToMeter, calculateTotalPrice, updateNotesWithProductTypes } from "../utils/order-form-utils"
 
-export function useOrderData() {
+export function useOrderData(mode: 'create' | 'edit' = 'create', initialOrderData?: any) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -80,23 +80,27 @@ export function useOrderData() {
   const watchedGsmKertas = form.watch("gsmKertas")
   const watchedMatchingColor = form.watch("matchingColor")
   
+  // Function to refresh the customers list
+  const refreshCustomers = async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/customers')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch customers')
+      }
+      const data = await response.json()
+      setCustomers(data)
+      return data
+    } catch (error) {
+      console.error('Error refreshing customers:', error)
+      toast.error('Failed to refresh customers')
+      return []
+    }
+  }
+  
   // Fetch customers when component mounts
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const response = await fetch('/api/customers')
-        if (!response.ok) throw new Error('Failed to fetch customers')
-        const data = await response.json()
-        setCustomers(data)
-      } catch (error) {
-        console.error('Error fetching customers:', error)
-        toast.error('Failed to load customers')
-        // Set empty array to avoid undefined errors
-        setCustomers([])
-      }
-    }
-    
-    fetchCustomers()
+    refreshCustomers()
   }, [])
   
   // Fetch marketing users with role "Marketing"
@@ -706,188 +710,78 @@ export function useOrderData() {
     return formDataForSubmission;
   };
   
-  // Handle form submission
-  const onSubmit = async (data: OrderFormValues) => {
-    setLoading(true);
+  // Update the onSubmit function to handle both create and edit modes
+  const onSubmit = useCallback(async (values: OrderFormValues) => {
+    setIsSubmitting(true);
     try {
-      // Log tax information for debugging
-      console.log('Tax information:', { 
-        taxEnabled: data.tax, 
-        taxPercentage: data.taxPercentage 
+      console.log(`${mode === 'create' ? 'Creating' : 'Updating'} order with values:`, values);
+      
+      // Create a copy of values to manipulate
+      const valuesToSubmit = { ...values };
+      
+      // Handle repeat order SPK - add to notes rather than as a separate field
+      if (valuesToSubmit.repeatOrderSpk) {
+        const repeatText = `REPEAT SPK No. ${valuesToSubmit.repeatOrderSpk}`;
+        if (!valuesToSubmit.notes || !valuesToSubmit.notes.includes(repeatText)) {
+          valuesToSubmit.notes = valuesToSubmit.notes 
+            ? `${valuesToSubmit.notes}, ${repeatText}`
+            : repeatText;
+        }
+        // Remove repeatOrderSpk as a separate field
+        delete valuesToSubmit.repeatOrderSpk;
+      }
+      
+      // Format the form data for submission
+      const formData = {
+        ...valuesToSubmit,
+        // IMPORTANT: When sending to the API, do NOT convert jenisProduk to string for PUT requests
+        // Only convert to string for POST requests (create mode)
+        jenisProduk: mode === 'create' 
+          ? formatProductTypes(values.jenisProduk) 
+          : values.jenisProduk, // Keep as object for PUT requests
+        
+        // Ensure asalBahan is explicitly included
+        asalBahan: values.asalBahan,
+        
+        // Add customerId for reference with fabric origin
+        customerId: values.customerId,
+      };
+      
+      console.log("Formatted form data:", formData);
+      
+      // Use POST for create, PUT for edit
+      const url = mode === 'create' ? '/api/orders' : `/api/orders/${orderId}`;
+      const method = mode === 'create' ? 'POST' : 'PUT';
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      
-      // Log priority information for debugging
-      console.log('Priority information:', {
-        isPriority: data.priority
-      });
-      
-      // Prepare the form data with needed transformations
-      const formData = prepareFormDataForSubmission(data);
-      
-      let requestUrl;
-      let requestMethod;
-      
-      // If we have an orderId, we're in edit mode and should PUT
-      if (orderId) {
-        requestUrl = `/api/orders/${orderId}`;
-        requestMethod = 'PUT';
-        console.log(`Updating order ${orderId}`);
-      } else {
-        // Otherwise, we're in create mode and should POST
-        requestUrl = '/api/orders';
-        requestMethod = 'POST';
-        console.log('Creating new order');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("API error response:", errorData);
+        throw new Error(errorData.error || errorData.details || `Failed to ${mode === 'create' ? 'create' : 'update'} order`);
       }
+
+      const data = await response.json();
+      // Check both possible response formats for order ID
+      const responseOrderId = data.order?.id || data.orderId || data.id || orderId;
+      setOrderId(responseOrderId);
+      toast.success(`Order ${mode === 'create' ? 'created' : 'updated'} successfully`);
       
-      console.log(`API Request: ${requestMethod} ${requestUrl}`);
-      console.log('Form data being sent:', JSON.stringify(formData, null, 2));
-      
-      try {
-        const response = await fetch(requestUrl, {
-          method: requestMethod,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
-        
-        // Log the response status
-        console.log(`Response status: ${response.status} ${response.statusText}`);
-        
-        // Try to get the response text first 
-        const responseText = await response.text();
-        console.log('Raw response text:', responseText);
-        
-        // Try to parse as JSON if not empty
-        let responseData: Record<string, unknown> = {};
-        if (responseText) {
-          try {
-            responseData = JSON.parse(responseText);
-            console.log('Response data:', responseData);
-          } catch (parseError: unknown) {
-            console.error('Failed to parse response as JSON:', parseError);
-            console.log('Raw response:', responseText);
-          }
-        } else {
-          console.log('Empty response received');
-        }
-        
-        // Check if the response was successful
-        if (!response.ok) {
-          // Extract error details for different status codes
-          if (response.status === 400) {
-            // Validation error - try to extract detailed errors
-            const validationErrors = responseData.details || responseData.error || 'Validation failed';
-            
-            console.error('Validation errors:', validationErrors);
-            
-            // Format validation errors for display
-            let errorMessage: string;
-            
-            if (typeof validationErrors === 'string') {
-              errorMessage = validationErrors;
-            } else if (typeof validationErrors === 'object') {
-              // Try to format object errors into a readable string
-              errorMessage = 'Validation failed:\n' + 
-                Object.entries(validationErrors as Record<string, unknown>)
-                  .map(([field, error]) => `- ${field}: ${error}`)
-                  .join('\n');
-            } else {
-              errorMessage = 'Invalid request data';
-            }
-            
-            throw new Error(errorMessage);
-          } else if (response.status === 401) {
-            throw new Error('Unauthorized - Please log in again');
-          } else if (response.status === 404) {
-            throw new Error('Resource not found');
-          } else if (response.status === 500) {
-            // For server errors, provide more details from the response if available
-            let serverErrorMessage = 'Server error - Please try again later';
-            if (responseData.details) {
-              serverErrorMessage = `Server error: ${responseData.details}`;
-            } else if (responseData.error) {
-              serverErrorMessage = `Server error: ${responseData.error}`;
-            }
-            throw new Error(serverErrorMessage);
-          } else {
-            throw new Error(`Request failed with status ${response.status} ${response.statusText}`);
-          }
-        }
-        
-        // Success!
-        const successMessage = orderId 
-          ? `✅ Order updated successfully! \nSPK: ${data.spk}`
-          : `✅ Order created successfully! \nSPK: ${data.spk}`;
-        
-        // Show success toast
-        toast.success(
-          successMessage + (responseData.projectNumber ? `\nProject: ${responseData.projectNumber}` : ''),
-          {
-            duration: 5000, // Show for 5 seconds
-            position: 'top-center',
-            style: { fontWeight: 'bold' }
-          }
-        );
-        
-        // Reset form for create mode only
-        if (!orderId) {
-          form.reset(defaultValues);
-        }
-        
-        // Redirect to the order list page after successful submission
-        setTimeout(() => {
-          router.push('/order');
-        }, 1500); // Give time for the toast to be seen
-        
-        return responseData;
-      } catch (apiError: unknown) {
-        console.error('API call error:', apiError);
-        const errorMessage = apiError instanceof Error 
-          ? apiError.message 
-          : 'An unexpected error occurred while communicating with the server';
-        
-        // Show error toast
-        const actionWord = orderId ? 'update' : 'create';
-        toast.error(
-          `Failed to ${actionWord} order\n${errorMessage}`,
-          {
-            duration: 5000,
-            position: 'top-center'
-          }
-        );
-        
-        return null;
-      }
-    } catch (error: unknown) {
-      console.error("Form submission error:", error);
-      
-      // Format error message for display
-      let displayErrorMessage: string;
-      
-      if (error instanceof Error) {
-        displayErrorMessage = error.message;
-      } else if (typeof error === 'string') {
-        displayErrorMessage = error;
-      } else {
-        displayErrorMessage = "Unknown error occurred";
-      }
-      
-      // Show error toast
-      const actionWord = orderId ? 'update' : 'create';
-      toast.error(
-        `Failed to ${actionWord} order\n${displayErrorMessage}`,
-        {
-          duration: 5000,
-          position: 'top-center'
-        }
-      );
-      
-      return null;
+      // Redirect to the main order list page
+      router.push("/order");
+    } catch (error) {
+      console.error(`Error ${mode === 'create' ? 'submitting' : 'updating'} order:`, error);
+      toast.error(error instanceof Error ? error.message : `Failed to ${mode === 'create' ? 'create' : 'update'} order`);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [router, mode, orderId, formatProductTypes]);
   
   // Function to handle fetching repeat order info
   const handleFetchRepeatOrderInfo = async (spkNumber: string) => {
@@ -935,60 +829,161 @@ export function useOrderData() {
   }
   
   // Add a function to fetch SPK number and update state
-  const fetchSpkNumber = async () => {
-    setIsSubmitting(true)
+  const fetchSpkNumber = async (retryCount = 0) => {
+    // First check if we already have an SPK to avoid unnecessary fetches
+    if (spkNumber) {
+      console.log('SPK already exists, skipping fetch:', spkNumber);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
-      const response = await fetch('/api/orders/spk/generate')
+      // Add signal to allow aborting the fetch after a timeout
+      const controller = new AbortController();
+      const signal = controller.signal;
+      
+      console.log('Fetching SPK number...');
+      
+      // Add a unique timestamp to prevent cache issues
+      const timestamp = Date.now();
+      
+      // Use a longer timeout (30 seconds) to avoid AbortErrors
+      let timeoutId = setTimeout(() => {
+        console.log('SPK fetch timeout, aborting');
+        controller.abort();
+      }, 30000);
+      
+      const response = await fetch(`/api/orders/spk/generate?t=${timestamp}`, {
+        signal,
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch SPK: ${response.status}`)
+        throw new Error(`Failed to fetch SPK: ${response.status}`);
       }
       
-      const data = await response.json()
+      const data = await response.json();
+      
       if (data && data.spk) {
-        setSpkNumber(data.spk)
-        form.setValue('spk', data.spk)
-        console.log('Set SPK:', data.spk)
+        // Handle both regular and fallback SPKs from the API
+        setSpkNumber(data.spk);
+        form.setValue('spk', data.spk);
+        
+        if (data.fallback) {
+          console.log('Using API-provided fallback SPK:', data.spk);
+          toast.warning('Using a fallback SPK number due to server issues.');
+        } else if (data.recovered) {
+          console.log('Using API-provided recovery SPK:', data.spk);
+          toast.info('Using recovery SPK due to sequence conflicts.');
+        } else {
+          console.log('Set SPK:', data.spk);
+        }
       } else {
-        console.error('Invalid SPK response:', data)
-        toast.error('Failed to generate SPK number. Using temporary value.')
+        console.error('Invalid SPK response:', data);
+        toast.error('Failed to generate SPK number. Using temporary value.');
         
         // Fallback to date-based SPK if the API fails
-        const now = new Date()
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const year = String(now.getFullYear()).slice(-2)
-        const randomNumber = Math.floor(100 + Math.random() * 900)
-        const formattedNumber = String(randomNumber).padStart(3, '0')
-        const fallbackSpk = `${month}${year}${formattedNumber}`
-        
-        console.log('Using fallback SPK:', fallbackSpk)
-        setSpkNumber(fallbackSpk)
-        form.setValue('spk', fallbackSpk)
+        generateFallbackSpk();
       }
     } catch (error) {
-      console.error('Error fetching SPK:', error)
-      toast.error('Failed to generate SPK number')
+      console.error('Error fetching SPK:', error);
       
-      // Even if there was an error, still generate a fallback SPK
-      const now = new Date()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const year = String(now.getFullYear()).slice(-2)
-      const randomNumber = Math.floor(100 + Math.random() * 900)
-      const formattedNumber = String(randomNumber).padStart(3, '0')
-      const fallbackSpk = `${month}${year}${formattedNumber}`
+      // Skip retry if we already have a valid SPK
+      if (spkNumber) {
+        console.log('Already have SPK, skipping retry:', spkNumber);
+        return;
+      }
       
-      console.log('Using fallback SPK after error:', fallbackSpk)
-      setSpkNumber(fallbackSpk)
-      form.setValue('spk', fallbackSpk)
+      // Implement retry logic for network issues
+      if (retryCount < 2) {
+        console.log(`Retrying SPK fetch (attempt ${retryCount + 1})...`);
+        setTimeout(() => fetchSpkNumber(retryCount + 1), 2000); // Longer delay (2 seconds)
+        return;
+      }
+      
+      toast.error('Failed to generate SPK number');
+      
+      // If retries are exhausted, use a fallback
+      generateFallbackSpk();
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
+  };
+  
+  // Helper to format SPK number - if above 999, don't pad with zeros
+  const formatSPKNumber = (datePrefix: string, number: number): string => {
+    if (number <= 999) {
+      return `${datePrefix}${String(number).padStart(3, '0')}`
+    } else {
+      return `${datePrefix}${number}`
+    }
+  }
+  
+  // Helper to generate a fallback SPK
+  const generateFallbackSpk = () => {
+    const now = new Date()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const year = String(now.getFullYear()).slice(-2)
+    const datePrefix = `${month}${year}`
+    
+    // Try to find the highest SPK in the spkOptions array
+    let highestNumber = 0
+    const prefixRegex = new RegExp(`^${datePrefix}(\\d+)$`)
+    
+    spkOptions.forEach(spk => {
+      const match = spk.match(prefixRegex)
+      if (match && match[1]) {
+        const num = parseInt(match[1], 10)
+        if (!isNaN(num) && num > highestNumber) {
+          highestNumber = num
+        }
+      }
+    })
+    
+    // If we found a valid highest number, use that + 1
+    // Otherwise use a random number
+    let nextNumber
+    if (highestNumber > 0) {
+      nextNumber = highestNumber + 1
+    } else {
+      nextNumber = Math.floor(100 + Math.random() * 900)
+    }
+    
+    // Format the SPK with the next number
+    const fallbackSpk = formatSPKNumber(datePrefix, nextNumber)
+    
+    console.log('Using client-generated fallback SPK:', fallbackSpk)
+    setSpkNumber(fallbackSpk)
+    form.setValue('spk', fallbackSpk)
+    
+    // Also indicate to the user that this is a temporary SPK
+    toast.warning('Using a temporary SPK number. Please verify it before submitting the order.')
   }
   
   // Call the fetchSpkNumber function when the component mounts
   useEffect(() => {
-    fetchSpkNumber()
-  }, [])
+    // Only fetch new SPK number when creating a new order, not when editing
+    if (mode === 'create' && !spkNumber) {
+      // Create a single instance flag to prevent multiple fetch calls
+      const fetchSingleInstance = () => {
+        // Use a static variable to track if this has been called
+        if (!(fetchSingleInstance as any).hasRun) {
+          (fetchSingleInstance as any).hasRun = true;
+          fetchSpkNumber();
+        }
+      };
+      
+      fetchSingleInstance();
+    }
+    // For edit mode, the SPK is set in setInitialData
+  }, [mode, spkNumber]);
   
   // Set initial data for edit mode
   const setInitialData = useCallback((data: any) => {
@@ -999,6 +994,11 @@ export function useOrderData() {
     try {
       // Reset form with defaults first to clear any previous values
       form.reset(defaultValues);
+      
+      // Store the data as initialOrderData for later use
+      // We can't update the parameter directly since it's read-only
+      // But we can store the ID for later use
+      setOrderId(data.id);
       
       // Extract and format product types
       const productTypes = {
@@ -1025,7 +1025,7 @@ export function useOrderData() {
       // Set the order ID
       setOrderId(data.id);
       
-      // Set SPK number
+      // Set SPK number - IMPORTANT: Preserve the existing SPK number when editing
       setSpkNumber(data.spk || "");
       
       // Set form values
@@ -1036,28 +1036,83 @@ export function useOrderData() {
       form.setValue("tipe_produk", data.tipe_produk || "SUBLIM");
       
       // Handle DTF pass if available
-      if (data.dtfPass) {
-        form.setValue("dtfPass", data.dtfPass);
+      if (data.catatan && data.catatan.includes("PASS")) {
+        if (data.catatan.includes("4 PASS")) {
+          form.setValue("dtfPass", "4 PASS");
+        } else if (data.catatan.includes("6 PASS")) {
+          form.setValue("dtfPass", "6 PASS");
+        }
       }
       
-      form.setValue("jumlah", data.jumlah || data.qty || "");
-      form.setValue("unit", data.unit || "meter");
-      form.setValue("asalBahan", data.asalBahan || "");
+      // Handle status fields - only set fields that exist in the form schema
+      if (data.statusprod || data.statusProduksi) {
+        form.setValue("statusProduksi", data.statusprod || data.statusProduksi || "NEW");
+      }
+      
+      // Handle quantity, pricing, and unit fields
+      form.setValue("jumlah", data.jumlah || data.qty || data.panjang_order || "");
+      form.setValue("unit", data.satuan_bahan || "meter");
+      form.setValue("harga", data.harga || data.harga_satuan || "");
+      
+      // Handle fabric information
+      form.setValue("asalBahan", data.asalBahan || ""); // Will be handled in UI separately
       form.setValue("asalBahanId", data.asalBahanId || data.asal_bahan || "");
       form.setValue("namaBahan", data.namaBahan || data.nama_kain || "");
-      form.setValue("aplikasiProduk", data.aplikasiProduk || "");
-      form.setValue("fabricLength", data.fabricLength || data.panjang_order || "");
-      form.setValue("gsmKertas", data.gsmKertas || data.gramasi || "");
-      form.setValue("lebarKertas", data.lebarKertas || "");
-      form.setValue("fileWidth", data.fileWidth || data.lebar_file || "");
       form.setValue("lebarKain", data.lebarKain || data.lebar_kain || "");
-      form.setValue("matchingColor", data.matchingColor || data.warna_acuan || "NO");
+      form.setValue("fabricLength", data.fabricLength || data.jumlah_kain || "");
+      
+      // Handle product application
+      form.setValue("aplikasiProduk", data.aplikasiProduk || data.nama_produk || "");
+      
+      // Handle paper information
+      form.setValue("gsmKertas", data.gsmKertas || data.gramasi || "");
+      form.setValue("lebarKertas", data.lebarKertas || data.lebar_kertas || "");
+      form.setValue("fileWidth", data.fileWidth || data.lebar_file || "");
+      
+      // Handle color matching
+      let matchingColor: "YES" | "NO" = "NO";
+      if (data.matchingColor === "YES" || data.warna_acuan === "ADA") {
+        matchingColor = "YES";
+      }
+      form.setValue("matchingColor", matchingColor);
+      
+      // Handle design file
+      form.setValue("fileDesain", data.fileDesain || data.path || "");
+      
+      // Handle notes
       form.setValue("notes", data.notes || data.catatan || "");
-      form.setValue("statusProduksi", data.statusProduksi || "NEW");
+      
+      // Handle category
       form.setValue("kategori", data.kategori || "REGULAR ORDER");
       form.setValue("targetSelesai", targetSelesai);
-      form.setValue("harga", data.harga || data.harga_satuan || "");
+      
+      // Handle priority
       form.setValue("priority", data.priority || data.prioritas === "YES" || false);
+      
+      // Handle discount
+      if (data.diskon) {
+        if (data.diskon.includes("%")) {
+          form.setValue("discountType", "percentage");
+          form.setValue("discountValue", data.diskon.replace("%", ""));
+        } else {
+          form.setValue("discountType", "fixed");
+          form.setValue("discountValue", data.diskon);
+        }
+      } else {
+        form.setValue("discountType", "none");
+      }
+      
+      // Handle tax
+      const hasTax = data.tambah_bahan && data.tambah_bahan.includes("Tax:");
+      form.setValue("tax", hasTax);
+      if (hasTax) {
+        const taxMatch = data.tambah_bahan.match(/Tax:\s*(\d+(?:\.\d+)?)%/);
+        if (taxMatch && taxMatch[1]) {
+          form.setValue("taxPercentage", taxMatch[1]);
+        } else {
+          form.setValue("taxPercentage", "10"); // Default tax percentage
+        }
+      }
       
       // Handle additional costs
       const additionalCosts = [];
@@ -1093,12 +1148,29 @@ export function useOrderData() {
         form.setValue("additionalCosts", additionalCosts);
       }
       
+      // Handle price calculation
+      if (data.nominal || data.total_price) {
+        form.setValue("totalPrice", data.nominal || data.total_price || "");
+      } else {
+        // Calculate total price if not explicitly provided
+        const totalPrice = calculateTotalPrice(
+          form.getValues("jumlah"),
+          form.getValues("harga"),
+          form.getValues("additionalCosts"),
+          form.getValues("discountType"),
+          form.getValues("discountValue"),
+          form.getValues("tax"),
+          form.getValues("unit")
+        );
+        form.setValue("totalPrice", totalPrice.toString());
+      }
+      
       console.log("Form initialized with data successfully");
     } catch (error) {
       console.error("Error setting initial form data:", error);
       toast.error("Failed to load order data");
     }
-  }, [form, setOrderId]);
+  }, [form, setOrderId, calculateTotalPrice]);
   
   return {
     form,
@@ -1137,6 +1209,7 @@ export function useOrderData() {
     isLoadingPaperGsm,
     isLoadingPaperWidth,
     setInitialData,
-    orderId
+    orderId,
+    refreshCustomers
   }
-} 
+}

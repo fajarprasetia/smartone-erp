@@ -77,11 +77,7 @@ export async function GET(req: NextRequest) {
         roll: item.roll,
         tanggal: item.tanggal,
         keterangan: item.keterangan,
-        foto: item.foto ? {
-          src: item.foto,
-          alt: `Fabric ${item.nama_bahan}`,
-          thumbnail: true
-        } : null,
+        foto: item.foto || null,
         asal_bahan: item.asal_bahan,
         customer_name: item.asal_bahan_rel?.nama || "N/A"
       }));     
@@ -166,7 +162,8 @@ export async function POST(req: NextRequest) {
       est_pjg_bahan,
       tanggal,
       roll,
-      keterangan
+      keterangan,
+      foto
     } = Object.fromEntries(
       Object.entries(fields).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
     );
@@ -181,6 +178,9 @@ export async function POST(req: NextRequest) {
     // Process uploaded files
     const filePaths = files.files?.map(file => `/fabric/${file.newFilename}`) || [];
     
+    // Use existing foto if no new files were uploaded
+    const finalFoto = filePaths.length > 0 ? filePaths[0] : (foto || null);
+
     // Create inventory item
     const newInventory = await prisma.inventory.create({
       data: {
@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
         berat_bahan,
         est_pjg_bahan,
         tanggal: tanggal ? new Date(tanggal) : null,
-        foto: filePaths.length > 0 ? filePaths[0] : null,
+        foto: finalFoto,
         roll,
         keterangan
       },
@@ -201,25 +201,20 @@ export async function POST(req: NextRequest) {
     
     const serializedItem = serializeData(newInventory);
     
-    // Format response
-    const formattedResponse = {
+    // Format response to match the expected format
+    return NextResponse.json({
       id: serializedItem.id,
-      "Fabric Name": serializedItem.nama_bahan,
-      "Width": serializedItem.lebar_bahan,
-      "Weight": serializedItem.berat_bahan,
-      "Est. Length": serializedItem.est_pjg_bahan,
-      "Roll": serializedItem.roll,
-      "Date": serializedItem.tanggal,
-      "Notes": serializedItem.keterangan,
-      "Capture Image": serializedItem.foto ? {
-        src: serializedItem.foto,
-        alt: `Fabric ${serializedItem.nama_bahan}`,
-        thumbnail: true
-      } : null,
-      "Source/Customer": serializedItem.asal_bahan_rel?.nama || 'N/A'
-    };
-    
-    return NextResponse.json(formattedResponse, { status: 201 });
+      nama_bahan: serializedItem.nama_bahan,
+      lebar_bahan: serializedItem.lebar_bahan,
+      berat_bahan: serializedItem.berat_bahan,
+      est_pjg_bahan: serializedItem.est_pjg_bahan,
+      roll: serializedItem.roll,
+      tanggal: serializedItem.tanggal,
+      keterangan: serializedItem.keterangan,
+      foto: serializedItem.foto,
+      asal_bahan: serializedItem.asal_bahan,
+      customer_name: serializedItem.asal_bahan_rel?.nama || "N/A"
+    }, { status: 201 });
   } catch (error) {
     console.error('Error creating inventory item:', error);
     return NextResponse.json(

@@ -28,6 +28,8 @@ export default function RootLayout({
           </div>
           {/* Portal container for custom popovers */}
           <div id="custom-popover-portal" className="fixed inset-0 z-[1000]" />
+          {/* Portal container for modals */}
+          <div id="modal-root" className="fixed inset-0 z-[9999]" />
         </Providers>
       </body>
     </html>

@@ -8,6 +8,7 @@ import { z } from "zod"
 import { toast } from "sonner"
 import { Calendar as CalendarIcon, ChevronsUpDown, X, Camera, Plus } from "lucide-react"
 import { format } from "date-fns"
+import { CustomerFormDialogNew } from "@/components/marketing/customer-form-dialog-new"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,23 +69,23 @@ interface InboundFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   customers?: Customer[] // Make customers optional since we'll fetch them directly
-  onSubmit: (data: FormValues) => Promise<void>
+  onSubmit: (data: FormValues & { images?: ImageFile[] }) => Promise<void>
+  initialData?: any // Add initialData for editing
 }
 
-export function InboundForm({ open, onOpenChange, customers: initialCustomers, onSubmit }: InboundFormProps) {
+export function InboundForm({ open, onOpenChange, customers: initialCustomers, onSubmit, initialData }: InboundFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [comboboxOpen, setComboboxOpen] = useState(false)
   const [images, setImages] = useState<ImageFile[]>([])
   const [showCamera, setShowCamera] = useState(false)
   const [isAddingCustomer, setIsAddingCustomer] = useState(false)
+  const [customerFormOpen, setCustomerFormOpen] = useState(false) 
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers || [])
   const [totalLength, setTotalLength] = useState<string>('')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
-  // Initialize the Uploader instance
-
-  // Initialize form
+  // Initialize form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -100,24 +101,59 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
     },
   })
 
-  // Fetch customers when component mounts or dialog opens
+  // Update form values when initialData changes
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const response = await fetch("/api/marketing/customers")
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch customers")
-        }
-        
-        const data = await response.json()
-        setCustomers(data)
-      } catch (error) {
-        console.error("Error fetching customers:", error)
-        toast.error("Failed to load customers")
+    if (initialData) {
+      form.reset({
+        asal_bahan: initialData.asal_bahan || "",
+        nama_bahan: initialData.nama_bahan || "",
+        lebar_bahan: initialData.lebar_bahan || "",
+        berat_bahan: initialData.berat_bahan || "",
+        est_pjg_bahan: initialData.est_pjg_bahan || "",
+        tanggal: initialData.tanggal ? new Date(initialData.tanggal) : new Date(),
+        foto: initialData.foto || "",
+        roll: initialData.roll || "",
+        keterangan: initialData.keterangan || "",
+      });
+      
+      // Set initial images if available
+      if (initialData.foto) {
+        setImages([{ 
+          fileUrl: initialData.foto,
+          fileName: `${initialData.id}_image.jpg`
+        }]);
+      } else {
+        setImages([]);
       }
     }
-    
+  }, [initialData, form]);
+
+  // Change the title and description based on whether we're editing or adding
+  const isEditing = !!initialData;
+  const formTitle = isEditing ? "Edit Inventory Item" : "Add Inventory Item";
+  const formDescription = isEditing
+    ? "Update the details of this inventory item"
+    : "Fill in the details to add a new inventory item";
+
+  // Define a function to fetch customers
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch("/api/marketing/customers")
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch customers")
+      }
+      
+      const data = await response.json()
+      setCustomers(data)
+    } catch (error) {
+      console.error("Error fetching customers:", error)
+      toast.error("Failed to load customers")
+    }
+  }
+
+  // Fetch customers when component mounts or dialog opens
+  useEffect(() => {
     if (open && (!initialCustomers || initialCustomers.length === 0)) {
       fetchCustomers()
     } else if (initialCustomers && initialCustomers.length > 0) {
@@ -161,52 +197,26 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
     return () => subscription.unsubscribe();
   }, [form]);
 
-
   // Handle form submission
   const handleSubmit = async (data: FormValues) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       
-      // Format data - convert to uppercase where needed
-      const formData = new FormData();
-      formData.append('nama_bahan', data.nama_bahan.toUpperCase());
-      formData.append('asal_bahan', data.asal_bahan || '');
-      formData.append('lebar_bahan', data.lebar_bahan?.toUpperCase() || '');
-      formData.append('berat_bahan', data.berat_bahan?.toUpperCase() || '');
-      formData.append('est_pjg_bahan', totalLength ? totalLength.toUpperCase() : data.est_pjg_bahan?.toUpperCase() || '');
-      formData.append('roll', data.roll?.toUpperCase() || '');
-      formData.append('keterangan', data.keterangan?.toUpperCase() || '');
-      formData.append('tanggal', data.tanggal ? data.tanggal.toISOString() : new Date().toISOString());
+      // Add the images to the data object
+      const dataWithImages = {
+        ...data,
+        images: images
+      };
       
-      // Append image files
-      const fileInput = document.getElementById('images') as HTMLInputElement;
-      if (fileInput?.files && fileInput.files.length > 0) {
-        Array.from(fileInput.files).forEach(file => {
-          formData.append('files', file);
-        });
-      }
+      // Call the parent's onSubmit function
+      await onSubmit(dataWithImages);
       
-      const response = await fetch('/api/inventory/inbound', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create inventory item');
-      }
-
-      const result = await response.json();
-      
-      // Reset form and clear files
-      form.reset();
-      setImages([]);
-      setTotalLength('');
-      if (fileInput) fileInput.value = '';
+      // Don't reset form here since the parent component will close the dialog
     } catch (error) {
-      console.error("Error submitting form:", error)
-      toast.error("Failed to add inventory item")
+      console.error("Error submitting form:", error);
+      toast.error("Failed to save inventory item");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -224,9 +234,9 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
       <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 overflow-auto">
         <div className="flex justify-between items-center p-6 border-b border-border/40">
           <div>
-            <h2 className="text-lg font-semibold">Add Inventory Item</h2>
+            <h2 className="text-lg font-semibold">{formTitle}</h2>
             <p className="text-sm text-muted-foreground">
-              Fill in the details to add a new inventory item
+              {formDescription}
             </p>
           </div>
           <Button
@@ -429,31 +439,78 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search customer..." />
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command
+                          filter={(value, search) => {
+                            // If the regular filter would match, return true
+                            if (value.toLowerCase().includes(search.toLowerCase())) {
+                              return 1;
+                            }
+                            
+                            // Normalize the search query for phone numbers
+                            const normalizedSearch = search.replace(/^(0|62)/, '');
+                            
+                            // If the search looks like a phone number (only digits)
+                            if (/^\d+$/.test(normalizedSearch) && value.includes(normalizedSearch)) {
+                              return 1;
+                            }
+                            
+                            return 0;
+                          }}
+                        >
+                          <CommandInput 
+                            placeholder="Search by name or phone..." 
+                            onValueChange={(search) => {
+                              // Let's keep the original search as is, as the CommandItem values
+                              // now include multiple phone formats to match against
+                            }}
+                          />
                           <CommandEmpty>
                               <Button 
                                 variant="ghost" 
                                 className="w-full"
-                                onClick={() => setIsAddingCustomer(true)}
+                                onClick={() => {
+                                  setComboboxOpen(false);
+                                  setCustomerFormOpen(true);
+                                }}
                               >
                                 <Plus className="mr-2 h-4 w-4" /> Add New Customer
                               </Button>
                             </CommandEmpty>
                           <CommandGroup>
-                            {customers.map(customer => (
-                              <CommandItem
-                                value={customer.nama}
-                                key={customer.id}
-                                onSelect={() => {
-                                  form.setValue("asal_bahan", customer.id)
-                                  setComboboxOpen(false)
-                                }}
-                              >
-                                {customer.nama}
-                              </CommandItem>
-                            ))}
+                            {customers.map(customer => {
+                              const customerPhone = customer.telp || '';
+                              
+                              // Create different formats of the phone number for search
+                              let phoneFormats = '';
+                              if (customerPhone) {
+                                // Original format (e.g., "812345678")
+                                phoneFormats = customerPhone;
+                                // With leading 0 (e.g., "0812345678")
+                                phoneFormats += ' 0' + customerPhone;
+                                // With leading 62 (e.g., "62812345678")
+                                phoneFormats += ' 62' + customerPhone;
+                              }
+                              
+                              return (
+                                <CommandItem
+                                  value={`${customer.nama.toLowerCase()} ${phoneFormats.toLowerCase()}`}
+                                  key={customer.id}
+                                  onSelect={() => {
+                                    form.setValue("asal_bahan", customer.id)
+                                    setComboboxOpen(false)
+                                  }}
+                                  className="flex justify-between"
+                                >
+                                  <span>{customer.nama}</span>
+                                  {customer.telp && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {customer.telp}
+                                    </span>
+                                  )}
+                                </CommandItem>
+                              );
+                            })}
                           </CommandGroup>
                         </Command>
                       </PopoverContent>
@@ -638,6 +695,19 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
           </Form>
         </div>
       </div>
+
+      {/* CustomerFormDialog for adding new customer */}
+      <CustomerFormDialogNew
+        open={customerFormOpen}
+        customer={null}
+        onClose={(refresh) => {
+          setCustomerFormOpen(false);
+          if (refresh) {
+            // Refresh the customers list
+            fetchCustomers();
+          }
+        }}
+      />
     </div>
   )
 }

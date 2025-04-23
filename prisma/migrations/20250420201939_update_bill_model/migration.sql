@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Bill" ADD COLUMN     "description" TEXT,
+ADD COLUMN     "paidAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "reference" TEXT,
+ADD COLUMN     "totalAmount" DOUBLE PRECISION NOT NULL DEFAULT 0;

@@ -59,7 +59,13 @@ const bigIntSerializer = (data: any): any => {
       const sortOrder = url.searchParams.get("sortOrder") || "desc";
       const searchQuery = url.searchParams.get("search") || "";
       
-      console.log(`Query params: filter=${filterType}, page=${page}, pageSize=${pageSize}, sort=${sortField}:${sortOrder}, search="${searchQuery}"`);
+      // Get additional filter parameters
+      const statusFilter = url.searchParams.get("status");
+      const produkFilter = url.searchParams.get("produk");
+      const approveMngFilter = url.searchParams.get("approve_mng");
+      const approvalOprFilter = url.searchParams.get("approval_opr");
+      
+      console.log(`Query params: filter=${filterType}, page=${page}, pageSize=${pageSize}, sort=${sortField}:${sortOrder}, search="${searchQuery}", status="${statusFilter}", produk="${produkFilter}", approve_mng="${approveMngFilter}", approval_opr="${approvalOprFilter}"`);
       
       // Build filter based on filterType
       let whereCondition: any = {};
@@ -70,6 +76,31 @@ const bigIntSerializer = (data: any): any => {
           { dp: { not: null } },
           { biaya_tambahan: { not: null } }
         ];
+      } else if (filterType === "PENDINGPRINT") {
+        // Filter for pending print orders
+        whereCondition = {
+          status: statusFilter || "READYFORPROD"
+        };
+        
+        // Add product type filter if provided
+        if (produkFilter) {
+          whereCondition.produk = {
+            contains: produkFilter,
+            mode: "insensitive"
+          };
+        }
+        
+        // Add approval filters if provided
+        if (approveMngFilter) {
+          whereCondition.approve_mng = approveMngFilter;
+        }
+        
+        if (approvalOprFilter) {
+          whereCondition.approval_opr = approvalOprFilter;
+        }
+      } else if (filterType === "PRINTING") {
+        // Filter for orders in printing process
+        whereCondition.status = statusFilter || "PRINT";
       }
       
       // Add search query if provided

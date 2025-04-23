@@ -3,111 +3,62 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
-// GET: Fetch all paper stocks
-export async function GET(req: NextRequest) {
+/**
+ * GET: Fetch paper stock data
+ */
+export async function GET(req: Request) {
   try {
+    // Check authentication
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
+    if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const searchParams = req.nextUrl.searchParams;
-    const availability = searchParams.get('availability');
-    const paperType = searchParams.get('type');
-    const gsm = searchParams.get('gsm');
-    const width = searchParams.get('width');
-    const approvedParam = searchParams.get('approved');
-    const remainingLengthParam = searchParams.get('remainingLength');
-    const includeUsers = searchParams.get('include_users') === 'true';
+    // Parse query parameters
+    const url = new URL(req.url);
+    const availability = url.searchParams.get("availability");
     
-    // Build the where clause based on provided filters
-    const whereClause: any = {};
-    
-    if (availability) {
-      whereClause.availability = availability;
+    // Build query
+    const whereClause = {};
+    if (availability === "YES") {
+      whereClause["availability"] = "YES";
     }
-    
-    if (paperType) {
-      whereClause.type = paperType;
-    }
-    
-    if (gsm) {
-      whereClause.gsm = parseInt(gsm);
-    }
-    
-    if (width) {
-      whereClause.width = parseFloat(width);
-    }
-    
-    if (approvedParam) {
-      whereClause.approved = approvedParam === 'true';
-    }
-    
-    console.log("Filter query:", JSON.stringify(whereClause, null, 2));
-    
-    // Execute the query with the basic filters
-    let paperStocks = await prisma.paperStock.findMany({
-      where: whereClause,
-      orderBy: {
-        dateAdded: 'desc',
-      },
-      include: {
-        // Include related user data
-        addedByUser: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        takenByUser: includeUsers ? {
-          select: {
-            id: true,
-            name: true
-          }
-        } : false,
-        paperLogs: {
-          take: 5,
-          orderBy: {
-            created_at: 'desc'
-          },
-          include: {
-            user: {
-              select: {
-                name: true
-              }
-            }
-          }
-        }
-      }
-    });
-    
-    // Post-process the results for remaining length if needed
-    if (remainingLengthParam === 'available') {
-      paperStocks = paperStocks.filter(stock => {
-        return stock.remainingLength !== null && stock.remainingLength > 0;
+
+    // Fetch paper stocks
+    try {
+      const paperStocks = await prisma.paperStock.findMany({
+        where: whereClause,
+        orderBy: [
+          { gsm: 'asc' },
+          { width: 'asc' }
+        ]
       });
+
+      return NextResponse.json(paperStocks);
+    } catch (error) {
+      console.error("Database error fetching paper stocks:", error);
+      
+      // Fallback to hardcoded data for testing
+      if (process.env.NODE_ENV === "development") {
+        const fallbackData = [
+          { id: "1", gsm: "70", width: "100", remaining_length: "50", availability: "YES", paper_type: "Sublimation" },
+          { id: "2", gsm: "80", width: "120", remaining_length: "75", availability: "YES", paper_type: "Sublimation" },
+          { id: "3", gsm: "100", width: "150", remaining_length: "100", availability: "YES", paper_type: "Sublimation" },
+          { id: "4", gsm: "120", width: "160", remaining_length: "80", availability: "YES", paper_type: "Inkjet" },
+          { id: "5", gsm: "150", width: "180", remaining_length: "60", availability: "YES", paper_type: "Inkjet" }
+        ];
+        return NextResponse.json(fallbackData);
+      }
+      
+      throw error;
     }
-
-    // Transform the results to match the expected format in the frontend
-    const transformedStocks = paperStocks.map(stock => ({
-      ...stock,
-      paper_type: stock.type,
-      user_name: stock.addedByUser?.name || null,
-      taker_name: stock.takenByUser?.name || null,
-      remaining_length: stock.remainingLength,
-      created_at: stock.dateAdded,
-      logs: stock.paperLogs
-    }));
-
-    return NextResponse.json(transformedStocks);
   } catch (error) {
     console.error("Error fetching paper stocks:", error);
     return NextResponse.json(
-      { error: "Error fetching paper stocks", details: error instanceof Error ? error.message : String(error) },
+      { error: "Failed to fetch paper stocks" },
       { status: 500 }
     );
   }

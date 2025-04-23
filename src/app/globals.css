@@ -608,3 +608,76 @@ body > * {
     }
   }
 }
+
+/* Update the global print styles to be more aggressive */
+@media print {
+  /* Reset everything to white */
+  html, body {
+    background: white !important;
+    background-color: white !important;
+    background-image: none !important;
+  }
+  
+  /* Remove all background decorative elements */
+  :root::before, 
+  :root::after, 
+  .dark::before, 
+  .dark::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+  }
+  
+  /* Force white background on absolutely everything */
+  *, *::before, *::after {
+    background-color: white !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-color: #ddd !important;
+    color: black !important;
+  }
+  
+  /* Allow only specific elements to have color */
+  .bg-orange, tr.bg-orange th, 
+  [style*="background-color: #ec9238"], 
+  [style*="background-color:#ec9238"] {
+    background-color: #ec9238 !important;
+    color: black !important;
+  }
+  
+  /* Remove all backdrop filters and blur effects */
+  [class*="backdrop-blur"], 
+  [style*="backdrop-filter"],
+  [class*="glass-"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: white !important;
+  }
+  
+  /* Remove all gradients */
+  [style*="background-image"],
+  [style*="background: linear-gradient"],
+  [style*="background: radial-gradient"] {
+    background-image: none !important;
+    background: white !important;
+  }
+  
+  /* Reset container backgrounds */
+  .bg-background, 
+  .bg-card, 
+  .bg-popover, 
+  .bg-primary, 
+  .bg-secondary, 
+  .bg-muted, 
+  .bg-accent {
+    background-color: white !important;
+  }
+  
+  /* Print color adjustments */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}

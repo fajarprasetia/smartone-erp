@@ -13,9 +13,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Key } from "lucide-react"
 import { UserFormDialog } from "./user-form-dialog"
 import { UserDeleteDialog } from "./user-delete-dialog"
+import { PasswordResetDialog } from "./password-reset-dialog"
 import { toast } from "@/components/ui/use-toast"
 
 interface UserTableProps {
@@ -30,6 +31,7 @@ export function UserTable({ users, roles }: UserTableProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isPasswordResetDialogOpen, setIsPasswordResetDialogOpen] = useState(false)
 
   const handleDelete = async (id: string) => {
     setIsDeleteDialogOpen(true)
@@ -110,6 +112,18 @@ export function UserTable({ users, roles }: UserTableProps) {
                       size="icon"
                       onClick={() => {
                         setSelectedUser(user)
+                        setIsPasswordResetDialogOpen(true)
+                      }}
+                      disabled={user.email === "systemadministrator@smartone.id"}
+                      title="Reset Password"
+                    >
+                      <Key className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedUser(user)
                         setIsDeleteDialogOpen(true)
                       }}
                       disabled={user.role.name === "System Administrator"}
@@ -129,6 +143,12 @@ export function UserTable({ users, roles }: UserTableProps) {
         onOpenChange={setIsEditDialogOpen}
         user={selectedUser}
         roles={roles}
+      />
+
+      <PasswordResetDialog
+        open={isPasswordResetDialogOpen}
+        onOpenChange={setIsPasswordResetDialogOpen}
+        user={selectedUser}
       />
 
       <UserDeleteDialog

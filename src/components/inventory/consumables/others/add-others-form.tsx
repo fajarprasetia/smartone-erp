@@ -7,7 +7,14 @@ import * as z from "zod"
 import { toast } from "sonner"
 import { Loader2, QrCode } from "lucide-react"
 
-import { DialogModal } from "@/components/ui/dialog-modal"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -134,113 +141,188 @@ export function AddOthersForm({
   }
 
   return (
-    <DialogModal 
-      open={open} 
-      onOpenChange={onOpenChange}
-      title="Add New Item to Inventory"
-      description="Fill out this form to add a new item to the inventory."
-      maxWidth="lg"
-    >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* QR Code */}
-          <FormField
-            control={form.control}
-            name="qr_code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>QR/Barcode (Optional)</FormLabel>
-                <div className="flex gap-2">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Add New Item to Inventory</DialogTitle>
+          <DialogDescription>
+            Fill out this form to add a new item to the inventory.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* QR Code */}
+            <FormField
+              control={form.control}
+              name="qr_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>QR/Barcode (Optional)</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        placeholder="Enter or scan QR code"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleScanBarcode}
+                      disabled={isScanning}
+                    >
+                      {isScanning ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <QrCode className="h-4 w-4 mr-2" />
+                      )}
+                      Scan
+                    </Button>
+                  </div>
+                  <FormDescription>
+                    Optional identifier for the item. If left blank, a unique ID will be generated.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Category and Item Name Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Category Selection */}
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="SPAREPARTS">Spare Parts</SelectItem>
+                          <SelectItem value="STATIONERY">Office Stationery</SelectItem>
+                          <SelectItem value="MISCELLANEOUS">Miscellaneous</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Item Name */}
+              <FormField
+                control={form.control}
+                name="item_name"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Item Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter item name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Quantity and Unit Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Quantity Input */}
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Quantity</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="Enter quantity"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Unit Input */}
+              <FormField
+                control={form.control}
+                name="unit"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Unit</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="piece">Piece</SelectItem>
+                          <SelectItem value="box">Box</SelectItem>
+                          <SelectItem value="roll">Roll</SelectItem>
+                          <SelectItem value="set">Set</SelectItem>
+                          <SelectItem value="bottle">Bottle</SelectItem>
+                          <SelectItem value="pair">Pair</SelectItem>
+                          <SelectItem value="pack">Pack</SelectItem>
+                          <SelectItem value="meter">Meter</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Location Input */}
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Storage Location (Optional)</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter or scan QR code"
+                      placeholder="Enter storage location (e.g., 'Cabinet A3', 'Warehouse Shelf B')"
                       {...field}
                       value={field.value || ""}
+                      className="bg-background/50"
                     />
-                  </FormControl>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleScanBarcode}
-                    disabled={isScanning}
-                  >
-                    {isScanning ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <QrCode className="h-4 w-4 mr-2" />
-                    )}
-                    Scan
-                  </Button>
-                </div>
-                <FormDescription>
-                  Optional identifier for the item. If left blank, a unique ID will be generated.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Category and Item Name Row */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Category Selection */}
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SPAREPARTS">Spare Parts</SelectItem>
-                        <SelectItem value="STATIONERY">Office Stationery</SelectItem>
-                        <SelectItem value="MISCELLANEOUS">Miscellaneous</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            {/* Item Name */}
+            {/* Description Input */}
             <FormField
               control={form.control}
-              name="item_name"
+              name="description"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Item Name</FormLabel>
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter item name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          {/* Quantity and Unit Row */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Quantity Input */}
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="1"
-                      placeholder="Enter quantity"
+                    <Textarea
+                      placeholder="Enter a description of the item"
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      value={field.value || ""}
+                      className="resize-none bg-background/50"
                     />
                   </FormControl>
                   <FormMessage />
@@ -248,114 +330,42 @@ export function AddOthersForm({
               )}
             />
             
-            {/* Unit Input */}
+            {/* Notes Input */}
             <FormField
               control={form.control}
-              name="unit"
+              name="notes"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Unit</FormLabel>
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
                   <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a unit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="piece">Piece</SelectItem>
-                        <SelectItem value="box">Box</SelectItem>
-                        <SelectItem value="roll">Roll</SelectItem>
-                        <SelectItem value="set">Set</SelectItem>
-                        <SelectItem value="bottle">Bottle</SelectItem>
-                        <SelectItem value="pair">Pair</SelectItem>
-                        <SelectItem value="pack">Pack</SelectItem>
-                        <SelectItem value="meter">Meter</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Textarea
+                      placeholder="Enter any additional notes about the item"
+                      {...field}
+                      value={field.value || ""}
+                      className="resize-none bg-background/50"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-          
-          {/* Location Input */}
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Storage Location (Optional)</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter storage location (e.g., 'Cabinet A3', 'Warehouse Shelf B')"
-                    {...field}
-                    value={field.value || ""}
-                    className="bg-background/50"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Description Input */}
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description (Optional)</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter a description of the item"
-                    {...field}
-                    value={field.value || ""}
-                    className="resize-none bg-background/50"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Notes Input */}
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes (Optional)</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter any additional notes about the item"
-                    {...field}
-                    value={field.value || ""}
-                    className="resize-none bg-background/50"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add to Inventory"}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </DialogModal>
+            
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add to Inventory"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   )
 } 

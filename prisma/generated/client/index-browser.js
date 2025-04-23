@@ -221,6 +221,21 @@ exports.Prisma.WhatsAppConfigScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.SpkCounterScalarFieldEnum = {
+  id: 'id',
+  prefix: 'prefix',
+  lastValue: 'lastValue',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.TempSpkReservationScalarFieldEnum = {
+  id: 'id',
+  spk: 'spk',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt'
+};
+
 exports.Prisma.FinancialTransactionScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -228,6 +243,141 @@ exports.Prisma.FinancialTransactionScalarFieldEnum = {
   description: 'description',
   category: 'category',
   date: 'date',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  billId: 'billId',
+  invoiceId: 'invoiceId',
+  orderId: 'orderId',
+  userId: 'userId'
+};
+
+exports.Prisma.VendorScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  contactName: 'contactName',
+  email: 'email',
+  phone: 'phone',
+  address: 'address',
+  taxId: 'taxId',
+  notes: 'notes',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BillScalarFieldEnum = {
+  id: 'id',
+  billNumber: 'billNumber',
+  vendorId: 'vendorId',
+  issueDate: 'issueDate',
+  dueDate: 'dueDate',
+  amount: 'amount',
+  status: 'status',
+  notes: 'notes',
+  attachmentUrl: 'attachmentUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  description: 'description',
+  paidAmount: 'paidAmount',
+  reference: 'reference',
+  totalAmount: 'totalAmount'
+};
+
+exports.Prisma.BillItemScalarFieldEnum = {
+  id: 'id',
+  billId: 'billId',
+  description: 'description',
+  quantity: 'quantity',
+  unitPrice: 'unitPrice',
+  amount: 'amount',
+  accountId: 'accountId',
+  taxRate: 'taxRate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PaymentScalarFieldEnum = {
+  id: 'id',
+  billId: 'billId',
+  amount: 'amount',
+  paymentDate: 'paymentDate',
+  paymentMethod: 'paymentMethod',
+  paymentReference: 'paymentReference',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AttachmentScalarFieldEnum = {
+  id: 'id',
+  billId: 'billId',
+  fileName: 'fileName',
+  fileType: 'fileType',
+  fileSize: 'fileSize',
+  fileUrl: 'fileUrl'
+};
+
+exports.Prisma.InvoiceScalarFieldEnum = {
+  id: 'id',
+  invoiceNumber: 'invoiceNumber',
+  invoiceDate: 'invoiceDate',
+  dueDate: 'dueDate',
+  status: 'status',
+  customerId: 'customerId',
+  orderId: 'orderId',
+  subtotal: 'subtotal',
+  tax: 'tax',
+  discount: 'discount',
+  total: 'total',
+  amountPaid: 'amountPaid',
+  balance: 'balance',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ChartOfAccountScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  type: 'type',
+  subtype: 'subtype',
+  description: 'description',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.FinancialPeriodScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  isClosed: 'isClosed',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.JournalEntryScalarFieldEnum = {
+  id: 'id',
+  entryNumber: 'entryNumber',
+  date: 'date',
+  description: 'description',
+  reference: 'reference',
+  status: 'status',
+  periodId: 'periodId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.JournalEntryItemScalarFieldEnum = {
+  id: 'id',
+  journalEntryId: 'journalEntryId',
+  accountId: 'accountId',
+  description: 'description',
+  debit: 'debit',
+  credit: 'credit',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -613,7 +763,19 @@ exports.Prisma.ModelName = {
   ChatMessage: 'ChatMessage',
   WhatsAppTemplate: 'WhatsAppTemplate',
   WhatsAppConfig: 'WhatsAppConfig',
+  SpkCounter: 'SpkCounter',
+  TempSpkReservation: 'TempSpkReservation',
   FinancialTransaction: 'FinancialTransaction',
+  Vendor: 'Vendor',
+  Bill: 'Bill',
+  BillItem: 'BillItem',
+  Payment: 'Payment',
+  Attachment: 'Attachment',
+  Invoice: 'Invoice',
+  ChartOfAccount: 'ChartOfAccount',
+  FinancialPeriod: 'FinancialPeriod',
+  JournalEntry: 'JournalEntry',
+  JournalEntryItem: 'JournalEntryItem',
   Order: 'Order',
   OrderLog: 'OrderLog',
   Produk: 'Produk',

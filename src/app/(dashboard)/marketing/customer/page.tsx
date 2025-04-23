@@ -272,7 +272,15 @@ function IntegratedCustomerTableNew() {
         body: JSON.stringify(payload)
       });
       
-      if (!res.ok) throw new Error('Failed to save customer');
+      if (!res.ok) {
+        const errorData = await res.json();
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to save customer data.",
+          variant: "destructive"
+        });
+        throw new Error(errorData.error || 'Failed to save customer');
+      }
       
       // Get the updated/new customer
       const savedCustomer = await res.json();
@@ -301,11 +309,7 @@ function IntegratedCustomerTableNew() {
       });
     } catch (error) {
       console.error('Error saving customer:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save customer data.",
-        variant: "destructive"
-      });
+      // Toast already shown in error handling above
     } finally {
       setIsSubmitting(false);
     }

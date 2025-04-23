@@ -47,7 +47,10 @@ export function UserAvatar() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-white/20 dark:bg-white/10" />
-        <DropdownMenuItem className="cursor-pointer hover:bg-white/20 dark:hover:bg-white/10 focus:bg-white/20 dark:focus:bg-white/10 text-white">
+        <DropdownMenuItem 
+          className="cursor-pointer hover:bg-white/20 dark:hover:bg-white/10 focus:bg-white/20 dark:focus:bg-white/10 text-white"
+          onClick={() => router.push('/profile')}
+        >
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>

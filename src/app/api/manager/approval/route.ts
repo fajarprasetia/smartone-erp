@@ -34,7 +34,105 @@ const bigIntSerializer = (data: any): any => {
     
     return data;
   };
-  export async function GET(req: Request) {
+  export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized - Please login" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const url = new URL(req.url);
+    const segments = url.pathname.split('/');
+    const id = segments[segments.length - 1];
+    const decodedId = decodeURIComponent(id);
+    
+    console.log('Processing approval for order:', decodedId);
+    
+    if (!decodedId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Order ID is required" }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Finding order with ID:', decodedId);
+    const order = await db.order.findUnique({
+      where: { id: decodedId },
+    });
+
+    if (!order) {
+      console.log('Order not found:', decodedId);
+      return new NextResponse(
+        JSON.stringify({ error: "Order not found" }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('Found order:', order.id);
+
+    const body = await req.json();
+
+    // Update order based on user role and request body
+    let updateData = {};
+    if (session.user.role?.name === "Manager") {
+      updateData = {
+        approval_mng: body.approval_mng || "APPROVED",
+        manager_id: session.user.id,
+        tgl_app_manager: new Date(body.tgl_app_manager || Date.now())
+      };
+    } else if (session.user.role?.name === "Operation Manager") {
+      updateData = {
+        approval_opr: body.approval_opr || "APPROVED",
+        opr_id: session.user.id,
+        tgl_app_prod: new Date(body.tgl_app_prod || Date.now())
+      };
+    } else {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized role" }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Updating order with data:', updateData);
+    
+    try {
+      const updatedOrder = await db.order.update({
+        where: { id: decodedId },
+        data: updateData
+      });
+      
+      console.log('Successfully updated order:', updatedOrder.id);
+
+      return new NextResponse(
+        JSON.stringify(bigIntSerializer(updatedOrder)),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } catch (dbError) {
+      console.error('Database error during order update:', dbError);
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Failed to update order in database',
+          message: dbError instanceof Error ? dbError.message : 'Unknown database error'
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+  } catch (error) {
+    console.error("Error updating approval status:", error);
+    return new NextResponse(
+      JSON.stringify({ 
+        error: "Failed to update approval status",
+        message: error instanceof Error ? error.message : "Unknown error"
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+export async function GET(req: Request) {
     try {
       console.log("Approval List API called");
       

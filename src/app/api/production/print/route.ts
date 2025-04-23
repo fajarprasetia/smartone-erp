@@ -120,14 +120,14 @@ const bigIntSerializer = (data: any): any => {
         .filter(order => order.marketing)
         .map(order => order.marketing);
       
-      let marketingUsers = {};
+      let marketingUsers: Record<string, string> = {};
       
       if (marketingIds.length > 0) {
         try {
           const users = await db.user.findMany({
             where: {
               id: {
-                in: marketingIds
+                in: marketingIds.filter((id): id is string => id !== null)
               }
             },
             select: {
@@ -136,7 +136,7 @@ const bigIntSerializer = (data: any): any => {
             }
           });
           
-          marketingUsers = users.reduce((acc, user) => {
+          marketingUsers = users.reduce((acc: Record<string, string>, user) => {
             acc[user.id] = user.name;
             return acc;
           }, {});
@@ -152,13 +152,13 @@ const bigIntSerializer = (data: any): any => {
         .filter(order => order.designer_id)
         .map(order => order.designer_id)
         .filter((id, idx, arr) => id && arr.indexOf(id) === idx);
-      let designerUsers = {};
+      let designerUsers: Record<string, string> = {};
       if (designerIds.length > 0) {
         try {
           const users = await db.user.findMany({
             where: {
               id: {
-                in: designerIds
+                in: designerIds.filter((id): id is string => id !== null)
               }
             },
             select: {
@@ -166,7 +166,7 @@ const bigIntSerializer = (data: any): any => {
               name: true
             }
           });
-          designerUsers = users.reduce((acc, user) => {
+          designerUsers = users.reduce((acc: Record<string, string>, user) => {
             acc[user.id] = user.name;
             return acc;
           }, {});
@@ -178,7 +178,7 @@ const bigIntSerializer = (data: any): any => {
       
       const modifiedOrders = orders.map(order => ({
         ...order,
-        asal_bahan: order.asal_bahan === 22 ? 'SMARTONE' : 'CUSTOMER',
+        asal_bahan: order.asal_bahan_id === BigInt(22) ? 'SMARTONE' : 'CUSTOMER',
         marketing: order.marketing
           ? { id: order.marketing, name: marketingUsers[order.marketing] || order.marketing }
           : null,

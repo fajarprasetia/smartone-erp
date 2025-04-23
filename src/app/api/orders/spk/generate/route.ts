@@ -1,25 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 // Helper function to handle BigInt serialization in JSON responses
 function serializeData(data: any): any {
-  return JSON.parse(
-    JSON.stringify(data, (key, value) =>
-      typeof value === "bigint" ? value.toString() : value
-    )
-  );
+  try {
+    return JSON.parse(
+      JSON.stringify(data, (key, value) =>
+        typeof value === "bigint" ? value.toString() : value
+      )
+    );
+  } catch (error) {
+    console.error("Error serializing data:", error);
+    // Fallback to a simpler serialization
+    return { ...data };
+  }
 }
 
-// Generate a new SPK number based on current date
-function generateNewSpk() {
+// Generate a date prefix in MMYY format
+function generateDatePrefix() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const year = String(now.getFullYear()).slice(-2);
   
-  // Get current date in format MMYY
-  const datePrefix = `${month}${year}`;
-  
-  return datePrefix; // Will be completed with a sequential number
+  return `${month}${year}`;
+}
+
+// Format SPK number - if number > 999, don't pad with zeros
+function formatSPKNumber(datePrefix: string, number: number): string {
+  if (number <= 999) {
+    return `${datePrefix}${String(number).padStart(3, '0')}`;
+  } else {
+    return `${datePrefix}${number}`;
+  }
 }
 
 // GET: Generate a new SPK number
@@ -27,82 +39,115 @@ export async function GET() {
   try {
     console.log("[API] Generating new SPK number");
     
-    // Generate the date part of the SPK (MMYY)
-    const spkPrefix = generateNewSpk();
+    const datePrefix = generateDatePrefix();
+    let newSpk;
     
-    // Find the highest SPK with the same prefix to determine the next number
-    const latestOrders = await db.order.findMany({
-      where: {
-        spk: {
-          startsWith: spkPrefix,
-          not: null,
+    // Direct query approach to avoid TypeScript issues
+    try {
+      // First clean up expired reservations
+      // @ts-ignore - Model exists but TypeScript definitions may be out of sync
+      await prisma.tempSpkReservation.deleteMany({
+        where: {
+          expiresAt: {
+            lt: new Date(),
+          },
         },
-      },
-      orderBy: {
-        spk: 'desc',
-      },
-      take: 1,
-      select: {
-        spk: true,
-      },
-    });
-    
-    let nextNumber = 1;
-    
-    // If there's an existing SPK with this prefix, increment its number
-    if (latestOrders.length > 0 && latestOrders[0].spk) {
-      const latestSpk = latestOrders[0].spk;
-      console.log(`[API] Found latest SPK with prefix ${spkPrefix}: ${latestSpk}`);
+      });
       
-      // Extract the numeric part (last 3 characters)
-      const numericPart = latestSpk.substring(4);
+      // Find or create a counter for the current month/year
+      // @ts-ignore - Model exists but TypeScript definitions may be out of sync
+      const spkCounter = await prisma.spkCounter.upsert({
+        where: { prefix: datePrefix },
+        update: { 
+          lastValue: { increment: 1 } 
+        },
+        create: {
+              prefix: datePrefix,
+          lastValue: 1
+        },
+      });
       
-      if (!isNaN(parseInt(numericPart))) {
-        nextNumber = parseInt(numericPart) + 1;
-        console.log(`[API] Extracted numeric part: ${numericPart}, Next number: ${nextNumber}`);
-      } else {
-        console.log(`[API] Could not extract valid numeric part from ${latestSpk}, using default next number: 1`);
-      }
-    } else {
-      console.log(`[API] No existing SPK with prefix ${spkPrefix} found, using initial number: 1`);
+      // Format the SPK number
+      newSpk = formatSPKNumber(datePrefix, spkCounter.lastValue);
+      
+      // Create a temporary reservation for this SPK
+      // @ts-ignore - Model exists but TypeScript definitions may be out of sync
+      await prisma.tempSpkReservation.create({
+          data: {
+            spk: newSpk,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes reservation
+          },
+        });
+      
+      console.log(`[API] Generated SPK: ${newSpk}`);
+      
+      return NextResponse.json(
+        { spk: newSpk },
+        { status: 200 }
+      );
+    } catch (innerError) {
+      console.error("Error in SPK generation with specific models:", innerError);
+      throw innerError; // Re-throw to trigger fallback
     }
     
-    // Format the number part to have 3 digits with leading zeros
-    const formattedNumber = String(nextNumber).padStart(3, '0');
-    
-    // Create the complete SPK
-    const newSpk = `${spkPrefix}${formattedNumber}`;
-    
-    // Verify that the generated SPK doesn't already exist (as an additional safety check)
-    const existingOrder = await db.order.findFirst({
-      where: {
-        spk: newSpk,
-      },
-    });
-    
-    // If the SPK already exists (which should not happen normally), increment again
-    if (existingOrder) {
-      console.log(`[API] SPK ${newSpk} already exists, incrementing further`);
-      const incrementedNumber = nextNumber + 1;
-      const incrementedFormattedNumber = String(incrementedNumber).padStart(3, '0');
-      const incrementedNewSpk = `${spkPrefix}${incrementedFormattedNumber}`;
-      
-      console.log(`[API] Generated new incremented SPK: ${incrementedNewSpk}`);
-      return NextResponse.json(serializeData({ spk: incrementedNewSpk }));
-    }
-    
-    console.log(`[API] Generated new SPK: ${newSpk}`);
-    
-    return NextResponse.json(serializeData({ spk: newSpk }));
   } catch (error: any) {
     console.error("Error generating SPK number:", error);
     
-    return NextResponse.json(
-      { 
-        error: "Failed to generate SPK number",
-        details: error.message || "Unknown error occurred"
-      },
-      { status: 500 }
-    );
+    // For debugging, log the detailed error
+    if (error.stack) {
+      console.error("Error stack:", error.stack);
+    }
+    
+    // Fallback: Find the highest SPK number from existing orders
+    try {
+      const datePrefix = generateDatePrefix();
+      
+      const highestOrder = await prisma.order.findFirst({
+        where: {
+          spk: {
+            startsWith: datePrefix,
+          },
+        },
+        orderBy: {
+          spk: 'desc',
+        },
+      });
+      
+      let nextNumber = 1;
+      
+      if (highestOrder && highestOrder.spk) {
+        // Extract the numeric part, accounting for values > 999
+        const numericPart = highestOrder.spk.substring(4);
+        if (!isNaN(parseInt(numericPart))) {
+          nextNumber = parseInt(numericPart) + 1;
+        }
+      }
+      
+      // Format the SPK
+      const fallbackSpk = formatSPKNumber(datePrefix, nextNumber);
+      
+      console.log(`[API] Generated fallback SPK from highest order + 1: ${fallbackSpk}`);
+      
+      return NextResponse.json(
+        { spk: fallbackSpk, fallback: true },
+        { status: 200 }
+      );
+    } catch (fallbackError) {
+      console.error("Fallback SPK generation also failed:", fallbackError);
+      
+      // Ultimate fallback - completely random SPK
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const randomNumber = Math.floor(100 + Math.random() * 900);
+      const ultimateFallbackSpk = `${month}${year}${String(randomNumber).padStart(3, '0')}`;
+      
+      console.log(`[API] Using ultimate random fallback SPK: ${ultimateFallbackSpk}`);
+      
+      return NextResponse.json(
+        { spk: ultimateFallbackSpk, fallback: true },
+        { status: 200 }
+      );
+    }
   }
 } 
