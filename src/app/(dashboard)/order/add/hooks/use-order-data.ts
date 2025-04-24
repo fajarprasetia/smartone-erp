@@ -44,7 +44,11 @@ export function useOrderData(mode: 'create' | 'edit' = 'create', initialOrderDat
   const session = useSession()
   
   // Use react-hook-form with zod validation
-  const resolver: Resolver<OrderFormValues> = async (values, context, options) => {
+  const resolver: Resolver<OrderFormValues> = (async (
+    values: OrderFormValues,
+    context: any,
+    options: any
+  ) => {
     // Perform the validation
     const result = await zodResolver(orderFormSchema)(values, context, options);
     
@@ -61,7 +65,7 @@ export function useOrderData(mode: 'create' | 'edit' = 'create', initialOrderDat
       values: result.values,
       errors: result.errors
     };
-  };
+  }) as any;
   
   const form = useForm<OrderFormValues>({
     resolver,
@@ -81,7 +85,7 @@ export function useOrderData(mode: 'create' | 'edit' = 'create', initialOrderDat
   const watchedMatchingColor = form.watch("matchingColor")
   
   // Function to refresh the customers list
-  const refreshCustomers = async (): Promise<void> => {
+  const refreshCustomers = async (): Promise<Customer[]> => {
     try {
       const response = await fetch('/api/customers')
       if (!response.ok) {

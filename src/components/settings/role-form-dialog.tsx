@@ -28,7 +28,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
   permissionIds: z.array(z.string()).min(1, "Select at least one permission"),
-  isAdmin: z.boolean().default(false),
+  isAdmin: z.boolean(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -36,7 +36,7 @@ type FormValues = z.infer<typeof formSchema>
 interface RoleFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  role?: Role | null
+  role?: (Role & { permissions: Permission[] }) | null
   permissions: Permission[]
 }
 
@@ -77,7 +77,7 @@ export function RoleFormDialog({
       form.reset({
         name: role.name,
         description: role.description || "",
-        permissionIds: role.permissions.map((p) => p.id),
+        permissionIds: role.permissions.map((p: Permission) => p.id),
         isAdmin: role.isAdmin || false,
       })
     } else if (!open) {

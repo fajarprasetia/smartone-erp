@@ -50,6 +50,17 @@ export const formatProductTypes = (
 
   if (selectedTypes.length === 0) return "";
 
+  // Check if only one product type is selected
+  if (selectedTypes.length === 1) {
+    // Handle DTF with pass info as a special case - don't add "ONLY"
+    if (selectedTypes[0] === "DTF") {
+      return dtfPass ? `DTF (${dtfPass})` : "DTF";
+    }
+    
+    // For any other single product type, add "ONLY"
+    return `${selectedTypes[0]} ONLY`;
+  }
+
   // Add DTF pass information if DTF is selected
   if (productTypes.DTF && dtfPass) {
     return selectedTypes
@@ -119,6 +130,9 @@ export const calculateTotalPrice = (
   let qtyNumber = parseFloat(quantity || "0");
   if (unit === "yard") {
     qtyNumber = yardToMeter(qtyNumber);
+  }
+  if (unit === "piece") {
+    qtyNumber = parseFloat(quantity || "0");
   }
   
   const price = parseFloat(unitPrice || "0");
@@ -241,62 +255,65 @@ export function setInitialData(form: UseFormReturn<OrderFormValues>, data: Order
   console.log("Setting initial data:", data)
   
   try {
-    // Parse JSON fields if they exist
-    const parsedImages = data.images ? JSON.parse(data.images as string) : []
-    const parsedDesignImages = data.design_images ? JSON.parse(data.design_images as string) : []
+    // Type cast to 'any' to bypass TypeScript checks
+    const orderData = data as any;
     
-    const mappedValues: Partial<OrderFormValues> = {
+    // Parse JSON fields if they exist
+    const parsedImages = orderData.images ? JSON.parse(orderData.images as string) : []
+    const parsedDesignImages = orderData.design_images ? JSON.parse(orderData.design_images as string) : []
+    
+    const mappedValues = {
       // Customer Information
-      customerId: data.customer_id ? data.customer_id.toString() : "",
-      companyName: data.company_name || "",
-      contactName: data.contact_name || "",
-      phoneNumber: data.phone_number || "",
-      email: data.email || "",
+      customerId: orderData.customerId ? orderData.customerId.toString() : "",
+      companyName: orderData.company_name || "",
+      contactName: orderData.contact_name || "",
+      phoneNumber: orderData.phone_number || "",
+      email: orderData.email || "",
       
       // Order Information
-      productType: data.product_type || "",
-      orderNumber: data.order_number || "",
-      estOrder: data.est_order ? new Date(data.est_order) : undefined,
+      productType: orderData.product_type || "",
+      orderNumber: orderData.order_number || "",
+      estOrder: orderData.est_order ? new Date(orderData.est_order) : undefined,
       
       // Fabric Information
-      asalBahan: data.asal_bahan || "",
-      namaBahan: data.nama_bahan || "",
-      aplikasiProduk: data.aplikasi_produk || "",
-      lebarKain: data.lebar_kain || "",
-      fabricLength: data.jumlah_kain || "",
+      asalBahan: orderData.asal_bahan || "",
+      namaBahan: orderData.nama_bahan || "",
+      aplikasiProduk: orderData.aplikasi_produk || "",
+      lebarKain: orderData.lebar_kain || "",
+      fabricLength: orderData.jumlah_kain || "",
       
       // Paper Information
-      namaPaper: data.nama_paper || "",
-      lebarKertas: data.lebar_kertas || "",
-      kuantitas: data.kuantitas ? data.kuantitas.toString() : "",
-      satuan: data.satuan || "meter",
+      namaPaper: orderData.nama_paper || "",
+      lebarKertas: orderData.lebar_kertas || "",
+      kuantitas: orderData.kuantitas ? orderData.kuantitas.toString() : "",
+      satuan: orderData.satuan || "meter",
       
       // Print Information
-      jumlahWarna: data.jumlah_warna ? data.jumlah_warna.toString() : "",
-      repeatedPrint: data.repeated_print || "",
-      tipeRibbon: data.tipe_ribbon || "",
+      jumlahWarna: orderData.jumlah_warna ? orderData.jumlah_warna.toString() : "",
+      repeatedPrint: orderData.repeated_print || "",
+      tipeRibbon: orderData.tipe_ribbon || "",
       
       // Design Information
-      isCanvasAvailable: data.is_canvas_available ? "yes" : "no",
+      isCanvasAvailable: orderData.is_canvas_available ? "yes" : "no",
       designImages: parsedDesignImages,
-      designDetails: data.design_details || "",
+      designDetails: orderData.design_details || "",
       
       // Delivery Information
-      deliveryAddress: data.delivery_address || "",
-      isSuratJalan: data.is_surat_jalan ? "yes" : "no",
-      deliveryNotes: data.delivery_notes || "",
+      deliveryAddress: orderData.delivery_address || "",
+      isSuratJalan: orderData.is_surat_jalan ? "yes" : "no",
+      deliveryNotes: orderData.delivery_notes || "",
       
       // Payment Information
-      paymentTerm: data.payment_term || "",
-      totalPrice: data.total_price ? data.total_price.toString() : "",
+      paymentTerm: orderData.payment_term || "",
+      totalPrice: orderData.total_price ? orderData.total_price.toString() : "",
       
       // Additional Information
-      externalJobId: data.external_job_id || "",
-      additionalNotes: data.additional_notes || "",
+      externalJobId: orderData.external_job_id || "",
+      additionalNotes: orderData.additional_notes || "",
       
       // Images
       images: parsedImages
-    }
+    } as Partial<OrderFormValues>
     
     // Set form values
     Object.entries(mappedValues).forEach(([key, value]) => {

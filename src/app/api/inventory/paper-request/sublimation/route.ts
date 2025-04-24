@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       const isSublimation = paperType.includes("sublim");
 
       // Check if there's remaining length
-      const remainingLength = parseFloat(String(paperStock.remainingLength || paperStock.remaining_length || 0));
+      const remainingLength = parseFloat(String(paperStock.remainingLength || 0));
 
       return isSublimation && remainingLength > 0;
     });
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     )].sort((a, b) => parseInt(a || "0") - parseInt(b || "0"));
 
     // Create a map of widths by GSM
-    const widthsByGsm = {};
+    const widthsByGsm: Record<string, string[]> = {};
     gsms.forEach(gsm => {
       const papersWithGsm = sublimationPapers.filter(
         paper => paper.paper_stock?.gsm && String(paper.paper_stock.gsm) === gsm
@@ -68,10 +68,10 @@ export async function GET(req: Request) {
       const widths = [...new Set(
         papersWithGsm
           .map(paper => paper.paper_stock?.width ? String(paper.paper_stock.width) : null)
-          .filter(Boolean)
+          .filter(Boolean) as string[]
       )].sort((a, b) => parseInt(a || "0") - parseInt(b || "0"));
       
-      widthsByGsm[gsm] = widths;
+      widthsByGsm[gsm as string] = widths;
     });
 
     // Return the data
@@ -84,7 +84,7 @@ export async function GET(req: Request) {
         gsm: paper.paper_stock?.gsm,
         width: paper.paper_stock?.width,
         type: paper.paper_stock?.type,
-        remaining_length: paper.paper_stock?.remainingLength || paper.paper_stock?.remaining_length
+        remaining_length: paper.paper_stock?.remainingLength
       }))
     });
   } catch (error) {

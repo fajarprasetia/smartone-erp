@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       }
     }
     
-    const paperRequests = await prisma.PaperRequest.findMany({
+    const paperRequests = await prisma.paperRequest.findMany({
       where: whereClause,
       orderBy: {
         created_at: 'desc',
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Create the paper request
-    const newPaperRequest = await prisma.PaperRequest.create({
+    const newPaperRequest = await prisma.paperRequest.create({
       data: {
         requested_by: userId,
         paper_type: data.paper_type,
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Create a log entry for the new paper request
-    await prisma.PaperLog.create({
+    await prisma.paperLog.create({
       data: {
         action: "REQUESTED",
         performed_by: userId,

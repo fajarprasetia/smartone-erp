@@ -41,16 +41,11 @@ export async function POST(req: Request) {
       // 1. Create a financial transaction record
       const transaction = await tx.financialTransaction.create({
         data: {
-          transactionNumber: `TRX-${Date.now()}`,
+          description: `Payment via ${paymentMethod} (TRX-${Date.now()}) for order ${order.spk || order.id}`,
           type: "INCOME",
           amount: parseFloat(amount),
-          description: `Payment for order ${order.spk || order.id}`,
           category: "SALES",
           date: new Date(),
-          status: "COMPLETED",
-          paymentMethod,
-          notes,
-          receiptImageUrl,
           orderId,
         }
       });
@@ -102,6 +97,20 @@ export async function POST(req: Request) {
       });
       
       if (!invoice) {
+        // Get customerId (ensure it exists and is in the correct format)
+        let customerIdValue: bigint | undefined;
+        
+        if (order.customerId) {
+          customerIdValue = BigInt(String(order.customerId));
+        } else if (order.customer?.id) {
+          // Convert from Prisma's BigInt type to native JS bigint
+          customerIdValue = BigInt(String(order.customer.id));
+        }
+        
+        if (!customerIdValue) {
+          throw new Error("Customer ID is required for creating an invoice");
+        }
+        
         // Create new invoice
         invoice = await tx.invoice.create({
           data: {
@@ -109,7 +118,7 @@ export async function POST(req: Request) {
             invoiceDate: new Date(),
             dueDate: new Date(new Date().setDate(new Date().getDate() + 30)), // 30 days from now
             status: paymentType === "FULL" || paymentType === "SETTLEMENT" ? "PAID" : "PARTIALLY_PAID",
-            customerId: order.customer_id,
+            customerId: customerIdValue,
             orderId,
             subtotal: parseFloat(order.nominal_total || "0"),
             tax: 0, // No tax by default
@@ -193,7 +202,7 @@ export async function GET(req: Request) {
       orderBy: { date: "desc" }
     });
     
-    const invoice = await db.Invoice.findFirst({
+    const invoice = await db.invoice.findFirst({
       where: { orderId }
     });
     

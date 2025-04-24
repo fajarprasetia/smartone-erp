@@ -338,6 +338,7 @@ export async function POST(req: NextRequest) {
     const quantity = data.unit === "yard" 
       ? yardToMeter(parseFloat(data.jumlah || "0")).toString()
       : data.jumlah;
+    console.log("[API] Converted quantity:", quantity, "from unit:", data.unit);
 
     // Process additional costs
     const additionalCosts = data.additionalCosts || [];

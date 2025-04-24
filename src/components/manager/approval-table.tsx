@@ -107,7 +107,17 @@ interface SortOption {
   order: "asc" | "desc"
 }
 
-export function OrderTable() {
+interface OrderTableProps {
+  approvalStatus?: string
+  role?: any
+  showActions?: boolean
+}
+
+export function OrderTable({ 
+  approvalStatus = "pending", 
+  role, 
+  showActions = false 
+}: OrderTableProps) {
   // Renamed component to match import in ManagerPage
   const router = useRouter()
   
@@ -143,10 +153,10 @@ export function OrderTable() {
       
       if (session?.user?.role?.name === "Manager") {
         // For Manager role, filter out orders that already have "APPROVED" status
-        filteredOrders = filteredOrders.filter(order => order.approve_mng !== "APPROVED");
+        filteredOrders = filteredOrders.filter((order: ApprovalOrderItem) => order.approve_mng !== "APPROVED");
       } else if (session?.user?.role?.name === "Operation Manager") {
         // For Operation Manager role, filter out orders that already have "APPROVED" status
-        filteredOrders = filteredOrders.filter(order => order.approval_opr !== "APPROVED");
+        filteredOrders = filteredOrders.filter((order: ApprovalOrderItem) => order.approval_opr !== "APPROVED");
       }
       
       setOrders(filteredOrders);
@@ -193,8 +203,14 @@ export function OrderTable() {
       }
     };
     
+    // Only fetch session if role is not provided via props
+    if (!role) {
     fetchSession();
-  }, []);
+    } else {
+      // Use the role prop if it's provided
+      setSession({ user: { role } });
+    }
+  }, [role]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -233,6 +249,19 @@ export function OrderTable() {
 const handleApproveOrder = async (order: ApprovalOrderItem) => {
   try {
     const currentTime = new Date().toISOString();
+    
+    // Determine status based on 'produk' value
+    let newStatus = "PRINT READY"; // Default status
+    
+    if (order.produk === "CUTTING ONLY") {
+      newStatus = "CUTTING READY";
+    } else if (order.produk === "PRESS ONLY") {
+      newStatus = "PRESS READY";
+    } else if (order.produk === "PRINT ONLY") {
+      newStatus = "PRINT READY";
+    } else if (order.produk === "DTF" || order.produk?.includes("DTF")) {
+      newStatus = "DTF READY";
+    }
 
     if (session.user?.role?.name === "Manager") {
       const approvalResponse = await fetch(`/api/manager/approval/${order.id}`, {
@@ -243,7 +272,8 @@ const handleApproveOrder = async (order: ApprovalOrderItem) => {
         body: JSON.stringify({
           approval_mng: "APPROVED",
           manager_id: session.user.id,
-          tgl_app_manager: currentTime
+          tgl_app_manager: currentTime,
+          status: newStatus // Set the new status based on produk
         })
       });
 
@@ -259,7 +289,8 @@ const handleApproveOrder = async (order: ApprovalOrderItem) => {
         body: JSON.stringify({
           approval_opr: "APPROVED",
           opr_id: session.user.id,
-          tgl_app_prod: currentTime
+          tgl_app_prod: currentTime,
+          status: newStatus // Set the new status based on produk
         })
       });
 
@@ -270,7 +301,7 @@ const handleApproveOrder = async (order: ApprovalOrderItem) => {
       throw new Error('Unauthorized user role');
     }
 
-    toast.success("Order approved successfully");
+    toast.success(`Order approved successfully. Status set to ${newStatus}`);
     fetchApprovalOrders(pagination.currentPage, searchQuery);
   } catch (error) {
     console.error("Error approving order:", error);
@@ -536,13 +567,13 @@ const handleRejectOrder = async (order: ApprovalOrderItem) => {
                         {order.catatan || "N/A"}
                       </TableCell>
                       <TableCell>
-                        {(formatCurrency(order.dp)) || "N/A"}
+                        {order.dp ? formatCurrency(order.dp) : "N/A"}
                       </TableCell>
                       <TableCell>
-                        {(formatCurrency(order.sisa)) || "N/A"}
+                        {order.sisa ? formatCurrency(order.sisa) : "N/A"}
                       </TableCell>
                       <TableCell>
-                        {(formatCurrency(order.nominal)) || "N/A"}
+                        {order.nominal ? formatCurrency(order.nominal) : "N/A"}
                       </TableCell>
                       <TableCell>
                             <CaptureThumbnails

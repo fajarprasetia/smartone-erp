@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Customer } from '@prisma/client'
+import type { customer } from '@prisma/client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -18,6 +18,13 @@ type ChatMessage = {
   content: string
   timestamp: Date
   isIncoming: boolean
+}
+
+// Define customer interface that matches what's used in the component
+interface Customer {
+  id: string
+  name: string
+  phone?: string
 }
 
 type CustomerWithChats = Customer & {
@@ -44,9 +51,11 @@ export function WhatsAppPlatform() {
         const customersData = await res.json()
         
         // Format customers with empty messages array for now
-        const formattedCustomers = customersData.map((customer: Customer) => ({
-          ...customer,
-          formattedPhone: customer.phone ? `62${customer.phone}` : '',
+        const formattedCustomers = customersData.map((data: customer) => ({
+          id: String(data.id), // Convert BigInt to string
+          name: data.nama,
+          phone: data.telp,
+          formattedPhone: data.telp ? `62${data.telp}` : '',
           messages: []
         }))
         
@@ -162,7 +171,7 @@ export function WhatsAppPlatform() {
             ? { 
                 ...c, 
                 messages: c.messages
-                  .filter(m => m.id !== tempMessage.id)
+                  .filter((m: ChatMessage) => m.id !== tempMessage.id)
                   .concat(sentMessage) 
               } 
             : c
@@ -180,7 +189,7 @@ export function WhatsAppPlatform() {
       setCustomers(prev => 
         prev.map(c => 
           c.id === selectedCustomerId 
-            ? { ...c, messages: c.messages.filter(m => !m.id.startsWith('temp-')) } 
+            ? { ...c, messages: c.messages.filter((m: ChatMessage) => !m.id.startsWith('temp-')) } 
             : c
         )
       )
@@ -275,7 +284,7 @@ export function WhatsAppPlatform() {
                     <p className="text-muted-foreground">No messages yet</p>
                   </div>
                 ) : (
-                  selectedCustomer.messages.map((message) => (
+                  selectedCustomer.messages.map((message: ChatMessage) => (
                     <div
                       key={message.id}
                       className={`flex ${message.isIncoming ? 'justify-start' : 'justify-end'}`}

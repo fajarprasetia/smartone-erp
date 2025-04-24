@@ -233,9 +233,10 @@ export async function GET(req: Request) {
       // Fetch marketing users for the orders
       const marketingIds = orders
         .filter(order => order.marketing)
-        .map(order => order.marketing);
+        .map(order => order.marketing)
+        .filter(Boolean) as string[];
       
-      let marketingUsers = {};
+      let marketingUsers: Record<string, string> = {};
       
       if (marketingIds.length > 0) {
         try {
@@ -253,7 +254,7 @@ export async function GET(req: Request) {
           });
           
           // Create a lookup map of user IDs to names
-          marketingUsers = users.reduce((acc, user) => {
+          marketingUsers = users.reduce((acc: Record<string, string>, user) => {
             acc[user.id] = user.name;
             return acc;
           }, {});
@@ -269,8 +270,8 @@ export async function GET(req: Request) {
       const designerIds = orders
         .filter(order => order.designer_id)
         .map(order => order.designer_id)
-        .filter((id, idx, arr) => id && arr.indexOf(id) === idx); // unique, non-null
-      let designerUsers = {};
+        .filter(Boolean) as string[]; // Filter out nulls
+      let designerUsers: Record<string, string> = {};
       if (designerIds.length > 0) {
         try {
           const users = await db.user.findMany({
@@ -284,7 +285,7 @@ export async function GET(req: Request) {
               name: true
             }
           });
-          designerUsers = users.reduce((acc, user) => {
+          designerUsers = users.reduce((acc: Record<string, string>, user) => {
             acc[user.id] = user.name;
             return acc;
           }, {});
@@ -296,7 +297,7 @@ export async function GET(req: Request) {
       
       const modifiedOrders = orders.map(order => ({
         ...order,
-        asal_bahan: order.asal_bahan === 22 ? 'SMARTONE' : 'CUSTOMER',
+        asal_bahan: order.asal_bahan_id === BigInt(22) ? 'SMARTONE' : 'CUSTOMER',
         marketing: order.marketing
           ? { id: order.marketing, name: marketingUsers[order.marketing] || order.marketing }
           : null,

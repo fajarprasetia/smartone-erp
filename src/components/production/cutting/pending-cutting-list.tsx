@@ -12,13 +12,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Play, MoreVertical, Search, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Play, Search, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Order } from "@/types/order";
@@ -37,60 +31,95 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isStartFormOpen, setIsStartFormOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalOrders, setTotalOrders] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchPendingCuttingOrders(currentPage);
-  }, [currentPage]);
+    fetchPendingCuttingOrders();
+  }, []);
 
   useEffect(() => {
+    console.log(`Total orders received from API: ${orders.length}`);
+
+    // Log orders with CUTTING READY status to debug
+    const cuttingReadyOrders = orders.filter(order => 
+      (order.status || "").toUpperCase() === "CUTTING READY"
+    );
+    console.log(`Orders with CUTTING READY status: ${cuttingReadyOrders.length}`);
+    if (cuttingReadyOrders.length > 0) {
+      console.log("Sample CUTTING READY order:", cuttingReadyOrders[0]);
+    }
+
+    // Filter orders by these exact criteria:
+    // 1. Orders with status "CUTTING READY" 
+    // 2. Orders with status "PRESS DONE" that have "CUTTING" in their product name
+    const filteredByCriteria = orders.filter(order => {
+      const status = ((order.status || "").trim()).toUpperCase();
+      const productName = (order.productName || "").toUpperCase();
+      
+      const isMatch = (
+        // Condition 1: Status is "CUTTING READY" (handle possible variations)
+        status === "CUTTING READY" || status === "CUTTINGREADY" || 
+        // Condition 2: Status is "PRESS DONE" and product contains "CUTTING"
+        (status === "PRESS DONE" && productName.includes("CUTTING"))
+      );
+
+      // Debug log for orders that don't match our criteria
+      if (status.includes("CUTTING") && status.includes("READY") && !isMatch) {
+        console.log("Potential CUTTING READY order not matching criteria:", {
+          status: order.status,
+          trimmedUpperStatus: status,
+          order
+        });
+      }
+      
+      return isMatch;
+    });
+    
+    console.log(`Orders after criteria filtering: ${filteredByCriteria.length}`);
+    
+    // Then apply search filter if there's a search query
     if (searchQuery) {
       const lowercaseQuery = searchQuery.toLowerCase();
-      
-      // First filter by product type - ensure it contains "CUTTING" and has no assigned operator
-      const filteredByProductType = orders.filter(order => {
-        const productName = (order.productName || "").toUpperCase();
-        // Ensure it contains CUTTING and has no cutting ID/assignee
-        return productName.includes("CUTTING") && !order.cuttingAssignee;
-      });
-      
-      // Then apply search filter
-      const filtered = filteredByProductType.filter(
+      const filtered = filteredByCriteria.filter(
         (order) =>
           order.spk.toLowerCase().includes(lowercaseQuery) ||
-          order.customerName.toLowerCase().includes(lowercaseQuery) ||
-          order.productName.toLowerCase().includes(lowercaseQuery)
+          (order.customerName || "").toLowerCase().includes(lowercaseQuery) ||
+          (order.productName || "").toLowerCase().includes(lowercaseQuery)
       );
       setFilteredOrders(filtered);
+      console.log(`Orders after search filtering: ${filtered.length}`);
     } else {
-      // Just filter by product type when no search query
-      const filteredByProductType = orders.filter(order => {
-        const productName = (order.productName || "").toUpperCase();
-        // Ensure it contains CUTTING and has no cutting ID/assignee
-        return productName.includes("CUTTING") && !order.cuttingAssignee;
-      });
-      setFilteredOrders(filteredByProductType);
+      // If no search query, use the criteria-filtered orders
+      setFilteredOrders(filteredByCriteria);
     }
   }, [searchQuery, orders]);
 
-  const fetchPendingCuttingOrders = async (page = 1, limit = 50) => {
+  const fetchPendingCuttingOrders = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/production/orders/pending-cutting?page=${page}&limit=${limit}`);
+      // Remove pagination parameters to get all orders
+      const response = await fetch(`/api/production/orders/pending-cutting?limit=1000`);
       if (!response.ok) {
         throw new Error("Failed to fetch pending cutting orders");
       }
       const data = await response.json();
       
-      // Handle the new paginated response format
+      // Handle the response format
       const ordersData = data.orders || [];
+      
+      // Check for specific example order
+      const exampleOrderId = "cm9us26do00013ipolpx7vqeg";
+      const exampleOrderFound = ordersData.some((order: Order) => order.id === exampleOrderId);
+      console.log(`Example order with ID ${exampleOrderId} found in API response: ${exampleOrderFound}`);
+      
+      // Log full data if important orders aren't appearing
+      if (!exampleOrderFound) {
+        console.log("First 5 orders from API response:", ordersData.slice(0, 5));
+      }
+      
       setOrders(ordersData);
       setFilteredOrders(ordersData);
-      setTotalPages(data.pagination?.pages || 1);
-      setTotalOrders(data.pagination?.total || 0);
+      console.log(`Total orders loaded: ${ordersData.length}`);
     } catch (error) {
       console.error("Error fetching pending cutting orders:", error);
       toast({
@@ -109,7 +138,7 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
   };
 
   const handleRefresh = () => {
-    fetchPendingCuttingOrders(currentPage);
+    fetchPendingCuttingOrders();
   };
 
   const getPriorityClass = (priority: string) => {
@@ -128,18 +157,6 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
   const formatDate = (dateString: string) => {
     if (!dateString) return "-";
     return format(new Date(dateString), "dd/MM/yyyy");
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
-    }
   };
 
   return (
@@ -172,9 +189,9 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
             </div>
           </div>
 
-          {totalOrders > 0 && (
+          {orders.length > 0 && (
             <div className="text-sm text-muted-foreground mb-2">
-              Showing {filteredOrders.length} of {totalOrders} orders (Page {currentPage} of {totalPages})
+              Showing {filteredOrders.length} of {orders.length} orders
             </div>
           )}
 
@@ -182,20 +199,21 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>SPK</TableHead>
+                  <TableHead className="sticky left-0 bg-muted/50 whitespace-nowrap">SPK</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Quantity</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Target Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="sticky right-0 bg-muted/90 whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10">
+                    <TableCell colSpan={9} className="text-center py-10">
                       <div className="flex justify-center items-center">
                         <Loader2 className="h-6 w-6 animate-spin mr-2" />
                         Loading...
@@ -204,17 +222,22 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
                   </TableRow>
                 ) : filteredOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10">
+                    <TableCell colSpan={9} className="text-center py-10">
                       No pending cutting orders found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredOrders.map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell>{order.spk}</TableCell>
+                      <TableCell className="font-medium sticky left-0 bg-muted/50 whitespace-nowrap">{order.spk}</TableCell>
                       <TableCell>{order.customerName}</TableCell>
                       <TableCell>{order.productName}</TableCell>
                       <TableCell>{order.quantity} {order.unit}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                          {order.status || "CUTTING READY"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Badge 
                           variant="outline" 
@@ -225,20 +248,16 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
                       </TableCell>
                       <TableCell>{formatDate(order.createdAt)}</TableCell>
                       <TableCell>{order.targetCompletionDate ? formatDate(order.targetCompletionDate) : "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStartCutting(order)}>
-                              <Play className="mr-2 h-4 w-4" />
-                              Start Cutting
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <TableCell className="sticky right-0 bg-muted/90 whitespace-nowrap">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleStartCutting(order)}
+                        >
+                          <Play className="h-4 w-4" />
+                          Start
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -246,34 +265,6 @@ export default function PendingCuttingList({ onCuttingStart }: PendingCuttingLis
               </TableBody>
             </Table>
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1 || loading}
-                className="flex items-center gap-1"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Previous</span>
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages || loading}
-                className="flex items-center gap-1"
-              >
-                <span>Next</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 

@@ -22,7 +22,7 @@ export const orderFormSchema = z.object({
   tipe_produk: z.string().default("SUBLIM"),
   dtfPass: z.enum(["4 PASS", "6 PASS"]).optional(),
   jumlah: z.string(),
-  unit: z.enum(["meter", "yard"]),
+  unit: z.enum(["meter", "yard", "piece"]),
   asalBahan: z.string().optional(),
   asalBahanId: z.string().optional(),
   statusProduksi: z.enum(["NEW", "REPEAT"]),
@@ -57,8 +57,22 @@ export const orderFormSchema = z.object({
   priority: z.boolean().default(false),
 })
 .superRefine((data, ctx) => {
-  // Only validate asalBahan if DTF is not selected
-  if (!data.jenisProduk?.DTF && (!data.asalBahan || data.asalBahan.length === 0)) {
+  // Check if only PRINT is selected and no other product types
+  const isPrintOnly = data.jenisProduk?.PRINT && 
+    !data.jenisProduk?.PRESS && 
+    !data.jenisProduk?.CUTTING && 
+    !data.jenisProduk?.DTF && 
+    !data.jenisProduk?.SEWING;
+  
+  // Check if only PRESS is selected and no other product types
+  const isPressOnly = data.jenisProduk?.PRESS && 
+    !data.jenisProduk?.PRINT && 
+    !data.jenisProduk?.CUTTING && 
+    !data.jenisProduk?.DTF && 
+    !data.jenisProduk?.SEWING;
+  
+  // Only validate asalBahan if DTF is not selected and it's not PRINT only
+  if (!data.jenisProduk?.DTF && !isPrintOnly && !isPressOnly && (!data.asalBahan || data.asalBahan.length === 0)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Please select fabric origin",

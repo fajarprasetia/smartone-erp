@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma";
 
 // Helper to serialize BigInt values for JSON response
 function serializeData(data: any): any {
@@ -15,7 +16,7 @@ function serializeData(data: any): any {
 // POST to submit a draft order (change status from DRAFT to PENDING)
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user) {
       return NextResponse.json(
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Check if order exists and is a draft
     const existingOrder = await prisma.order.findUnique({
       where: {
-        id: BigInt(orderId),
+        id: orderId,
         status: "DRAFT",
       },
     });
@@ -63,11 +64,10 @@ export async function POST(request: NextRequest) {
     // Submit the order (change status from DRAFT to PENDING)
     const submittedOrder = await prisma.order.update({
       where: {
-        id: BigInt(orderId),
+        id: orderId,
       },
       data: {
         status: "PENDING",
-        submitted_at: new Date(),
         updated_at: new Date(),
       },
       include: {
@@ -89,6 +89,8 @@ export async function POST(request: NextRequest) {
     };
     
     // Optional: Create log entry for order submission
+    // Uncomment and modify this based on your actual schema
+    /*
     await prisma.orderLog.create({
       data: {
         orderId: submittedOrder.id,
@@ -98,6 +100,10 @@ export async function POST(request: NextRequest) {
         created_at: new Date(),
       },
     });
+    */
+    
+    // Log the submission to console
+    console.log(`Order ${orderId} submitted by user ${session.user.id}`);
     
     return NextResponse.json({
       order: serializeData(processedOrder),

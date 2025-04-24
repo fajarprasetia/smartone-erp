@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   PlusCircle, Search, FileText, ArrowUpDown, 
-  Loader2, AlertCircle, Calendar, DollarSign, Plus, ArrowDown, ArrowUp, Users 
+  Loader2, AlertCircle, Calendar, DollarSign, Plus, ArrowDown, ArrowUp, Users, RefreshCw, Upload
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -28,6 +28,9 @@ import { PaymentDialog } from "./components/PaymentDialog";
 import { formatCurrency } from "@/lib/utils";
 import { PageContainer } from "@/components/layout/page-container";
 import { PayableSummaryCards } from "./components/PayableSummaryCards";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentForm } from "@/components/finance/payment-form";
 
 // Types
 type Bill = {
@@ -133,6 +136,9 @@ export default function AccountsPayablePage() {
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -390,11 +396,59 @@ export default function AccountsPayablePage() {
 
   const handleRecordPayment = (bill) => {
     setSelectedBill(bill);
-    setOpenPaymentDialog(true);
+    setIsPaymentDialogOpen(true);
   };
 
   const handleRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleViewBill = (bill: Bill) => {
+    // Navigate to bill detail page
+    router.push(`/finance/payable/${bill.id}`);
+  };
+
+  const handleDownloadBill = (bill: Bill) => {
+    toast.info(`Preparing PDF for bill ${bill.billNumber}...`);
+    // In a real implementation, you'd call your API to generate and download a PDF
+    setTimeout(() => {
+      toast.success(`Bill ${bill.billNumber} ready for download`);
+    }, 1500);
+  };
+
+  const handleUploadAttachment = (bill: Bill) => {
+    setSelectedBill(bill);
+    setIsUploadDialogOpen(true);
+  };
+
+  const handlePaymentSubmit = async (values: any) => {
+    if (!selectedBill) return;
+    
+    try {
+      setIsProcessingPayment(true);
+      
+      // In a real implementation, you'd call your API to record the payment
+      // await fetch('/api/finance/bills/payment', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     billId: selectedBill.id,
+      //     ...values
+      //   })
+      // })
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast.success(`Payment recorded for bill ${selectedBill.billNumber}`);
+      setIsPaymentDialogOpen(false);
+      fetchBills(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to record payment:", error);
+      toast.error("Failed to record payment. Please try again.");
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   return (
@@ -510,7 +564,6 @@ export default function AccountsPayablePage() {
         </TabsContent>
         
         <TabsContent value="all" className="space-y-4">
-          <PayableFilter />
           <PayableTable 
             initialTab="all"
             onRefreshData={fetchSummaryData}
@@ -518,7 +571,6 @@ export default function AccountsPayablePage() {
         </TabsContent>
         
         <TabsContent value="unpaid" className="space-y-4">
-          <PayableFilter />
           <PayableTable 
             initialTab="unpaid"
             onRefreshData={fetchSummaryData}
@@ -526,7 +578,6 @@ export default function AccountsPayablePage() {
         </TabsContent>
         
         <TabsContent value="overdue" className="space-y-4">
-          <PayableFilter />
           <PayableTable 
             initialTab="overdue"
             onRefreshData={fetchSummaryData}
@@ -539,6 +590,55 @@ export default function AccountsPayablePage() {
         onClose={() => setIsCreateDialogOpen(false)}
         onSubmit={handleCreateBill}
       />
+      
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+          </DialogHeader>
+          {selectedBill && (
+            <PaymentForm
+              isProcessing={isProcessingPayment}
+              documentId={selectedBill.id}
+              documentNumber={selectedBill.billNumber}
+              documentTotal={selectedBill.totalAmount}
+              documentBalance={selectedBill.totalAmount - selectedBill.paidAmount}
+              documentType="bill"
+              onSubmit={handlePaymentSubmit}
+              onCancel={() => setIsPaymentDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload Attachment</DialogTitle>
+          </DialogHeader>
+          {/* Insert attachment upload form here */}
+          <div className="space-y-4">
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <label htmlFor="attachment" className="text-sm font-medium">
+                Select File
+              </label>
+              <Input id="attachment" type="file" />
+              <p className="text-sm text-muted-foreground">
+                Max size: 5MB. Supported formats: PDF, JPG, PNG
+              </p>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }

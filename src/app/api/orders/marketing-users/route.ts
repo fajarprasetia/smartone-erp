@@ -19,7 +19,9 @@ export async function GET() {
       // Fetch users from the database with role "Marketing"
       const marketingUsers = await prisma.user.findMany({
         where: {
-          role: "Marketing", // Filter users by the Marketing role
+          role: {
+            name: "Marketing" // Filter users with roles named "Marketing"
+          }
         },
         select: {
           id: true,

@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss"
 
 const config = {
-  darkMode: ["class"],
+  darkMode: "class",
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -67,31 +67,29 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-      },
-    },
-  },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
-
-module.exports = {
-  theme: {
-    extend: {
-      keyframes: {
+        "collapsible-down": {
+          "0%": { height: "0" },
+          "100%": { height: "var(--radix-collapsible-content-height)" },
+        },
+        "collapsible-up": {
+          "0%": { height: "var(--radix-collapsible-content-height)" },
+          "100%": { height: "0" },
+        },
         'toast-slide-up': {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
       animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "collapsible-down": "collapsible-down 0.2s ease-out",
+        "collapsible-up": "collapsible-up 0.2s ease-out",
         'toast-slide-up': 'toast-slide-up 300ms ease-out',
       },
     },
   },
-}
-
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config
 
 export default config 

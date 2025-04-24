@@ -182,26 +182,92 @@ export function PrintListTab() {
   const fetchProductionOrders = useCallback(async (page = 1, search = searchQuery) => {
     setIsLoading(true);
     try {
+      // First try the dedicated endpoint with filter
       const apiUrl = `/api/production/orders?page=${page}&pageSize=${pageSize}&search=${search}&filter=PRINTING&status=PRINT`;
-      const response = await fetch(apiUrl);
+      let response = await fetch(apiUrl);
+      let printOrders: ProductionOrderItem[] = [];
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch production orders");
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API Response from production endpoint:", data);
+        
+        if (data && typeof data === 'object' && Array.isArray(data.orders)) {
+          printOrders = data.orders;
+        } else if (Array.isArray(data)) {
+          printOrders = data;
+        }
+      } else {
+        console.warn("Production endpoint returned error:", response.status);
       }
       
-      const data = await response.json();
+      // If no results, try the orders endpoint with status=PRINT as fallback
+      if (printOrders.length === 0) {
+        console.log("No orders found with dedicated endpoint, trying fallback...");
+        try {
+          response = await fetch(`/api/orders/status?status=PRINT`);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log("API Response from status=PRINT endpoint:", data);
+            
+            if (Array.isArray(data)) {
+              printOrders = data;
+            } else if (data && typeof data === 'object' && Array.isArray(data.orders)) {
+              printOrders = data.orders;
+            }
+          } else {
+            console.warn("Status endpoint returned error:", response.status);
+          }
+        } catch (error) {
+          console.warn("Error fetching from status endpoint:", error);
+        }
+      }
+      
+      // If still no results, try the main orders endpoint as a last resort
+      if (printOrders.length === 0) {
+        console.log("No orders found with status endpoint, trying main orders endpoint...");
+        try {
+          response = await fetch(`/api/orders`);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log("API Response from main orders endpoint:", data);
+            
+            let allOrders: ProductionOrderItem[] = [];
+            if (Array.isArray(data)) {
+              allOrders = data;
+            } else if (data && typeof data === 'object' && Array.isArray(data.orders)) {
+              allOrders = data.orders;
+            }
+            
+            // Filter for orders with PRINT status
+            printOrders = allOrders.filter(order => {
+              const status = (order.status || "").toUpperCase();
+              return status === "PRINT";
+            });
+            
+            console.log("Filtered PRINT orders from all orders:", printOrders);
+          } else {
+            console.warn("Main orders endpoint returned error:", response.status);
+          }
+        } catch (error) {
+          console.warn("Error fetching from main orders endpoint:", error);
+        }
+      }
       
       // Filter out "PRESS ONLY" and "CUTTING ONLY" orders
-      const filteredOrders = (data.orders || []).filter((order: ProductionOrderItem) => {
+      const filteredOrders = printOrders.filter((order: ProductionOrderItem) => {
         const produk = (order.produk || "").toUpperCase();
         return produk !== "PRESS ONLY" && produk !== "CUTTING ONLY";
       });
+      
+      console.log("Final filtered orders to display:", filteredOrders);
       
       setOrders(filteredOrders);
       setPagination({
         totalCount: filteredOrders.length,
         totalPages: Math.ceil(filteredOrders.length / pageSize) || 1,
-        currentPage: data.currentPage || 1
+        currentPage: page
       });
     } catch (error) {
       console.error("Error fetching production orders:", error);
@@ -299,8 +365,8 @@ export function PrintListTab() {
     setIsSubmittingPrintDone(true);
     
     try {
-      // Check if this is a PRINT ONLY order
-      const isPrintOnly = selectedOrder.produk === "PRINT ONLY";
+      // Get product type for display purposes only
+      const produk = selectedOrder.produk?.toUpperCase() || "";
       
       // Prepare the data for submission
       const printDoneData = {
@@ -309,14 +375,11 @@ export function PrintListTab() {
         prints_reject: values.prints_reject,
         prints_waste: values.prints_waste,
         catatan_print: values.catatan_print,
-        // Update status is handled on the server side
-        print_done: new Date().toISOString(), // Set current date as print completion date
-        // For PRINT ONLY orders, also set the statusm to JOB DONE
-        statusm: isPrintOnly ? "JOB DONE" : undefined
+        // Status updates are handled server-side based on product type
+        print_done: new Date().toISOString() // Set current date as print completion date
       };
       
       console.log("Submitting print done data:", printDoneData);
-      console.log("Is PRINT ONLY order:", isPrintOnly);
       
       // Submit to API
       const response = await fetch(`/api/orders/${selectedOrder.id}/production/print-done`, {
@@ -339,10 +402,17 @@ export function PrintListTab() {
         }
       }
       
-      // Success
-      toast.success(isPrintOnly 
-        ? "Print job completed and marked as JOB DONE" 
-        : "Print job marked as completed successfully");
+      // Success - customize message based on product type
+      let successMessage = "Print job marked as completed successfully";
+      if (produk === "PRINT ONLY") {
+        successMessage = "Print job completed and marked as COMPLETED";
+      } else if (produk.includes("PRESS")) {
+        successMessage = "Print job completed and marked as PRESS READY";
+      } else if (produk.includes("CUTTING")) {
+        successMessage = "Print job completed and marked as CUTTING READY";
+      }
+      
+      toast.success(successMessage);
       setIsPrintDonePopoverOpen(false);
       
       // Refresh the order list after a short delay
@@ -412,7 +482,7 @@ export function PrintListTab() {
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="cursor-pointer" 
+                      className="cursor-pointer sticky left-0 bg-muted/90 whitespace-nowrap"
                       onClick={() => handleSort("spk")}
                     >
                       <div className="flex items-center">
@@ -476,7 +546,7 @@ export function PrintListTab() {
                     <TableHead>File Width</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Notes</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="sticky right-0 bg-muted/90 whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -485,7 +555,7 @@ export function PrintListTab() {
                       <TableCell>
                         {formatDate(order.created_at)}
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium sticky left-0 bg-muted/90 whitespace-nowrap">
                         {order.spk || "N/A"}
                       </TableCell>
                       <TableCell>
@@ -544,7 +614,7 @@ export function PrintListTab() {
                       <TableCell>
                         {order.catatan || "N/A"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="sticky right-0 bg-muted/90 whitespace-nowrap">
                         <Popover open={isPrintDonePopoverOpen && selectedOrder?.id === order.id} onOpenChange={(open) => !open && setIsPrintDonePopoverOpen(false)}>
                           <PopoverTrigger asChild>
                             <Button 

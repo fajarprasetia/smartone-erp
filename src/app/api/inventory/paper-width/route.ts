@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Find paper stock with the specified GSM - using PaperStock model
     const paperStock = await prisma.paperStock.findFirst({
       where: {
-        gsm: gsm,
+        gsm: parseInt(gsm),
       },
       select: {
         width: true,

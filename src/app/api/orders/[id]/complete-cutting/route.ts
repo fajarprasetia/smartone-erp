@@ -63,7 +63,7 @@ export async function PATCH(
     });
 
     // Determine the new status
-    const newStatus = isOrderComplete ? "JOB DONE" : "CUTTING DONE";
+    const newStatus = isOrderComplete ? "COMPLETED" : "CUTTING DONE";
 
     // Update the order with completion information
     const updatedOrder = await prisma.order.update({

@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
     console.log("Order before resume:", {
       id: order.id,
       status: order.status,
-      previousStatus: order.previousStatus,
-      holdReason: order.holdReason
+      previousStatus: (order as any).previousStatus,
+      holdReason: (order as any).holdReason
     });
     
     // Check if order is actually on hold
@@ -69,11 +69,11 @@ export async function POST(request: NextRequest) {
     // Get the previousStatus from the raw query result
     let previousStatus = "PENDING";
     
-    if (result && result[0] && result[0].previousStatus) {
-      previousStatus = result[0].previousStatus;
+    if (result && Array.isArray(result) && result[0] && (result[0] as any).previousStatus) {
+      previousStatus = (result[0] as any).previousStatus;
       console.log("Using previousStatus from database:", previousStatus);
-    } else if (order.previousStatus) {
-      previousStatus = order.previousStatus;
+    } else if ((order as any).previousStatus) {
+      previousStatus = (order as any).previousStatus;
       console.log("Using previousStatus from order object:", previousStatus);
     } else {
       console.log("No previousStatus found, using default:", previousStatus);
@@ -95,15 +95,15 @@ export async function POST(request: NextRequest) {
     });
     
     console.log("Order after resume:", {
-      id: updatedOrder.id,
-      status: updatedOrder.status,
-      previousStatus: updatedOrder.previousStatus,
-      holdReason: updatedOrder.holdReason
+      id: updatedOrder?.id,
+      status: updatedOrder?.status,
+      previousStatus: updatedOrder ? (updatedOrder as any).previousStatus : null,
+      holdReason: updatedOrder ? (updatedOrder as any).holdReason : null
     });
     
     // Log the action without using raw SQL since it's causing issues
     try {
-      await prisma.orderLog.create({
+      await (prisma as any).orderLog.create({
         data: {
           id: crypto.randomUUID(),
           orderId,

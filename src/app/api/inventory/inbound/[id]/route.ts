@@ -71,7 +71,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const files: Record<string, any> = { files: [] };
     
     // Process each entry in the formData
-    for (const [key, value] of formData.entries()) {
+    for (const [key, value] of (formData as any).entries()) {
       if (value instanceof File) {
         // Handle file uploads
         const buffer = Buffer.from(await value.arrayBuffer());

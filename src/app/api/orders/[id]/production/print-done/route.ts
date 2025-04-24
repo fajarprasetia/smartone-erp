@@ -64,15 +64,32 @@ export async function PATCH(
       }
 
       // Ensure order is in PRINT status
-      if (existingOrder.status !== "PRINT") {
+      if (existingOrder.status !== "PRINT" && existingOrder.status !== "PRINT READY") {
         return NextResponse.json(
-          { error: "Order is not in PRINT status, cannot mark as done." },
+          { error: "Order is not in PRINT or PRINT READY status, cannot mark as done." },
           { status: 400 }
         );
       }
 
       // Get current timestamp for print_done if not provided
       const currentTimestamp = new Date();
+
+      // Determine the status and statusm based on the product type
+      let newStatus = "PRINT DONE";  // Default status
+      let newStatusm = "PRINT DONE"; // Default statusm
+      
+      const produk = existingOrder.produk?.toUpperCase() || "";
+      
+      if (produk === "PRINT ONLY") {
+        newStatus = "COMPLETED";
+        newStatusm = "COMPLETED";
+      } else if (produk.includes("PRESS")) {
+        newStatus = "PRESS READY";
+        newStatusm = "PRINT DONE";
+      } else if (!produk.includes("PRESS") && produk.includes("CUTTING")) {
+        newStatus = "CUTTING READY";
+        newStatusm = "PRINT DONE";
+      }
 
       // Update the order with print done information
       const updatedOrder = await prisma.order.update({
@@ -84,8 +101,9 @@ export async function PATCH(
           prints_waste: validatedData.prints_waste,
           catatan_print: validatedData.catatan_print,
           
-          // Explicitly update status to PRINT DONE
-          status: "PRINT DONE", // Force status to PRINT DONE regardless of input
+          // Update status based on product type
+          status: newStatus,
+          statusm: newStatusm,
           
           // Update completion timestamp (full timestamp, not just date)
           print_done: validatedData.print_done ? new Date(validatedData.print_done) : currentTimestamp,

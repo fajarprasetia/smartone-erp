@@ -6,13 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, RefreshCw, Search, CheckCircle, Loader2, ChevronDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { RefreshCw, Search, CheckCircle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -132,13 +126,13 @@ export default function DTFInProgressList({ onOrderComplete }: DTFInProgressList
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>SPK</TableHead>
+                <TableHead className="text-center sticky left-0 bg-white">SPK</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Product</TableHead>
                 <TableHead>Priority</TableHead>
                 <TableHead>Started At</TableHead>
                 <TableHead>Deadline</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right sticky right-0 bg-white">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -157,7 +151,7 @@ export default function DTFInProgressList({ onOrderComplete }: DTFInProgressList
               ) : (
                 filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell>{order.spk}</TableCell>
+                    <TableCell className="text-center sticky left-0 bg-white">{order.spk}</TableCell>
                     <TableCell>{order.customer.nama}</TableCell>
                     <TableCell>{order.produk}</TableCell>
                     <TableCell>{order.prioritas}</TableCell>
@@ -165,21 +159,15 @@ export default function DTFInProgressList({ onOrderComplete }: DTFInProgressList
                     <TableCell>
                       {order.est_order ? formatDate(order.est_order) : "N/A"}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            Actions <ChevronDown className="ml-1 h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleCompleteOrder(order)}
-                          >
-                            Complete DTF
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <TableCell className="text-right sticky right-0 bg-white">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleCompleteOrder(order)}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Complete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -208,7 +196,8 @@ export default function DTFInProgressList({ onOrderComplete }: DTFInProgressList
                 fetchDTFInProgressOrders();
                 if (onOrderComplete) onOrderComplete();
               }}
-              onCancel={() => setCompleteDialogOpen(false)}
+              open={completeDialogOpen}
+              onOpenChange={() => setCompleteDialogOpen(false)}
             />
           )}
         </DialogContent>

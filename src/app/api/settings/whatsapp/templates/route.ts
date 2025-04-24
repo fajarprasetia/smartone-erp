@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import prisma from "@/lib/prisma"
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: Request) {
   try {
@@ -12,38 +12,25 @@ export async function GET(request: Request) {
     }
 
     // Get WhatsApp settings from database
-    const settings = await prisma.setting.findMany({
-      where: {
-        category: "whatsapp",
-      },
-    })
-
-    if (!settings || settings.length === 0) {
+    const whatsappConfig = await prisma.whatsAppConfig.findFirst();
+    
+    if (!whatsappConfig) {
       return NextResponse.json({ error: "WhatsApp settings not configured" }, { status: 400 })
     }
 
-    // Convert settings array to object for easier access
-    const settingsMap = settings.reduce((acc, setting) => {
-      acc[setting.key] = setting.value
-      return acc
-    }, {} as Record<string, string>)
-
     // Check for required settings
-    const requiredSettings = ["businessAccountId", "accessToken"]
-    for (const key of requiredSettings) {
-      if (!settingsMap[key]) {
-        return NextResponse.json({ error: `Missing WhatsApp configuration: ${key}` }, { status: 400 })
-      }
+    if (!whatsappConfig.businessAccountId || !whatsappConfig.accessToken) {
+      return NextResponse.json({ error: "Missing WhatsApp configuration: businessAccountId or accessToken" }, { status: 400 })
     }
 
     try {
       // Fetch templates from WhatsApp Business API
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${settingsMap.businessAccountId}/message_templates?limit=100`,
+        `https://graph.facebook.com/v18.0/${whatsappConfig.businessAccountId}/message_templates?limit=100`,
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${settingsMap.accessToken}`,
+            Authorization: `Bearer ${whatsappConfig.accessToken}`,
           },
         }
       )

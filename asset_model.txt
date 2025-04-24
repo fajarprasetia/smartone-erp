@@ -1,0 +1,28 @@
+
+> model Asset {
+    id                  String                   @id @default(cuid())
+    name                String
+    type                String
+    supplier            String?
+    status              String
+    location            String?
+    notes               String?
+    createdAt           DateTime                 @default(now())
+    lastMaintenanceDate DateTime?
+    manufacturer        String?
+    model               String?
+    nextMaintenanceDate DateTime?
+    purchaseDate        DateTime?
+    purchasePrice       String?
+    serialNumber        String?
+    updatedAt           DateTime                 @updatedAt
+    warrantyExpiry      DateTime?
+    maintenanceRecords  AssetMaintenanceRecord[]
+  }
+  
+  model AssetMaintenanceRecord {
+    id                  String    @id @default(cuid())
+    assetId             String
+    date                DateTime
+    maintenanceType     String
+

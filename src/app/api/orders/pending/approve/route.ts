@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // Helper function to serialize data (handle BigInt)
 function serializeData(data: any): any {
@@ -11,7 +11,7 @@ function serializeData(data: any): any {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     
     // Check if user is authenticated
     if (!session?.user) {
@@ -56,14 +56,14 @@ export async function POST(request: NextRequest) {
       where: { id: orderId },
       data: { 
         status: "APPROVED",
-        approvedBy: session.user.id,
-        approvedAt: new Date()
+        approve_mng: session.user.id,
+        tgl_app_manager: new Date()
       },
       include: { customer: true }
     });
     
     // Log the approval action
-    await prisma.orderLog.create({
+    await (prisma as any).orderLog.create({
       data: {
         orderId,
         userId: session.user.id,

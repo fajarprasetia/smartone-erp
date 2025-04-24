@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { createReadStream, mkdirSync } from 'fs';
 import { join } from 'path';
 import { formidable } from 'formidable';
+import { Prisma } from '@prisma/client';
 
 // Helper function to serialize data and handle BigInt values
 const serializeData = (data: any): any => {
@@ -24,13 +25,13 @@ export async function GET(req: NextRequest) {
     // Prepare filter conditions
     const where = search ? {
       OR: [
-        { nama_bahan: { contains: search, mode: 'insensitive' } },
-        { keterangan: { contains: search, mode: 'insensitive' } },
-        { roll: { contains: search, mode: 'insensitive' } },
-        { lebar_bahan: { contains: search, mode: 'insensitive' } },
-        { berat_bahan: { contains: search, mode: 'insensitive' } },
-        { est_pjg_bahan: { contains: search, mode: 'insensitive' } },
-        { asal_bahan_rel: { nama: { contains: search, mode: 'insensitive' } } }
+        { nama_bahan: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { keterangan: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { roll: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { lebar_bahan: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { berat_bahan: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { est_pjg_bahan: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { asal_bahan_rel: { nama: { contains: search, mode: Prisma.QueryMode.insensitive } } }
       ]
     } : {};
 
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
       keepExtensions: true,
       maxFiles: 5,
       maxFileSize: 10 * 1024 * 1024, // 10MB
-      filter: ({ mimetype }) => !!mimetype?.startsWith('image/')
+      filter: ({ mimetype }: { mimetype?: string }) => !!mimetype?.startsWith('image/')
     });
 
     // Process the form data directly instead of using formidable.parse
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
     const files: Record<string, any> = { files: [] };
     
     // Process each entry in the formData
-    for (const [key, value] of formData.entries()) {
+    for (const [key, value] of (formData as any).entries()) {
       if (value instanceof File) {
         // Handle file uploads
         const buffer = Buffer.from(await value.arrayBuffer());
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Process uploaded files
-    const filePaths = files.files?.map(file => `/fabric/${file.newFilename}`) || [];
+    const filePaths = files.files?.map((file: { newFilename: string }) => `/fabric/${file.newFilename}`) || [];
     
     // Use existing foto if no new files were uploaded
     const finalFoto = filePaths.length > 0 ? filePaths[0] : (foto || null);

@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// POST /api/marketing/whatsapp/send-template - Send a template message
+// Helper function to safely convert string to BigInt
+function safeBigInt(value: string): BigInt | null {
+  try {
+    return BigInt(value);
+  } catch (error) {
+    console.error(`Error converting to BigInt: ${value}`, error);
+    return null;
+  }
+}
+
+// POST /api/marketing/whatsapp/send-template - Send a template WhatsApp message to a customer
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -14,24 +24,20 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // Get the customer - try both Customer and customer models
-    let customer = null
-    try {
-      // Try uppercase Customer model first
-      customer = await prisma.customer.findUnique({
-        where: { id: customerId }
-      })
-    } catch (error) {
-      console.log('Error finding customer in Customer model:', error)
-      // Try lowercase customer model
-      try {
-        customer = await prisma.customer.findFirst({
-          where: { id: BigInt(customerId) }
-        })
-      } catch (innerError) {
-        console.error('Error finding customer in lowercase customer model:', innerError)
-      }
+    // Convert customerId to BigInt safely
+    const customerBigInt = safeBigInt(customerId);
+    
+    if (!customerBigInt) {
+      return NextResponse.json(
+        { error: 'Invalid customer ID format' },
+        { status: 400 }
+      );
     }
+    
+    // Verify customer exists
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerBigInt }
+    })
     
     if (!customer) {
       return NextResponse.json(
@@ -40,54 +46,50 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // Get the template
-    let template = null
-    try {
-      template = await prisma.whatsAppTemplate.findFirst({
-        where: { 
-          name: templateName,
-          isActive: true 
-        }
-      })
-    } catch (error) {
-      console.log('WhatsAppTemplate model not available:', error)
-      // Continue without template validation since the model doesn't exist
-    }
+    // In a real implementation, you would fetch the template from WhatsApp Business API
+    // and then send it with the parameters
     
-    // Only check if template exists if we were able to query the model
-    if (template === null && template !== undefined) {
-      return NextResponse.json(
-        { error: 'Template not found' },
-        { status: 404 }
-      )
-    }
+    // Format content to show template info
+    const contentText = `[Template: ${templateName}]${parameters && parameters.length > 0 ? 
+      ` With params: ${parameters.join(', ')}` : ''}`;
     
-    // In a real implementation, you would send the template message to WhatsApp API here
-    // Since we don't have a ChatMessage table, we'll just return a success response
-    
-    // Generate a unique message ID for tracking
-    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Create a ChatMessage record
+    const chatMessage = await prisma.chatMessage.create({
+      data: {
+        content: contentText,
+        isIncoming: false, // outgoing message (from us to customer)
+        timestamp: new Date(),
+        status: 'sent',
+        messageType: 'template',
+        metadata: JSON.stringify({ 
+          templateName, 
+          parameters
+        }),
+        customerId: customerBigInt,
+      }
+    });
     
     // Create a response object with the message details
     const messageResponse = {
-      id: messageId,
-      customerId,
-      content: `[Template: ${templateName}]${parameters?.length > 0 ? ` With params: ${parameters.join(', ')}` : ''}`,
-      isIncoming: false,
-      timestamp: new Date(),
-      status: 'sent',
-      messageType: 'template',
-      metadata: {
-        templateName,
-        parameters
-      }
+      id: chatMessage.id,
+      content: chatMessage.content,
+      isIncoming: chatMessage.isIncoming,
+      timestamp: chatMessage.timestamp,
+      status: chatMessage.status,
+      messageType: chatMessage.messageType,
+      customerId: customerId,
+      templateName,
+      parameters,
     }
     
-    return NextResponse.json(messageResponse)
+    return NextResponse.json({
+      message: messageResponse,
+      success: true
+    })
   } catch (error) {
-    console.error('Error sending template message:', error)
+    console.error('Error sending template WhatsApp message:', error)
     return NextResponse.json(
-      { error: 'Failed to send template message' },
+      { error: 'Failed to send template WhatsApp message: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     )
   }

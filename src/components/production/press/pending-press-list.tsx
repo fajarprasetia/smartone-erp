@@ -17,55 +17,44 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
 import { PressForm } from "./press-form";
 import { useToast } from "@/components/ui/use-toast";
 import { Spinner } from "@/components/ui/spinner";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import { formatDate } from "@/lib/utils";
 
 interface Order {
-  id: string;
-  spk: string;
-  tanggal?: Date;
-  kategori?: string;
+  id: string
+  spk: string
+  created_at?: Date | null
+  kategori?: string
   customer?: {
     nama: string;
-  };
-  prioritas?: string;
-  est_order?: Date;
-  status: string;
-  statusprod?: string;
-  produk?: string;
-  asal_bahan?: string;
-  asal_bahan_id?: string;
-  originalCustomer?: {
-    id: string;
-    nama: string;
-  };
-  nama_kain?: string;
-  lebar_kain?: string;
-  warna_acuan?: string;
-  tgl_print?: Date;
-  tgl_print_done?: Date;
-  press_mesin?: string;
-  press_presure?: string;
-  press_id?: string;
+  }
+  prioritas?: string
+  est_order?: Date | null
+  status: string
+  statusprod?: string
+  produk?: string
+  asal_bahan_rel?: {
+    nama: string
+  }  
+  nama_kain?: string
+  lebar_kain?: number
+  warna_acuan?: string
+  tgl_print?: Date | null
+  print_done?: Date | null
+  press_mesin?: string
+  press_presure?: string
+  press_id?: string
+  qty?: number
 }
 
 interface PendingPressListProps {
   onPressStart: () => void;
 }
-
-// Helper function to display dates or empty string instead of N/A
-const displayDate = (date?: Date | string | null) => {
-  if (!date) return "";
-  try {
-    return formatDate(new Date(date));
-  } catch (error) {
-    return "";
-  }
-};
 
 export function PendingPressList({ onPressStart }: PendingPressListProps) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -77,60 +66,32 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const { toast } = useToast();
 
-  // Fetch orders with "PRINT DONE" status
+  // Fetch orders with "PRESS READY" status
   async function fetchPendingPressOrders() {
     setLoading(true);
     try {
-      console.log("Fetching orders with PRINT DONE status...");
-      let response;
-      let data;
+      console.log("Fetching pending press orders...");
       
-      try {
-        // First try the dedicated status endpoint
-        response = await fetch("/api/orders/status?status=PRINT%20DONE");
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching orders: ${response.status}`);
-        }
-        
-        data = await response.json();
-        console.log("API Response from status endpoint:", data);
-      } catch (error) {
-        console.warn("Dedicated status endpoint failed, trying fallback:", error);
-        
-        // Fallback to the main orders endpoint
-        response = await fetch("/api/orders?status=PRINT%20DONE");
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching orders from fallback: ${response.status}`);
-        }
-        
-        data = await response.json();
-        console.log("API Response from fallback endpoint:", data);
+      // Use dedicated endpoint instead of filtering on client side
+      const response = await fetch("/api/production/orders/pending-press");
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
       }
       
-      // The new endpoint returns the array directly, but we'll keep the check for robustness
-      let ordersData: Order[] = [];
+      const data = await response.json();
+      
+      let pendingPressOrders: Order[] = [];
       if (Array.isArray(data)) {
-        console.log("Data is an array");
-        ordersData = data;
+        pendingPressOrders = data;
       } else if (data && typeof data === 'object' && Array.isArray(data.orders)) {
-        console.log("Data has orders array property");
-        ordersData = data.orders;
-      } else {
-        console.error("Unexpected data format:", data);
-        throw new Error("Received unexpected data format from API");
-      }
+        pendingPressOrders = data.orders;
+      }          
       
-      // Filter out "PRINT ONLY" and "CUTTING ONLY" orders
-      ordersData = ordersData.filter(order => {
-        const produk = (order.produk || "").toUpperCase();
-        return produk !== "PRINT ONLY" && produk !== "CUTTING ONLY";
-      });
+      console.log("Pending press orders:", pendingPressOrders);
       
-      console.log("Orders to display:", ordersData);
-      setOrders(ordersData);
-      setFilteredOrders(ordersData);
+      setOrders(pendingPressOrders);
+      setFilteredOrders(pendingPressOrders);
       setError(null);
     } catch (err) {
       console.error("Failed to fetch pending press orders:", err);
@@ -149,6 +110,19 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
     fetchPendingPressOrders();
   }, []);
 
+  // Parse and format date strings from API
+  const formatDate = (dateValue: Date | string | null | undefined) => {
+    if (!dateValue) return "N/A"
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return "Invalid date";
+      return format(date, "dd MMM yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date"
+    }
+  }
+
   // Filter orders when search query changes
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -164,37 +138,29 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
       order.nama_kain?.toLowerCase().includes(query) ||
       order.status?.toLowerCase().includes(query) ||
       order.statusprod?.toLowerCase().includes(query) ||
-      order.originalCustomer?.nama?.toLowerCase().includes(query) ||
-      order.asal_bahan?.toLowerCase().includes(query)
+      order.asal_bahan_rel?.nama?.toLowerCase().includes(query)
     );
     
     setFilteredOrders(filtered);
   }, [searchQuery, orders]);
 
-  // Filter out PRINT ONLY and CUTTING ONLY products
-  useEffect(() => {
-    const filteredByProductType = orders.filter(order => {
-      const produk = (order.produk || "").toUpperCase();
-      return produk !== "PRINT ONLY" && produk !== "CUTTING ONLY";
-    });
-    
-    if (!searchQuery.trim()) {
-      setFilteredOrders(filteredByProductType);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = filteredByProductType.filter(order => 
-        order.spk?.toLowerCase().includes(query) ||
-        order.customer?.nama?.toLowerCase().includes(query) ||
-        order.produk?.toLowerCase().includes(query) ||
-        order.nama_kain?.toLowerCase().includes(query) ||
-        order.status?.toLowerCase().includes(query) ||
-        order.statusprod?.toLowerCase().includes(query) ||
-        order.originalCustomer?.nama?.toLowerCase().includes(query) ||
-        order.asal_bahan?.toLowerCase().includes(query)
-      );
-      setFilteredOrders(filtered);
+  // Helper function to get priority color class
+  const getPriorityColorClass = (priority?: string) => {
+    if (!priority) return "";
+    switch (priority.toLowerCase()) {
+      case 'high':
+      case 'tinggi':
+        return "text-red-600 font-semibold";
+      case 'medium':
+      case 'sedang':
+        return "text-orange-500";
+      case 'low':
+      case 'rendah':
+        return "text-green-600";
+      default:
+        return "";
     }
-  }, [orders, searchQuery]);
+  };
 
   const handlePressClick = (order: Order) => {
     setSelectedOrder(order);
@@ -217,30 +183,12 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
     });
   };
 
-  // Helper function to get priority color class
-  const getPriorityColorClass = (priority?: string) => {
-    if (!priority) return "";
-    switch (priority.toLowerCase()) {
-      case 'high':
-      case 'tinggi':
-        return "text-red-600 font-semibold";
-      case 'medium':
-      case 'sedang':
-        return "text-orange-500";
-      case 'low':
-      case 'rendah':
-        return "text-green-600";
-      default:
-        return "";
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Pending Press</CardTitle>
         <CardDescription>
-          Orders that are ready for press (PRINT DONE status)
+          Orders ready for press (PRESS READY status or PRINT DONE with PRESS in product)
         </CardDescription>
         
         {/* Search and filter section */}
@@ -254,10 +202,6 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            Filters
-          </Button>
           <Button 
             variant="outline" 
             size="sm" 
@@ -286,8 +230,8 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
             <Table className="min-w-[1400px]">
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="sticky left-0 bg-muted/50 whitespace-nowrap">Date</TableHead>
-                  <TableHead className="whitespace-nowrap">SPK</TableHead>
+                  <TableHead className="whitespace-nowrap">Created Date</TableHead>
+                  <TableHead className="sticky left-0 bg-muted/50 whitespace-nowrap">SPK</TableHead>
                   <TableHead className="whitespace-nowrap">Category</TableHead>
                   <TableHead className="whitespace-nowrap">Customer</TableHead>
                   <TableHead className="whitespace-nowrap">Priority</TableHead>
@@ -298,18 +242,19 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
                   <TableHead className="whitespace-nowrap">Fabric Origin</TableHead>
                   <TableHead className="whitespace-nowrap">Fabric Name</TableHead>
                   <TableHead className="whitespace-nowrap">Fabric Width</TableHead>
+                  <TableHead className="whitespace-nowrap">Qty</TableHead>
                   <TableHead className="whitespace-nowrap">Color Matching</TableHead>
                   <TableHead className="whitespace-nowrap">Print Datetime</TableHead>
-                  <TableHead className="sticky right-0 bg-muted/50 whitespace-nowrap">Action</TableHead>
+                  <TableHead className="sticky right-0 bg-muted/90 whitespace-nowrap">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="sticky left-0 bg-white whitespace-nowrap">
-                      {displayDate(order.tanggal)}
+                    <TableCell className="whitespace-nowrap">
+                      {formatDate(order.created_at)}
                     </TableCell>
-                    <TableCell className="font-medium whitespace-nowrap">{order.spk}</TableCell>
+                    <TableCell className="font-medium sticky left-0 bg-muted/50 whitespace-nowrap">{order.spk}</TableCell>
                     <TableCell>{order.kategori || ""}</TableCell>
                     <TableCell className="max-w-[150px] truncate" title={order.customer?.nama || ""}>
                       {order.customer?.nama || ""}
@@ -318,7 +263,7 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
                       {order.prioritas || ""}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {displayDate(order.est_order)}
+                      {formatDate(order.est_order)}
                     </TableCell>
                     <TableCell>{order.status || ""}</TableCell>
                     <TableCell>{order.statusprod || ""}</TableCell>
@@ -326,20 +271,21 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
                       {order.produk || ""}
                     </TableCell>
                     <TableCell className="max-w-[150px] truncate" 
-                      title={order.originalCustomer?.nama || order.asal_bahan || ""}>
-                      {order.originalCustomer?.nama || order.asal_bahan || ""}
+                      title={order.asal_bahan_rel?.nama || order.asal_bahan_rel?.nama || ""}>
+                      {order.asal_bahan_rel?.nama || order.asal_bahan_rel?.nama || ""}
                     </TableCell>
                     <TableCell className="max-w-[150px] truncate" title={order.nama_kain || ""}>
                       {order.nama_kain || ""}
                     </TableCell>
-                    <TableCell>{order.lebar_kain || ""}</TableCell>
+                    <TableCell>{order.lebar_kain?.toString() || ""}</TableCell>
+                    <TableCell>{order.qty || ""}</TableCell>
                     <TableCell className="max-w-[150px] truncate" title={order.warna_acuan || ""}>
                       {order.warna_acuan || ""}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {order.tgl_print_done 
-                        ? displayDate(order.tgl_print_done)
-                        : displayDate(order.tgl_print)}
+                      {order.print_done 
+                        ? formatDate(order.print_done)
+                        : formatDate(order.tgl_print)}
                     </TableCell>
                     <TableCell className="sticky right-0 bg-white whitespace-nowrap">
                       <Button
@@ -361,8 +307,8 @@ export function PendingPressList({ onPressStart }: PendingPressListProps) {
       {isFormOpen && selectedOrder && (
         <PressForm
           order={selectedOrder}
-          isOpen={isFormOpen}
-          onClose={handleFormClose}
+          open={isFormOpen}
+          onOpenChange={handleFormClose}
           onSuccess={handlePressSuccess}
         />
       )}

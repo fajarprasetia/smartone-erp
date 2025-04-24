@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { PressManagement } from "@/components/production/press-management";
+import { PressManagement } from "@/components/production/press/press-management";
 
 export const metadata: Metadata = {
   title: "Press Management | SmartOne ERP",

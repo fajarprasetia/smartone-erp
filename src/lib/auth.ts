@@ -1,5 +1,4 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
@@ -32,7 +31,11 @@ export const authOptions: NextAuthOptions = {
             email: credentials.email,
           },
           include: {
-            role: true,
+            role: {
+              include: {
+                permissions: true
+              }
+            },
           },
         });
 
@@ -71,8 +74,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.name = user.name;
-        token.email = user.email;
+        token.name = user.name || "";
+        token.email = user.email || "";
         token.role = user.role;
       }
       return token;

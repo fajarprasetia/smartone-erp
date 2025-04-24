@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     }
     
     // If category filter is applied, we'll filter after fetching
-    const logs = await prisma.OthersLog.findMany({
+    const logs = await prisma.othersLog.findMany({
       where: filter,
       orderBy: {
         created_at: "desc"
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Create the log entry
-    const logEntry = await prisma.OthersLog.create({
+    const logEntry = await prisma.othersLog.create({
       data: {
         action,
         others_request_id,

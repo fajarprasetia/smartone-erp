@@ -31,14 +31,26 @@ export function FabricInfoSection({
   const asalBahan = form.watch("asalBahan");
   const namaBahan = form.watch("namaBahan");
   const aplikasiProduk = form.watch("aplikasiProduk");
-  const isDtfSelected = form.watch("jenisProduk")?.DTF === true;
+  const productTypes = form.watch("jenisProduk");
+  const isDtfSelected = productTypes?.DTF === true;
+  
+  // Check if only PRINT is selected and no other product types
+  const isPrintOnly = productTypes?.PRINT && 
+    !productTypes?.PRESS && 
+    !productTypes?.CUTTING && 
+    !productTypes?.DTF && 
+    !productTypes?.SEWING;
+  
+  // Determine if section should be disabled
+  const isSectionDisabled = isDtfSelected || isPrintOnly;
   
   console.log("Fabric Info Section - Current values:", { 
     asalBahan, 
     namaBahan, 
     aplikasiProduk, 
     selectedFabric,
-    isDtfSelected
+    isDtfSelected,
+    isPrintOnly
   });
 
   // Check if quantity exceeds available fabric length
@@ -65,6 +77,11 @@ export function FabricInfoSection({
             (Not required for DTF products)
           </span>
         )}
+        {isPrintOnly && (
+          <span className="ml-2 text-sm text-muted-foreground font-normal">
+            (Not required for PRINT only products)
+          </span>
+        )}
       </h3>
       
       {isDtfSelected && (
@@ -74,19 +91,26 @@ export function FabricInfoSection({
         </div>
       )}
       
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isDtfSelected ? 'opacity-50 pointer-events-none' : ''}`}>
+      {isPrintOnly && (
+        <div className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700 mb-4">
+          <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+          <p className="text-sm">When only PRINT is selected, fabric information is not required and will not be used in processing the order.</p>
+        </div>
+      )}
+      
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isSectionDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Fabric Origins */}
         <FormField
           control={form.control}
           name="asalBahan"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Fabric Origin{!isDtfSelected && "*"}</FormLabel>
+              <FormLabel>Fabric Origin{!isSectionDisabled && "*"}</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value}
                 defaultValue={field.value}
-                disabled={isDtfSelected}
+                disabled={isSectionDisabled}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -113,8 +137,8 @@ export function FabricInfoSection({
             <FormItem className="flex flex-col">
               <FormLabel>Fabric Name</FormLabel>
               <Popover 
-                open={isFabricNameOpen && !isDtfSelected} 
-                onOpenChange={(open) => !isDtfSelected && setIsFabricNameOpen(open)}
+                open={isFabricNameOpen && !isSectionDisabled} 
+                onOpenChange={(open) => !isSectionDisabled && setIsFabricNameOpen(open)}
               >
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -123,7 +147,7 @@ export function FabricInfoSection({
                       role="combobox"
                       aria-expanded={isFabricNameOpen}
                       className="justify-between w-full"
-                      disabled={isDtfSelected || !form.watch("asalBahan") || fabricNames.length === 0}
+                      disabled={isSectionDisabled || !form.watch("asalBahan") || fabricNames.length === 0}
                     >
                       {field.value
                         ? fabricNames.find((fabric) => fabric.name === field.value)?.name || "Select Fabric"
@@ -185,7 +209,7 @@ export function FabricInfoSection({
         />
       </div>
       
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isDtfSelected ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isSectionDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
                 
         {/* Fabric Width */}
         <FormField
@@ -198,7 +222,7 @@ export function FabricInfoSection({
                 <Input
                   placeholder="Enter fabric width"
                   {...field}
-                  disabled={isDtfSelected}
+                  disabled={isSectionDisabled}
                 />
               </FormControl>
               <FormMessage />
@@ -217,7 +241,7 @@ export function FabricInfoSection({
                 <Input
                   placeholder="Enter fabric length"
                   {...field}
-                  disabled={isDtfSelected}
+                  disabled={isSectionDisabled}
                 />
               </FormControl>
               <FormMessage />

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       filters.category = category
     }
     
-    const requests = await prisma.OthersRequest.findMany({
+    const requests = await prisma.othersRequest.findMany({
       where: filters,
       orderBy: {
         created_at: "desc"
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Create the others request
-    const request = await prisma.OthersRequest.create({
+    const request = await prisma.othersRequest.create({
       data: {
         category,
         item_name,
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     })
     
     // Log the request creation
-    await prisma.OthersLog.create({
+    await prisma.othersLog.create({
       data: {
         action: "REQUESTED",
         others_request_id: request.id,

@@ -77,7 +77,12 @@ interface BillsResponse {
   vendorCount: number;
 }
 
-export function PayableTable() {
+interface PayableTableProps {
+  initialTab?: string;
+  onRefreshData?: () => void;
+}
+
+export function PayableTable({ initialTab = "all", onRefreshData }: PayableTableProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -100,7 +105,13 @@ export function PayableTable() {
 
   // Filter states
   const [vendorId, setVendorId] = useState<number | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(() => {
+    // Set initial status based on initialTab prop
+    if (initialTab === "unpaid") return "pending";
+    if (initialTab === "overdue") return "overdue";
+    if (initialTab === "paid") return "paid";
+    return null;
+  });
   const [dueDateStart, setDueDateStart] = useState<Date | null>(null);
   const [dueDateEnd, setDueDateEnd] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -116,7 +127,6 @@ export function PayableTable() {
     const vendor = searchParams.get("vendorId") 
       ? parseInt(searchParams.get("vendorId") as string) 
       : null;
-    const statusParam = searchParams.get("status");
     const search = searchParams.get("search") || "";
     const start = searchParams.get("dueDateStart") 
       ? parseISO(searchParams.get("dueDateStart") as string) 
@@ -128,7 +138,6 @@ export function PayableTable() {
     setCurrentPage(page);
     setPageSize(size);
     setVendorId(vendor);
-    setStatus(statusParam);
     setSearchQuery(search);
     setDueDateStart(start);
     setDueDateEnd(end);
@@ -190,12 +199,16 @@ export function PayableTable() {
       setOverdueCount(data.overdueCount);
       setDueSoonCount(data.dueSoonCount);
       setVendorCount(data.vendorCount);
+      
+      if (onRefreshData) {
+        onRefreshData();
+      }
     } catch (error) {
       console.error("Error fetching bills:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [buildQueryParams]);
+  }, [buildQueryParams, onRefreshData]);
 
   // Fetch bills when dependencies change
   useEffect(() => {
@@ -217,15 +230,12 @@ export function PayableTable() {
 
   // Handle filter changes
   const handleFilterChange = (
-    vendor: number | null,
-    statusFilter: string | null,
-    startDate: Date | null,
-    endDate: Date | null
+    filters: { vendorId: string, search: string, dueDateStart?: Date, dueDateEnd?: Date }
   ) => {
-    setVendorId(vendor);
-    setStatus(statusFilter);
-    setDueDateStart(startDate);
-    setDueDateEnd(endDate);
+    setVendorId(filters.vendorId ? parseInt(filters.vendorId) : null);
+    setDueDateStart(filters.dueDateStart || null);
+    setDueDateEnd(filters.dueDateEnd || null);
+    setSearchQuery(filters.search || "");
     setCurrentPage(1); // Reset to first page
     updateUrl();
   };
@@ -239,11 +249,11 @@ export function PayableTable() {
 
   // Function to get status badge
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "success" }> = {
+    const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
       draft: { label: "Draft", variant: "outline" },
       pending: { label: "Pending", variant: "secondary" },
       partial: { label: "Partial", variant: "secondary" },
-      paid: { label: "Paid", variant: "success" },
+      paid: { label: "Paid", variant: "default" },
       overdue: { label: "Overdue", variant: "destructive" },
     };
 
@@ -398,9 +408,6 @@ export function PayableTable() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">Bills & Payments</h2>
-        <Button onClick={handleCreateBill}>
-          <Plus className="mr-2 h-4 w-4" /> New Bill
-        </Button>
       </div>
 
       <PayableFilter

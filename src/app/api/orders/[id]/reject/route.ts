@@ -36,7 +36,7 @@ export async function POST(
     }
 
     // Check if order exists
-    const order = await prisma.Order.findUnique({
+    const order = await prisma.order.findUnique({
       where: { id },
       include: {
         customer: true,
@@ -71,7 +71,7 @@ export async function POST(
     };
 
     // Update the order
-    const updatedOrder = await prisma.Order.update({
+    const updatedOrder = await prisma.order.update({
       where: { id },
       data: updateData,
       include: {

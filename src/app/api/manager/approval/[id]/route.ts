@@ -84,14 +84,16 @@ export async function PUT(
         updateData = {
           approve_mng: body.approval_mng || "APPROVED", // Using approve_mng (DB field) from approval_mng (frontend field)
           manager_id: session.user.id,
-          tgl_app_manager: new Date(body.tgl_app_manager || Date.now())
+          tgl_app_manager: new Date(body.tgl_app_manager || Date.now()),
+          status: body.status || "PRINT READY" // Add status field with default
         };
         console.log('Manager approval update data:', updateData);
       } else if (session.user.role?.name === "Operation Manager") {
         updateData = {
           approval_opr: body.approval_opr || "APPROVED",
           opr_id: session.user.id,
-          tgl_app_prod: new Date(body.tgl_app_prod || Date.now())
+          tgl_app_prod: new Date(body.tgl_app_prod || Date.now()),
+          status: body.status || "PRINT READY" // Add status field with default
         };
         console.log('Operation Manager approval update data:', updateData);
       } else {
@@ -135,7 +137,8 @@ export async function PUT(
             const correctedData = {
               [correctField]: body.approval_mng || "APPROVED",
               manager_id: session.user.id,
-              tgl_app_manager: new Date(body.tgl_app_manager || Date.now())
+              tgl_app_manager: new Date(body.tgl_app_manager || Date.now()),
+              status: body.status || "PRINT READY" // Add status field with default
             };
             
             console.log('Corrected update data:', correctedData);
@@ -163,7 +166,8 @@ export async function PUT(
             const correctedData = {
               [correctField]: body.approval_opr || "APPROVED",
               opr_id: session.user.id,
-              tgl_app_prod: new Date(body.tgl_app_prod || Date.now())
+              tgl_app_prod: new Date(body.tgl_app_prod || Date.now()),
+              status: body.status || "PRINT READY" // Add status field with default
             };
             
             console.log('Corrected update data:', correctedData);

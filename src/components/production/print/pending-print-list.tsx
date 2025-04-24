@@ -1,9 +1,24 @@
 "use client";
 
-// ... existing code ...
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-// ... existing code ...
+import { PrintStartForm } from "./print-start-form"; // Adjust path as needed
 
+// Define component props
+interface PendingPrintListProps {
+  onOrderStart?: () => void;
+}
+
+export function PendingPrintList({ onOrderStart }: PendingPrintListProps) {
+  const [startDialogOpen, setStartDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+  // Function to fetch orders
+  const fetchPendingPrintOrders = async () => {
+    // Implementation here
+  };
+
+  // Rest of component
       <Dialog open={startDialogOpen} onOpenChange={setStartDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogTitle>Start Printing Process</DialogTitle>
@@ -28,4 +43,4 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
           )}
         </DialogContent>
       </Dialog>
-// ... existing code ...
+}

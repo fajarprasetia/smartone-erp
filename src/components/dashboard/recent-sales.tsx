@@ -1,133 +1,95 @@
 "use client"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { formatDate, formatNumber } from "@/lib/utils"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { formatNumber } from "@/lib/utils"
+import { useEffect, useState } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const recentSales = [
-  {
-    id: "ORD001",
-    customer: "John Doe",
-    avatar: "/avatars/01.png",
-    amount: 1250.00,
-    status: "Completed",
-    date: "2024-03-15",
-  },
-  {
-    id: "ORD002",
-    customer: "Jane Smith",
-    avatar: "/avatars/02.png",
-    amount: 850.50,
-    status: "Processing",
-    date: "2024-03-14",
-  },
-  {
-    id: "ORD003",
-    customer: "Bob Johnson",
-    avatar: "/avatars/03.png",
-    amount: 2100.00,
-    status: "Completed",
-    date: "2024-03-13",
-  },
-  {
-    id: "ORD004",
-    customer: "Alice Brown",
-    avatar: "/avatars/04.png",
-    amount: 750.25,
-    status: "Pending",
-    date: "2024-03-12",
-  },
-  {
-    id: "ORD005",
-    customer: "Charlie Wilson",
-    avatar: "/avatars/05.png",
-    amount: 1500.75,
-    status: "Completed",
-    date: "2024-03-11",
-  },
-]
+interface SaleItem {
+  id: string
+  customerName: string
+  amount: number
+  date: string
+}
 
-export function RecentSales() {
+interface RecentSalesProps {
+  data?: SaleItem[]
+}
+
+export function RecentSales({ data: propData }: RecentSalesProps) {
+  const [sales, setSales] = useState<SaleItem[]>([])
+  const [isLoading, setIsLoading] = useState(!propData)
+
+  useEffect(() => {
+    if (propData) {
+      setSales(propData)
+      setIsLoading(false)
+      return
+    }
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch('/api/dashboard/stats')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data')
+        }
+        
+        const result = await response.json()
+        setSales(result.recentSales || [])
+      } catch (error) {
+        console.error('Error fetching recent sales data:', error)
+        // Fallback to empty data
+        setSales([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchData()
+  }, [propData])
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center space-x-4">
+            <Skeleton className="h-10 w-10 rounded-full bg-primary/10" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-3/4 bg-primary/10" />
+              <Skeleton className="h-4 w-1/2 bg-primary/10" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/01.png" alt="Avatar" />
-          <AvatarFallback>OM</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Olivia Martin</p>
-          <p className="text-sm text-muted-foreground">olivia.martin@email.com</p>
+      {sales.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8">
+          No recent sales data available
         </div>
-        <div className="ml-auto font-medium text-right">
-          <div>{formatNumber(1999000)}</div>
-          <div className="text-xs text-green-700">Completed</div>
-        </div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/02.png" alt="Avatar" />
-          <AvatarFallback>JL</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Jackson Lee</p>
-          <p className="text-sm text-muted-foreground">jackson.lee@email.com</p>
-        </div>
-        <div className="ml-auto font-medium text-right">
-          <div>{formatNumber(3999000)}</div>
-          <div className="text-xs text-green-700">Completed</div>
-        </div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/03.png" alt="Avatar" />
-          <AvatarFallback>IN</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
-          <p className="text-sm text-muted-foreground">isabella.nguyen@email.com</p>
-        </div>
-        <div className="ml-auto font-medium text-right">
-          <div>{formatNumber(2999000)}</div>
-          <div className="text-xs text-yellow-700">Processing</div>
-        </div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/04.png" alt="Avatar" />
-          <AvatarFallback>WK</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">William Kim</p>
-          <p className="text-sm text-muted-foreground">william.kim@email.com</p>
-        </div>
-        <div className="ml-auto font-medium text-right">
-          <div>{formatNumber(4999000)}</div>
-          <div className="text-xs text-green-700">Completed</div>
-        </div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/05.png" alt="Avatar" />
-          <AvatarFallback>SD</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Sofia Davis</p>
-          <p className="text-sm text-muted-foreground">sofia.davis@email.com</p>
-        </div>
-        <div className="ml-auto font-medium text-right">
-          <div>{formatNumber(1999000)}</div>
-          <div className="text-xs text-red-700">Failed</div>
-        </div>
-      </div>
+      ) : (
+        sales.map((sale) => (
+          <div key={sale.id} className="flex items-center">
+            <Avatar className="h-9 w-9 border border-white/20">
+              <AvatarFallback className="bg-primary/10 text-xs">
+                {sale.customerName.split(' ').map(part => part[0]).join('').toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="ml-4 space-y-1">
+              <p className="text-sm font-medium leading-none">{sale.customerName}</p>
+              <p className="text-sm text-muted-foreground">
+                {new Date(sale.date).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="ml-auto font-medium">+{formatNumber(sale.amount)}</div>
+          </div>
+        ))
+      )}
     </div>
   )
 } 

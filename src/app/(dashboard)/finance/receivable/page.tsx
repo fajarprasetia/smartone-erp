@@ -37,13 +37,16 @@ import {
   ChevronRight,
   X,
   Receipt,
+  Calendar,
+  FileDown,
+  FileType
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { debounce } from "lodash"
 import Image from "next/image"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
@@ -58,11 +61,23 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { PaymentReceipt } from "@/components/finance/PaymentReceipt"
+import { Switch } from "@/components/ui/switch"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import jsPDF from "jspdf"
+import 'jspdf-autotable'
+import autoTable from "jspdf-autotable"
+import { saveAs } from "file-saver"
+import * as XLSX from "xlsx"
 
 interface Invoice {
   id: string | null
   invoiceNumber: string | null
-  invoice: string | null
+  invoice: string | null  // Keep this for backward compatibility
   invoiceDate: Date | null
   dueDate: Date | null
   status: string | null
@@ -76,6 +91,7 @@ interface Invoice {
     spk: string | null
     produk: string | null;
     invoice: string | null;
+    created_at?: Date | null;
   } | null;
   subtotal: number;
   tax: number;
@@ -83,6 +99,8 @@ interface Invoice {
   total: number;
   amountPaid: number;
   balance: number;
+  sisa: number;
+  nominal: number;
   notes: string | null;
   transactions: {
     id: string;
@@ -116,6 +134,13 @@ interface InvoiceData {
       count: number;
       amount: number;
     };
+  },
+  timeFrame: {
+    month: number;
+    year: number;
+    monthName: string;
+    startDate: string;
+    endDate: string;
   }
 }
 
@@ -154,7 +179,7 @@ function PaymentForm({
     const prefix = `SO01${month}${year}`;
     
     try {
-      const response = await fetch(`/api/orders/latest-invoice?prefix=${prefix}`);
+      const response = await fetch(`/api/finance/receivable?invoicePrefix=${prefix}`);
       if (!response.ok) throw new Error("Failed to get latest invoice number");
       
       const data = await response.json();
@@ -194,7 +219,7 @@ function PaymentForm({
       setIsLoading(true);
       
       let invoiceNumber = invoice.invoiceNumber;
-      if (!invoiceNumber || invoiceNumber.startsWith('INV-')) {
+      if (!invoiceNumber) {
         invoiceNumber = await generateInvoiceNumber();
         
         // Update the order status to indicate it has been invoiced
@@ -362,7 +387,7 @@ function PaymentForm({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
+              <CalendarComponent
                 mode="single"
                 selected={paymentDate}
                 onSelect={(date) => date && setPaymentDate(date)}
@@ -434,6 +459,7 @@ export default function AccountsReceivablePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [searchAll, setSearchAll] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState("");
@@ -443,6 +469,8 @@ export default function AccountsReceivablePage() {
   const [showInvoiceDetails, setShowInvoiceDetails] = useState(false);
   const [activeTab, setActiveTab] = useState("invoices");
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12 for Jan-Dec
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [transactions, setTransactions] = useState<{
     id: string;
     amount: number;
@@ -466,11 +494,15 @@ export default function AccountsReceivablePage() {
   const [transactionSearch, setTransactionSearch] = useState("");
   const [showReceipt, setShowReceipt] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [reportFormat, setReportFormat] = useState<"pdf" | "excel">("pdf");
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const debouncedSearch = useMemo(() => debounce(() => {
     setPage(1);
     fetchInvoices();
-  }, 500), [search]);
+  }, 500), [search, pageSize, statusFilter, sortBy, sortOrder, searchAll, selectedMonth, selectedYear]);
 
   const debouncedTransactionSearch = useMemo(() => debounce(() => {
     setPaymentsPage(1);
@@ -485,14 +517,12 @@ export default function AccountsReceivablePage() {
   }, [debouncedSearch, debouncedTransactionSearch]);
 
   useEffect(() => {
-    if (search !== "") {
-      debouncedSearch();
-    }
+    debouncedSearch();
   }, [search, debouncedSearch]);
 
   useEffect(() => {
     fetchInvoices();
-  }, [page, pageSize, statusFilter, sortBy, sortOrder]);
+  }, [page, pageSize, statusFilter, sortBy, sortOrder, selectedMonth, selectedYear]);
 
   const fetchInvoices = async () => {
     try {
@@ -503,7 +533,10 @@ export default function AccountsReceivablePage() {
         ...(search && { search }),
         ...(statusFilter && { status: statusFilter }),
         ...(sortBy && { sortBy }),
-        ...(sortOrder && { sortOrder })
+        ...(sortOrder && { sortOrder }),
+        searchAll: searchAll.toString(),
+        month: selectedMonth.toString(),
+        year: selectedYear.toString()
       });
       
       const response = await fetch(`/api/finance/receivable?${queryParams.toString()}`);
@@ -524,6 +557,10 @@ export default function AccountsReceivablePage() {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+    if (e.target.value === "") {
+      setPage(1);
+      fetchInvoices();
+    }
   };
 
   const handleStatusFilter = (status: string) => {
@@ -590,6 +627,8 @@ export default function AccountsReceivablePage() {
         return <Badge variant="destructive">Overdue</Badge>;
       case 'CANCELLED':
         return <Badge variant="outline">Cancelled</Badge>;
+      case 'COMPLETED':
+        return <Badge className="bg-blue-500">Completed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -645,7 +684,7 @@ export default function AccountsReceivablePage() {
       console.log("Payment transactions data:", result.transactions);
       
       // Enhance transactions with order data if missing
-      const processedTransactions = await Promise.all((result.transactions || []).map(async (transaction) => {
+      const processedTransactions = await Promise.all((result.transactions || []).map(async (transaction: any) => {
         // If transaction already has order data with SPK, use it
         if (transaction.order?.spk) {
           return transaction;
@@ -745,20 +784,443 @@ export default function AccountsReceivablePage() {
     setShowReceipt(true);
   };
 
+  const handleGenerateInvoiceNumber = async (invoice: Invoice) => {
+    try {
+      // Validate that balance is 0
+      if (invoice.balance !== 0) {
+        toast.error("Cannot generate invoice number: Balance must be 0");
+        return;
+      }
+
+      // Format: SO01MMYYNNNNNN
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const prefix = `SO01${month}${year}`;
+      
+      const response = await fetch('/api/finance/receivable', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: invoice.id,
+          invoicePrefix: prefix,
+          // Add additional fields to update
+          additionalData: {
+            approval_barang: "APPROVED",
+            tgl_invoice: new Date(),
+            statusm: "DELIVERY"
+          }
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate invoice number');
+      }
+      
+      const result = await response.json();
+      toast.success(`Invoice number generated: ${result.invoiceNumber}`);
+      
+      // Refresh the invoice list
+      fetchInvoices();
+    } catch (error) {
+      console.error('Error generating invoice number:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to generate invoice number');
+    }
+  };
+
+  // Add a function to handle month selection
+  const handleMonthChange = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+    setPage(1); // Reset to first page when changing month
+  };
+
+  // Generate array of month options
+  const months = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(2000, i, 1);
+      return {
+        value: i + 1,
+        label: date.toLocaleString('default', { month: 'long' })
+      };
+    });
+  }, []);
+
+  // Generate year options (current year and 5 years back)
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, i) => currentYear - i);
+  }, []);
+
+  // Function to generate report
+  const generateReport = async () => {
+    try {
+      setIsGeneratingReport(true);
+      
+      // Fetch all invoices for the report (without pagination)
+      const queryParams = new URLSearchParams({
+        pageSize: "1000", // Fetch a large number of records
+        page: "1",
+        ...(statusFilter && { status: statusFilter }),
+        ...(search && { search }),
+        month: selectedMonth.toString(),
+        year: selectedYear.toString(),
+        searchAll: searchAll.toString()
+      });
+      
+      const response = await fetch(`/api/finance/receivable?${queryParams.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching report data: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (reportFormat === "pdf") {
+        generatePdfReport(result);
+      } else {
+        generateExcelReport(result);
+      }
+      
+      toast.success(`${reportFormat.toUpperCase()} report generated successfully`);
+      setShowReportDialog(false);
+    } catch (error) {
+      console.error("Failed to generate report:", error);
+      toast.error("Failed to generate report");
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+
+  // Generate PDF report
+  const generatePdfReport = (data: any) => {
+    const { invoices, summary, timeFrame } = data;
+    
+    // Create a new PDF document
+    const doc = new jsPDF();
+    
+    // Add title and header information
+    doc.setFontSize(18);
+    doc.text("Accounts Receivable Report", 14, 22);
+    
+    doc.setFontSize(11);
+    doc.text(`Period: ${timeFrame.monthName} ${timeFrame.year}`, 14, 30);
+    doc.text(`Generated on: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 36);
+    
+    // Add summary section
+    doc.setFontSize(14);
+    doc.text("Summary", 14, 46);
+    
+    // Create summary table
+    autoTable(doc, {
+      startY: 50,
+      head: [["Category", "Count", "Amount"]],
+      body: [
+        ["Total Receivables", invoices.length.toString(), formatCurrency(summary.totalReceivables)],
+        ["Overdue", summary.overdue.count.toString(), formatCurrency(summary.overdue.amount)],
+        ["Due Soon", summary.dueSoon.count.toString(), formatCurrency(summary.dueSoon.amount)],
+        ["Paid", summary.paid.count.toString(), formatCurrency(summary.paid.amount)]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [71, 85, 105] }
+    });
+    
+    // Add invoices table
+    doc.setFontSize(14);
+    // Use a safe access pattern for jsPDF extensions
+    const firstTableY = (doc as any).lastAutoTable?.finalY || 50;
+    doc.text("Invoice Details", 14, firstTableY + 15);
+    
+    // Prepare invoice data for table
+    const invoiceData = invoices.map((invoice: any) => [
+      invoice.invoiceNumber || '-',
+      invoice.order?.spk || '-',
+      formatDate(invoice.invoiceDate),
+      invoice.customer?.nama || 'N/A',
+      formatCurrency(invoice.nominal),
+      formatCurrency(invoice.sisa),
+      invoice.status
+    ]);
+    
+    // Add the invoice table
+    autoTable(doc, {
+      startY: firstTableY + 20,
+      head: [["Invoice #", "SPK", "Date", "Customer", "Amount", "Balance", "Status"]],
+      body: invoiceData,
+      theme: 'grid',
+      headStyles: { fillColor: [71, 85, 105] },
+      didDrawPage: () => {
+        // Add page number on each page
+        // Use a safe access pattern for jsPDF extensions
+        const pageNumber = (doc as any).internal?.getNumberOfPages?.() || 1;
+        doc.setFontSize(8);
+        doc.text(
+          `Page ${pageNumber}`,
+          doc.internal.pageSize.width - 20,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+    
+    // Add footer
+    // Use a safe access pattern for jsPDF extensions
+    const pageCount = (doc as any).internal?.getNumberOfPages?.() || 1;
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(
+        'SmartOne ERP - Accounts Receivable Report',
+        14,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    // Save the PDF
+    doc.save(`Receivables_${timeFrame.monthName}_${timeFrame.year}.pdf`);
+  };
+
+  // Generate Excel report
+  const generateExcelReport = (data: any) => {
+    const { invoices, summary, timeFrame } = data;
+    
+    // Create workbook and worksheets
+    const wb = XLSX.utils.book_new();
+    
+    // Summary worksheet
+    const summaryData = [
+      ["Accounts Receivable Summary"],
+      [`Period: ${timeFrame.monthName} ${timeFrame.year}`],
+      [`Generated on: ${format(new Date(), 'dd MMM yyyy HH:mm')}`],
+      [],
+      ["Category", "Count", "Amount"],
+      ["Total Receivables", invoices.length, summary.totalReceivables],
+      ["Overdue", summary.overdue.count, summary.overdue.amount],
+      ["Due Soon", summary.dueSoon.count, summary.dueSoon.amount],
+      ["Paid", summary.paid.count, summary.paid.amount]
+    ];
+    
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+    
+    // Invoices worksheet
+    const invoiceHeaders = ["Invoice #", "SPK", "Date", "Customer", "Amount", "Balance", "Status"];
+    
+    const invoiceData = invoices.map((invoice: any) => [
+      invoice.invoiceNumber || '-',
+      invoice.order?.spk || '-',
+      invoice.invoiceDate ? new Date(invoice.invoiceDate) : '-',
+      invoice.customer?.nama || 'N/A',
+      invoice.nominal,
+      invoice.sisa,
+      invoice.status
+    ]);
+    
+    // Insert headers at the beginning
+    invoiceData.unshift(invoiceHeaders);
+    
+    const invoicesWs = XLSX.utils.aoa_to_sheet(invoiceData);
+    XLSX.utils.book_append_sheet(wb, invoicesWs, "Invoices");
+    
+    // Generate the Excel file
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const excelData = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Save the file
+    saveAs(excelData, `Receivables_${timeFrame.monthName}_${timeFrame.year}.xlsx`);
+  };
+
+  // Function to generate invoice PDF
+  const downloadInvoicePdf = (invoice: Invoice) => {
+    if (!invoice) return;
+    
+    setIsDownloadingPdf(true);
+    
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
+      
+      // Add company logo/header (placeholder)
+      doc.setFontSize(22);
+      doc.text("SmartOne ERP", 14, 20);
+      
+      // Invoice title and number
+      doc.setFontSize(16);
+      doc.text("INVOICE", 14, 32);
+      
+      doc.setFontSize(12);
+      doc.text(`Invoice #: ${invoice.invoiceNumber || 'N/A'}`, 14, 42);
+      doc.text(`Date: ${formatDate(invoice.invoiceDate)}`, 14, 48);
+      doc.text(`Due Date: ${formatDate(invoice.dueDate)}`, 14, 54);
+      
+      // Customer information
+      doc.setFontSize(14);
+      doc.text("Bill To:", 14, 66);
+      
+      doc.setFontSize(12);
+      doc.text(invoice.customer?.nama || 'N/A', 14, 74);
+      if (invoice.customer?.phone) {
+        doc.text(`Phone: ${invoice.customer.phone}`, 14, 80);
+      }
+      
+      // Order information
+      doc.setFontSize(12);
+      doc.text(`Order #: ${invoice.order?.spk || 'N/A'}`, 130, 42);
+      doc.text(`Status: ${invoice.status || 'N/A'}`, 130, 48);
+      
+      // Add order details table
+      autoTable(doc, {
+        startY: 90,
+        head: [["Description", "Quantity", "Price", "Total"]],
+        body: [
+          [
+            invoice.order?.produk || 'Product/Service', 
+            "1", 
+            formatCurrency(invoice.subtotal), 
+            formatCurrency(invoice.subtotal)
+          ]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [71, 85, 105] }
+      });
+      
+      // Get the last auto table Y position for positioning next elements
+      // Use a safe access pattern for jsPDF extensions
+      const finalY = (doc as any).lastAutoTable?.finalY || 120;
+      
+      // Add summary table (subtotal, tax, total)
+      autoTable(doc, {
+        startY: finalY + 10,
+        body: [
+          ["Subtotal", formatCurrency(invoice.subtotal)],
+          ["Tax", formatCurrency(invoice.tax)],
+          ["Discount", formatCurrency(invoice.discount)],
+          ["Total", formatCurrency(invoice.total)],
+          ["Amount Paid", formatCurrency(invoice.amountPaid)],
+          ["Balance Due", formatCurrency(invoice.balance)]
+        ],
+        theme: 'plain',
+        styles: { cellPadding: 2 },
+        columnStyles: {
+          0: { cellWidth: 100 },
+          1: { cellWidth: 50, halign: 'right' }
+        },
+        margin: { left: doc.internal.pageSize.width / 2 }
+      });
+      
+      // Use a safe access pattern for jsPDF extensions
+      const summaryY = (doc as any).lastAutoTable?.finalY || 160;
+      
+      // Add payment information if available
+      if (invoice.transactions && invoice.transactions.length > 0) {
+        doc.setFontSize(14);
+        doc.text("Payment History", 14, summaryY + 20);
+        
+        const paymentData = invoice.transactions.map(transaction => [
+          formatDate(transaction.date),
+          formatPaymentMethod(transaction.paymentMethod || 'Unknown'),
+          formatCurrency(transaction.amount)
+        ]);
+        
+        autoTable(doc, {
+          startY: summaryY + 25,
+          head: [["Date", "Method", "Amount"]],
+          body: paymentData,
+          theme: 'grid',
+          headStyles: { fillColor: [71, 85, 105] }
+        });
+      }
+      
+      // Use a safe access pattern for jsPDF extensions
+      const paymentsY = (doc as any).lastAutoTable?.finalY || 200;
+      
+      // Add notes if available
+      if (invoice.notes) {
+        doc.setFontSize(14);
+        doc.text("Notes", 14, paymentsY + 20);
+        
+        doc.setFontSize(10);
+        doc.text(invoice.notes, 14, paymentsY + 28);
+      }
+      
+      // Add footer
+      doc.setFontSize(10);
+      doc.text(
+        'Thank you for your business!',
+        doc.internal.pageSize.width / 2,
+        doc.internal.pageSize.height - 20,
+        { align: 'center' }
+      );
+      
+      // Save the PDF
+      doc.save(`Invoice_${invoice.invoiceNumber || invoice.id}.pdf`);
+      
+      toast.success("Invoice PDF downloaded successfully");
+    } catch (error) {
+      console.error("Failed to generate invoice PDF:", error);
+      toast.error("Failed to generate invoice PDF");
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold">Accounts Receivable</h1>
-        <Button>
-          <Download className="h-4 w-4 mr-2" />
-          Generate Report
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Select
+              value={selectedMonth.toString()}
+              onValueChange={(value) => handleMonthChange(parseInt(value), selectedYear)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select month" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month) => (
+                  <SelectItem key={month.value} value={month.value.toString()}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={selectedYear.toString()}
+              onValueChange={(value) => handleMonthChange(selectedMonth, parseInt(value))}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Button onClick={() => setShowReportDialog(true)}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Generate Report
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Receivables</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Receivables
+              <p className="text-xs font-normal text-muted-foreground mt-1">
+                Total order amount for {data?.timeFrame?.monthName} {data?.timeFrame?.year}
+              </p>
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -768,7 +1230,7 @@ export default function AccountsReceivablePage() {
               <>
                 <div className="text-2xl font-bold">{formatCurrency(data?.summary.totalReceivables || 0)}</div>
                 <p className="text-xs text-muted-foreground">
-                  {data?.pagination.totalCount || 0} open invoices
+                  {data?.pagination.totalCount || 0} {data?.pagination.totalCount === 1 ? 'invoice' : 'invoices'}
                 </p>
               </>
             )}
@@ -777,7 +1239,12 @@ export default function AccountsReceivablePage() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Overdue
+              <p className="text-xs font-normal text-muted-foreground mt-1">
+                Unpaid balances from past due invoices
+              </p>
+            </CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -787,7 +1254,7 @@ export default function AccountsReceivablePage() {
               <>
                 <div className="text-2xl font-bold">{formatCurrency(data?.summary.overdue.amount || 0)}</div>
                 <p className="text-xs text-muted-foreground">
-                  {data?.summary.overdue.count || 0} invoices
+                  {data?.summary.overdue.count || 0} {data?.summary.overdue.count === 1 ? 'invoice' : 'invoices'}
                 </p>
               </>
             )}
@@ -796,7 +1263,12 @@ export default function AccountsReceivablePage() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Due Soon</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Due Soon
+              <p className="text-xs font-normal text-muted-foreground mt-1">
+                Orders created within the last 7 days
+              </p>
+            </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -806,7 +1278,7 @@ export default function AccountsReceivablePage() {
               <>
                 <div className="text-2xl font-bold">{formatCurrency(data?.summary.dueSoon.amount || 0)}</div>
                 <p className="text-xs text-muted-foreground">
-                  {data?.summary.dueSoon.count || 0} invoices
+                  {data?.summary.dueSoon.count || 0} {data?.summary.dueSoon.count === 1 ? 'order' : 'orders'}
                 </p>
               </>
             )}
@@ -815,7 +1287,12 @@ export default function AccountsReceivablePage() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Paid</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Paid
+              <p className="text-xs font-normal text-muted-foreground mt-1">
+                Amount paid (nominal - sisa)
+              </p>
+            </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -825,7 +1302,7 @@ export default function AccountsReceivablePage() {
               <>
                 <div className="text-2xl font-bold">{formatCurrency(data?.summary.paid.amount || 0)}</div>
                 <p className="text-xs text-muted-foreground">
-                  {data?.summary.paid.count || 0} invoices
+                  {data?.summary.paid.count || 0} {data?.summary.paid.count === 1 ? 'fully paid order' : 'fully paid orders'}
                 </p>
               </>
             )}
@@ -843,22 +1320,47 @@ export default function AccountsReceivablePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Customer Invoices</CardTitle>
-              <div className="flex items-center space-x-2">
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search invoices..."
-                    value={search}
-                    onChange={handleSearch}
-                    className="pl-8"
-                  />
+              <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2">
+                <div className="flex items-center space-x-2 w-full">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by invoice #, SPK, or customer name..."
+                      value={search}
+                      onChange={handleSearch}
+                      className="pl-8"
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => debouncedSearch()}>
+                    <Search className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => fetchInvoices()}>
-                  <Search className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="search-all"
+                    checked={searchAll}
+                    onCheckedChange={(checked) => {
+                      setSearchAll(checked);
+                      setPage(1);
+                      debouncedSearch();
+                    }}
+                  />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <label htmlFor="search-all" className="text-sm cursor-help">
+                          Include orders without invoices
+                        </label>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">When enabled, searches through all orders in the database, including those without invoice or payment information.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">
@@ -880,6 +1382,9 @@ export default function AccountsReceivablePage() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleStatusFilter("PAID")}>
                       Paid
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusFilter("COMPLETED")}>
+                      Completed
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -920,7 +1425,7 @@ export default function AccountsReceivablePage() {
                           {data.invoices.map((invoice) => (
                             <TableRow key={invoice.id} className={isOverdue(invoice.dueDate) && invoice.status !== 'PAID' ? 'bg-red-50 dark:bg-red-950/20' : 'hover:bg-muted/50'}>
                               <TableCell>
-                                {invoice.order?.invoice || "-"}
+                                {invoice.invoiceNumber || "-"}
                               </TableCell>
                               <TableCell>{invoice.order?.spk || '-'}</TableCell>
                               <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
@@ -946,6 +1451,18 @@ export default function AccountsReceivablePage() {
                                       {invoice.status !== "PAID" && (
                                         <DropdownMenuItem onClick={() => handleRecordPayment(invoice)}>
                                           Record Payment
+                                        </DropdownMenuItem>
+                                      )}
+                                      {!invoice.invoiceNumber && (
+                                        <DropdownMenuItem 
+                                          onClick={() => handleGenerateInvoiceNumber(invoice)}
+                                          disabled={invoice.balance !== 0}
+                                          className={invoice.balance !== 0 ? "text-muted-foreground cursor-not-allowed" : ""}
+                                        >
+                                          Generate Invoice No.
+                                          {invoice.balance !== 0 && (
+                                            <span className="ml-2 text-xs">(Requires paid balance)</span>
+                                          )}
                                         </DropdownMenuItem>
                                       )}
                                       <DropdownMenuItem
@@ -1043,7 +1560,7 @@ export default function AccountsReceivablePage() {
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  onClick={fetchTransactions}>
+                  onClick={() => fetchTransactions()}>
                   <Search className="h-4 w-4" />
                 </Button>
               </div>
@@ -1076,11 +1593,9 @@ export default function AccountsReceivablePage() {
                           {transactions.map((transaction: any) => (
                             <TableRow key={transaction.id}>
                               <TableCell>{formatDate(transaction.date)}</TableCell>
-                              <TableCell>{(transaction.invoiceNumber && !transaction.invoiceNumber.startsWith('INV-')) ? transaction.invoiceNumber : '-'}</TableCell>
+                              <TableCell>{transaction.order?.invoice || '-'}</TableCell>
                               <TableCell>
-                                {transaction.invoiceNumber?.startsWith('INV-') 
-                                  ? transaction.invoiceNumber.replace('INV-', '') 
-                                  : (transaction.orderId ? `#${transaction.orderId}` : '-')}
+                                {transaction.order?.spk || '-'}
                               </TableCell>
                               <TableCell>{transaction.customerName}</TableCell>
                               <TableCell>{formatCurrency(transaction.amount)}</TableCell>
@@ -1314,9 +1829,13 @@ export default function AccountsReceivablePage() {
                 Close
               </Button>
               <div className="flex space-x-2">
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download PDF
+                <Button 
+                  variant="outline"
+                  onClick={() => downloadInvoicePdf(selectedInvoice)}
+                  disabled={isDownloadingPdf}
+                >
+                  <FileType className="h-4 w-4 mr-2" />
+                  {isDownloadingPdf ? "Generating..." : "Download PDF"}
                 </Button>
                 <Button onClick={() => {
                   setShowInvoiceDetails(false);
@@ -1387,6 +1906,88 @@ export default function AccountsReceivablePage() {
           </div>
         </div>
       )}
+
+      {/* Report options dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Generate Receivables Report</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Report Format</label>
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="pdf-format"
+                    name="report-format"
+                    checked={reportFormat === "pdf"}
+                    onChange={() => setReportFormat("pdf")}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="pdf-format" className="text-sm">PDF</label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="excel-format"
+                    name="report-format"
+                    checked={reportFormat === "excel"}
+                    onChange={() => setReportFormat("excel")}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="excel-format" className="text-sm">Excel</label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Period</label>
+              <div className="flex items-center space-x-2 text-sm p-2 bg-muted rounded-md">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span>{data?.timeFrame?.monthName} {data?.timeFrame?.year}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Report will include all receivables for the selected month.
+              </p>
+            </div>
+            
+            {statusFilter && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status Filter</label>
+                <div className="flex items-center space-x-2 text-sm p-2 bg-muted rounded-md">
+                  <span>Status: {statusFilter}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Only {statusFilter.toLowerCase()} invoices will be included in the report.
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowReportDialog(false)}
+              disabled={isGeneratingReport}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={generateReport}
+              disabled={isGeneratingReport}
+            >
+              {isGeneratingReport ? 
+                "Generating..." : 
+                `Generate ${reportFormat === "pdf" ? "PDF" : "Excel"}`
+              }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

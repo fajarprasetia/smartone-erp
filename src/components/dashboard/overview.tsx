@@ -1,133 +1,169 @@
 "use client"
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts"
-import { formatNumber } from "@/lib/utils"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { useEffect, useState } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { formatCurrency, formatNumber } from "@/lib/utils"
 
-const data = [
-  {
-    name: "Jan",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Feb",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Mar",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Apr",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "May",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Jun",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Jul",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Aug",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Sep",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Oct",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Nov",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-  {
-    name: "Dec",
-    total: Math.floor(Math.random() * 5000000) + 1000000,
-  },
-]
-
-// Define a colorful gradient palette
-const COLORS = [
-  'rgba(255, 99, 132, 0.8)',
-  'rgba(54, 162, 235, 0.8)',
-  'rgba(255, 206, 86, 0.8)',
-  'rgba(75, 192, 192, 0.8)',
-  'rgba(153, 102, 255, 0.8)',
-  'rgba(255, 159, 64, 0.8)',
-  'rgba(255, 99, 132, 0.8)',
-]
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-lg border bg-background p-2 shadow-sm">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col">
-            <span className="text-[0.70rem] uppercase text-muted-foreground">
-              {label}
-            </span>
-            <span className="font-bold">
-              {formatNumber(payload[0].value as number)}
-            </span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return null
+interface MonthlyData {
+  month: number
+  year: number
+  revenue: number
+  name?: string
 }
 
-export function Overview() {
+interface OverviewProps {
+  data?: MonthlyData[]
+}
+
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+export function Overview({ data: propData }: OverviewProps) {
+  const [data, setData] = useState<MonthlyData[]>([])
+  const [isLoading, setIsLoading] = useState(!propData)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (propData) {
+      // Sort the data by year and month to ensure chronological order
+      const sortedData = [...propData].sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.month - b.month;
+      });
+      
+      setData(sortedData);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const response = await fetch('/api/dashboard/stats')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data')
+        }
+        
+        const result = await response.json()
+        
+        if (result.overview && Array.isArray(result.overview)) {
+          // Sort the data by year and month to ensure chronological order
+          const sortedData = [...result.overview].sort((a, b) => {
+            if (a.year !== b.year) return a.year - b.year;
+            return a.month - b.month;
+          });
+          
+          setData(sortedData);
+        } else {
+          // Create dummy data if no data is available
+          createDummyData()
+        }
+      } catch (error) {
+        console.error('Error fetching overview data:', error)
+        setError('Failed to load chart data')
+        // Create dummy data if error
+        createDummyData()
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    const createDummyData = () => {
+      const currentDate = new Date()
+      const currentMonth = currentDate.getMonth()
+      const currentYear = currentDate.getFullYear()
+      const dummyData = []
+      
+      // Generate data for the last 12 months
+      for (let i = 11; i >= 0; i--) {
+        let month = currentMonth - i
+        let year = currentYear
+        
+        // Adjust for previous year
+        if (month < 0) {
+          month = 12 + month
+          year = year - 1
+        }
+        
+        dummyData.push({
+          month: month + 1, // 1-indexed month
+          year,
+          revenue: 0
+        })
+      }
+      
+      setData(dummyData)
+    }
+    
+    fetchData()
+  }, [propData])
+
+  // Format the data with month names and year
+  const formattedData = data.map(item => {
+    const monthName = monthNames[item.month - 1]
+    const year = item.year || new Date().getFullYear()
+    
+    return {
+      ...item,
+      name: `${monthName} ${year.toString().substring(2)}` // e.g. "Jan 23" for January 2023
+    }
+  })
+
+  console.log('Chart data:', formattedData);
+
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="rgba(255, 255, 255, 0.5)" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="rgba(255, 255, 255, 0.2)" stopOpacity={0.2}/>
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-        <XAxis
-          dataKey="name"
-          stroke="currentColor"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => value}
-        />
-        <YAxis
-          stroke="currentColor"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => formatNumber(value)}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Bar
-          dataKey="total"
-          radius={[4, 4, 0, 0]}
-          className="fill-primary"
-        >
-          {data.map((entry, index) => (
-            <Cell 
-              key={`cell-${index}`} 
-              fill={COLORS[index % COLORS.length]} 
-              stroke="rgba(255, 255, 255, 0.4)"
-              strokeWidth={1}
+    <div className="h-[300px] w-full">
+      {isLoading ? (
+        <div className="flex flex-col space-y-3 h-full w-full">
+          <Skeleton className="h-full w-full bg-primary/10" />
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center h-full w-full text-muted-foreground">
+          {error}
+        </div>
+      ) : formattedData.length === 0 ? (
+        <div className="flex items-center justify-center h-full w-full text-muted-foreground">
+          No revenue data available
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={formattedData}>
+            <XAxis
+              dataKey="name"
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
             />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+            <YAxis
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value) => formatNumber(value)}
+            />
+            <Tooltip
+              formatter={(value: number) => [formatCurrency(value), 'Revenue']}
+              labelFormatter={(label) => label}
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                borderRadius: '6px',
+                border: '1px solid rgba(0, 0, 0, 0.05)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+              }}
+            />
+            <CartesianGrid stroke="#dddddd" strokeDasharray="3 3" opacity={0.2} />
+            <Bar
+              dataKey="revenue"
+              fill="rgba(99, 102, 241, 0.8)"
+              radius={[4, 4, 0, 0]}
+              barSize={30}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   )
 } 

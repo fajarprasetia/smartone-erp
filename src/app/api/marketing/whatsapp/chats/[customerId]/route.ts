@@ -7,13 +7,26 @@ function isUuid(id: string): boolean {
   return uuidRegex.test(id);
 }
 
+// Helper function to safely convert string to BigInt
+function safeBigInt(value: string): BigInt | null {
+  try {
+    return BigInt(value);
+  } catch (error) {
+    console.error(`Error converting to BigInt: ${value}`, error);
+    return null;
+  }
+}
+
 // GET /api/marketing/whatsapp/chats/[customerId] - Get chat messages for a specific customer
 export async function GET(req: NextRequest, { params }: { params: { customerId: string } }) {
   try {
     const { customerId } = params
     
+    console.log(`Fetching chat messages for customer: ${customerId}`);
+    
     // Check if we're dealing with a UUID (new Customer model) or legacy ID
     if (isUuid(customerId)) {
+      console.log(`Customer ID is UUID format: ${customerId}`);
       // For new Customer model, fetch messages directly
       const messages = await prisma.chatMessage.findMany({
         where: {
@@ -26,55 +39,58 @@ export async function GET(req: NextRequest, { params }: { params: { customerId: 
       
       return NextResponse.json(messages);
     } else {
-      // For legacy customer, we need to find if there's a corresponding new Customer
-      // First, get the legacy customer data
-      const legacyCustomer = await prisma.$queryRaw`
-        SELECT id, nama, telp FROM "customer" WHERE id = ${BigInt(customerId)}
-      `;
+      console.log(`Customer ID is legacy format: ${customerId}`);
+      // Convert to BigInt safely
+      const customerBigInt = safeBigInt(customerId);
       
-      const foundCustomer = Array.isArray(legacyCustomer) && legacyCustomer.length > 0 
-        ? legacyCustomer[0] 
-        : null;
-      
-      if (!foundCustomer) {
+      if (!customerBigInt) {
         return NextResponse.json(
-          { error: 'Customer not found' },
-          { status: 404 }
+          { error: 'Invalid customer ID format' },
+          { status: 400 }
         );
       }
       
-      // Check if we have a new Customer with matching phone number
-      const phone = foundCustomer.telp;
-      if (phone) {
-        const matchingCustomer = await prisma.Customer.findFirst({
+      // First, check if customer exists and has chat messages
+      try {
+        const customerExists = await prisma.customer.findUnique({
+          where: { id: customerBigInt }
+        });
+        
+        if (!customerExists) {
+          console.log(`Customer not found: ${customerId}`);
+          return NextResponse.json(
+            { error: 'Customer not found' },
+            { status: 404 }
+          );
+        }
+        
+        console.log(`Found customer: ${customerExists.nama}`);
+        
+        // Fetch chat messages directly using customer id
+        const messages = await prisma.chatMessage.findMany({
           where: {
-            phone: phone
+            customerId: customerBigInt
+          },
+          orderBy: {
+            timestamp: 'asc'
           }
         });
         
-        if (matchingCustomer) {
-          // If we found a match, return their messages
-          const messages = await prisma.chatMessage.findMany({
-            where: {
-              customerId: matchingCustomer.id
-            },
-            orderBy: {
-              timestamp: 'asc'
-            }
-          });
-          
-          return NextResponse.json(messages);
-        }
+        console.log(`Found ${messages.length} messages for customer ${customerId}`);
+        return NextResponse.json(messages);
+      } catch (error) {
+        console.error(`Error finding customer: ${customerId}`, error);
+        return NextResponse.json(
+          { error: 'Error finding customer' },
+          { status: 500 }
+        );
       }
-      
-      // If no matching customer or no messages, return empty array
-      return NextResponse.json([]);
     }
   } catch (error) {
-    console.error('Error fetching chat messages:', error)
+    console.error('Error fetching chat messages:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch chat messages' },
+      { error: 'Failed to fetch chat messages: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
-    )
+    );
   }
 }

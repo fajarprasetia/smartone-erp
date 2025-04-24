@@ -96,13 +96,13 @@ export async function GET(
       spk: order.spk || "",
       jenisProduk: productTypes,
       jumlah: order.panjang_order?.toString() || order.qty?.toString() || "",
-      unit: order.unit || "meter",
-      asalBahan: order.asal_bahan_id?.toString() || order.asal_bahan?.toString() || "",
+      unit: (order as any).unit || "meter",
+      asalBahan: order.asal_bahan_id?.toString() || (order as any).asal_bahan?.toString() || "",
       statusProduksi: "REPEAT" as const,
       kategori: "REGULAR ORDER" as const,
       targetSelesai: order.est_order || new Date(),
       namaBahan: order.nama_kain || "",
-      aplikasiProduk: order.aplikasi || "",
+      aplikasiProduk: (order as any).aplikasi || "",
       gsmKertas: order.gramasi?.toString() || "",
       lebarKertas: order.lebar_kertas || "",
       fileWidth: order.lebar_file || "",
@@ -126,7 +126,7 @@ export async function GET(
 
     // Only add optional fields if they have values
     if (dtfPass) {
-      formattedOrder.dtfPass = dtfPass as "4 PASS" | "6 PASS";
+      (formattedOrder as any).dtfPass = dtfPass as "4 PASS" | "6 PASS";
     }
 
     console.log("Returning repeat order data:", formattedOrder);

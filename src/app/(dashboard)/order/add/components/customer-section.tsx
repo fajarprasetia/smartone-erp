@@ -38,7 +38,7 @@ interface CustomerSectionProps {
   setIsMarketingOpen: (open: boolean) => void
   spkNumber: string
   fetchSpkNumber: () => Promise<void>
-  refreshCustomers: () => Promise<void>
+  refreshCustomers: () => Promise<Customer[]>
 }
 
 export function CustomerSection({

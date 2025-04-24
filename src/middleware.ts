@@ -61,6 +61,7 @@ export default withAuth(
 // Configure the middleware to run on specific paths
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/manager/:path*",
     "/marketing/:path*",
@@ -71,4 +72,4 @@ export const config = {
     "/finance/:path*",
     "/settings/:path*",
   ],
-}; 
+};

@@ -12,7 +12,8 @@ import {
   ChevronUp,
   ChevronDown,
   Printer,
-  Check
+  Check,
+  X
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -45,10 +46,14 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -67,6 +72,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface ProductionOrderItem {
   id: string
@@ -172,7 +182,7 @@ export function PendingPrintTab() {
   
   // Print form state
   const [selectedOrder, setSelectedOrder] = useState<ProductionOrderItem | null>(null)
-  const [isPrintPopoverOpen, setIsPrintPopoverOpen] = useState(false)
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false)
   const [isSubmittingPrint, setIsSubmittingPrint] = useState(false)
   const [repeatOrderInfo, setRepeatOrderInfo] = useState<any>(null)
   const [paperStocks, setPaperStocks] = useState<PaperStockOption[]>([])
@@ -200,7 +210,7 @@ export function PendingPrintTab() {
   const fetchProductionOrders = useCallback(async (page = 1, search = searchQuery) => {
     setIsLoading(true);
     try {
-      const apiUrl = `/api/production/orders?page=${page}&pageSize=${pageSize}&search=${search}&filter=PENDINGPRINT&status=READYFORPROD&produk=PRINT&approve_mng=APPROVED&approval_opr=APPROVED`;
+      const apiUrl = `/api/production/orders?page=${page}&pageSize=${pageSize}&search=${search}&filter=PENDINGPRINT&status=PRINT READY&produk=PRINT`;
       const response = await fetch(apiUrl);
       
       if (!response.ok) {
@@ -393,7 +403,7 @@ export function PendingPrintTab() {
     }
   }
   
-  // Handle opening the print form popover
+  // Handle opening the print form dialog
   const handlePrintAction = async (order: ProductionOrderItem) => {
     setSelectedOrder(order);
     
@@ -436,7 +446,7 @@ export function PendingPrintTab() {
       }
     }
     
-    setIsPrintPopoverOpen(true);
+    setIsPrintDialogOpen(true);
   }
   
   // Handle form submission
@@ -487,7 +497,7 @@ export function PendingPrintTab() {
       
       // Success
       toast.success("Order status updated to PRINT successfully");
-      setIsPrintPopoverOpen(false);
+      setIsPrintDialogOpen(false);
       
       // Refresh the order list after a short delay
       setTimeout(() => {
@@ -559,7 +569,7 @@ export function PendingPrintTab() {
                       className="cursor-pointer" 
                       onClick={() => handleSort("spk")}
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center sticky left-0 bg-muted/90 whitespace-nowrap">
                         SPK
                         {getSortIcon("spk")}
                       </div>
@@ -614,7 +624,7 @@ export function PendingPrintTab() {
                     <TableHead>Fabric Name</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Notes</TableHead>
-                    <TableHead>Print</TableHead>
+                    <TableHead className="sticky right-0 bg-muted/90 whitespace-nowrap">Print</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -623,7 +633,7 @@ export function PendingPrintTab() {
                       <TableCell>
                         {formatDate(order.created_at)}
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium sticky left-0 bg-muted/90 whitespace-nowrap">
                         {order.spk || "N/A"}
                       </TableCell>
                       <TableCell>
@@ -683,287 +693,15 @@ export function PendingPrintTab() {
                       <TableCell>
                         {order.catatan || "N/A"}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Popover open={isPrintPopoverOpen && selectedOrder?.id === order.id} onOpenChange={(open) => !open && setIsPrintPopoverOpen(false)}>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="default"
-                              onClick={() => handlePrintAction(order)}
-                            >
-                              <Printer className="h-4 w-4 mr-1" />
-                              PRINT
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[400px] p-0" align="end">
-                            <Card className="border-0 shadow-none">
-                              <CardHeader className="pb-2">
-                                <CardTitle className="text-lg">Print Order Form</CardTitle>
-                                <CardDescription>
-                                  Fill in print information for order {order.spk}
-                                </CardDescription>
-                              </CardHeader>
-                              <CardContent>
-                                <ScrollArea className="h-[500px] pr-4">
-                                  {/* Customer Info Card - Uneditable */}
-                                  <div className="mb-4">
-                                    <h3 className="font-medium text-sm mb-2">Order Information</h3>
-                                    <div className="bg-muted/40 p-3 rounded-md space-y-2 text-sm">
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Date</Label>
-                                          <p>{formatDate(selectedOrder?.created_at)}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">SPK</Label>
-                                          <p>{selectedOrder?.spk || "N/A"}</p>
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs text-muted-foreground">Customer</Label>
-                                        <p>{selectedOrder?.customer?.nama || "N/A"}</p>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Category</Label>
-                                          <p>{selectedOrder?.kategori || "N/A"}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Priority</Label>
-                                          <p>{selectedOrder?.prioritas === "YES" ? "High" : "Normal"}</p>
-                                        </div>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Due Date</Label>
-                                          <p>{formatDate(selectedOrder?.est_order)}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Quantity</Label>
-                                          <p>{selectedOrder?.qty || "N/A"}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Print Form */}
-                                  <Form {...printForm}>
-                                    <form onSubmit={printForm.handleSubmit(onPrintFormSubmit)}>
-                                      <h3 className="font-medium text-sm mb-2">Print Details</h3>
-                                      
-                                      <div className="space-y-3">
-                                        <FormField
-                                          control={printForm.control}
-                                          name="paperGsm"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Paper GSM</FormLabel>
-                                              <Select
-                                                value={field.value}
-                                                onValueChange={(value) => {
-                                                  field.onChange(value);
-                                                  handleGSMChange(value);
-                                                }}
-                                                disabled={isLoadingPaperOptions}
-                                              >
-                                                <FormControl>
-                                                  <SelectTrigger>
-                                                    <SelectValue placeholder="Select GSM" />
-                                                  </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                  {isLoadingPaperOptions ? (
-                                                    <SelectItem value="loading" disabled>
-                                                      Loading...
-                                                    </SelectItem>
-                                                  ) : availableGSMs.length === 0 ? (
-                                                    <SelectItem value="none" disabled>
-                                                      No GSM options available
-                                                    </SelectItem>
-                                                  ) : (
-                                                    availableGSMs.map((gsm) => (
-                                                      <SelectItem key={gsm} value={gsm}>
-                                                        {gsm}
-                                                      </SelectItem>
-                                                    ))
-                                                  )}
-                                                </SelectContent>
-                                              </Select>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="paperWidth"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Paper Width</FormLabel>
-                                              <Select
-                                                value={field.value}
-                                                onValueChange={(value) => {
-                                                  field.onChange(value);
-                                                  handleWidthChange(value);
-                                                }}
-                                                disabled={availableWidths.length === 0}
-                                              >
-                                                <FormControl>
-                                                  <SelectTrigger>
-                                                    <SelectValue placeholder="Select paper width" />
-                                                  </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                  {availableWidths.length === 0 ? (
-                                                    <SelectItem value="none" disabled>
-                                                      Select a GSM first
-                                                    </SelectItem>
-                                                  ) : (
-                                                    availableWidths.map((width) => (
-                                                      <SelectItem key={width} value={width}>
-                                                        {width}
-                                                      </SelectItem>
-                                                    ))
-                                                  )}
-                                                </SelectContent>
-                                              </Select>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="fileWidth"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>File Width</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter file width" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="ripBy"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>RIP by</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter RIP operator name" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="dimensionFile"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>RIP File Dimension</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter RIP file dimensions" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="printMachine"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Printer</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter printer/machine name" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="printIcc"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>ICC</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter ICC" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="printTarget"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Target</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter target" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="totalPrint"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Total Print (m)</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} type="number" min="0" placeholder="Enter total print" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printForm.control}
-                                          name="paperWaste"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Paper Waste (m)</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} type="number" min="0" placeholder="Enter paper waste" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                      </div>
-                                      
-                                      <div className="mt-4 flex justify-end">
-                                        <Button type="submit" disabled={isSubmittingPrint}>
-                                          {isSubmittingPrint ? (
-                                            <>Processing...</>
-                                          ) : (
-                                            <>
-                                              <Check className="h-4 w-4 mr-1" />
-                                              Start Print
-                                            </>
-                                          )}
-                                        </Button>
-                                      </div>
-                                    </form>
-                                  </Form>
-                                </ScrollArea>
-                              </CardContent>
-                            </Card>
-                          </PopoverContent>
-                        </Popover>
+                      <TableCell className="sticky right-0 bg-muted/90 whitespace-nowrap">
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={() => handlePrintAction(order)}
+                        >
+                          <Printer className="h-4 w-4 mr-1" />
+                          PRINT
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1004,6 +742,282 @@ export function PendingPrintTab() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Print Order Dialog */}
+      <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Print Order Form</DialogTitle>
+            <DialogDescription>
+              Fill in print information for order {selectedOrder?.spk}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {/* Customer Info Card - Uneditable */}
+            <div className="mb-4">
+              <h3 className="font-medium text-sm mb-2">Order Information</h3>
+              <div className="bg-muted/40 p-3 rounded-md space-y-2 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Date</Label>
+                    <p>{formatDate(selectedOrder?.created_at)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">SPK</Label>
+                    <p>{selectedOrder?.spk || "N/A"}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Customer</Label>
+                  <p>{selectedOrder?.customer?.nama || "N/A"}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Category</Label>
+                    <p>{selectedOrder?.kategori || "N/A"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Priority</Label>
+                    <p>{selectedOrder?.prioritas === "YES" ? "High" : "Normal"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Due Date</Label>
+                    <p>{formatDate(selectedOrder?.est_order)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Quantity</Label>
+                    <p>{selectedOrder?.qty || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Print Form */}
+            <Form {...printForm}>
+              <form onSubmit={printForm.handleSubmit(onPrintFormSubmit)}>
+                <h3 className="font-medium text-sm mb-2">Print Details</h3>
+                
+                <div className="space-y-3">
+                  <FormField
+                    control={printForm.control}
+                    name="paperGsm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Paper GSM</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            handleGSMChange(value);
+                          }}
+                          disabled={isLoadingPaperOptions}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select GSM" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {isLoadingPaperOptions ? (
+                              <SelectItem value="loading" disabled>
+                                Loading...
+                              </SelectItem>
+                            ) : availableGSMs.length === 0 ? (
+                              <SelectItem value="none" disabled>
+                                No GSM options available
+                              </SelectItem>
+                            ) : (
+                              availableGSMs.map((gsm) => (
+                                <SelectItem key={gsm} value={gsm}>
+                                  {gsm}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="paperWidth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Paper Width</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            handleWidthChange(value);
+                          }}
+                          disabled={availableWidths.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select paper width" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableWidths.length === 0 ? (
+                              <SelectItem value="none" disabled>
+                                Select a GSM first
+                              </SelectItem>
+                            ) : (
+                              availableWidths.map((width) => (
+                                <SelectItem key={width} value={width}>
+                                  {width}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="fileWidth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>File Width</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter file width" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="ripBy"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>RIP by</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter RIP operator name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="dimensionFile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>RIP File Dimension</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter RIP file dimensions" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="printMachine"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Printer</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter printer/machine name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="printIcc"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ICC</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter ICC" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="printTarget"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter target" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="totalPrint"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Print (m)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min="0" placeholder="Enter total print" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printForm.control}
+                    name="paperWaste"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Paper Waste (m)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min="0" placeholder="Enter paper waste" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <DialogFooter className="mt-6">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsPrintDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmittingPrint}>
+                    {isSubmittingPrint ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 mr-1" />
+                        Start Print
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

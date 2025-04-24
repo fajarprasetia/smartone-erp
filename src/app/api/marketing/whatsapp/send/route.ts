@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Helper function to safely convert string to BigInt
+function safeBigInt(value: string): BigInt | null {
+  try {
+    return BigInt(value);
+  } catch (error) {
+    console.error(`Error converting to BigInt: ${value}`, error);
+    return null;
+  }
+}
+
 // POST /api/marketing/whatsapp/send - Send a WhatsApp message to a customer
 export async function POST(req: NextRequest) {
   try {
@@ -14,47 +24,61 @@ export async function POST(req: NextRequest) {
       )
     }
     
+    // Convert customerId to BigInt safely
+    const customerBigInt = safeBigInt(customerId);
+    
+    if (!customerBigInt) {
+      return NextResponse.json(
+        { error: 'Invalid customer ID format' },
+        { status: 400 }
+      );
+    }
+    
     // Verify customer exists
     const customer = await prisma.customer.findUnique({
-      where: { id: customerId }
+      where: { id: customerBigInt }
     })
     
     if (!customer) {
-      // Try to find in lowercase 'customer' table
-      const lowercaseCustomer = await prisma.customer.findFirst({
-        where: { id: BigInt(customerId) }
-      })
-      
-      if (!lowercaseCustomer) {
-        return NextResponse.json(
-          { error: 'Customer not found' },
-          { status: 404 }
-        )
-      }
+      return NextResponse.json(
+        { error: 'Customer not found' },
+        { status: 404 }
+      )
     }
     
     // In a real implementation, you would integrate with WhatsApp Cloud API here
-    // Since we don't have a ChatMessage table, we'll just return a success response
     
-    // Generate a unique message ID for tracking
-    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Create a ChatMessage record
+    const chatMessage = await prisma.chatMessage.create({
+      data: {
+        content: message,
+        isIncoming: false, // outgoing message (from us to customer)
+        timestamp: new Date(),
+        status: 'sent',
+        messageType: 'text',
+        customerId: customerBigInt,
+      }
+    });
     
     // Create a response object with the message details
     const messageResponse = {
-      id: messageId,
-      customerId,
-      content: message,
-      isIncoming: false,
-      timestamp: new Date(),
-      status: 'sent',
-      messageType: 'text'
+      id: chatMessage.id,
+      content: chatMessage.content,
+      isIncoming: chatMessage.isIncoming,
+      timestamp: chatMessage.timestamp,
+      status: chatMessage.status,
+      messageType: chatMessage.messageType,
+      customerId: customerId,
     }
     
-    return NextResponse.json(messageResponse)
+    return NextResponse.json({
+      message: messageResponse,
+      success: true
+    })
   } catch (error) {
     console.error('Error sending WhatsApp message:', error)
     return NextResponse.json(
-      { error: 'Failed to send WhatsApp message' },
+      { error: 'Failed to send WhatsApp message: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     )
   }

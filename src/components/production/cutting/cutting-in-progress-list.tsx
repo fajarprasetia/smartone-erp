@@ -12,18 +12,11 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { CheckCircle2, MoreVertical, Search, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { CheckCircle2, Search, RefreshCw, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Order } from "@/types/order";
 import { CuttingCompleteForm } from "./cutting-complete-form";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { format } from "date-fns";
 
 interface CuttingInProgressListProps {
@@ -47,32 +40,25 @@ export default function CuttingInProgressList({ onCuttingComplete }: CuttingInPr
   }, [currentPage]);
 
   useEffect(() => {
+    // First filter orders where status is "CUTTING"
+    const filteredByStatus = orders.filter(order => {
+      const status = (order.status || "").toUpperCase();
+      return status === "CUTTING";
+    });
+    
+    // Then apply search filter if there's a search query
     if (searchQuery) {
       const lowercaseQuery = searchQuery.toLowerCase();
-      
-      // First filter by product type - ensure it contains "CUTTING" and has an assigned operator
-      const filteredByProductType = orders.filter(order => {
-        const productName = (order.productName || "").toUpperCase();
-        // Ensure it contains CUTTING and has a cutting assignee
-        return productName.includes("CUTTING") && !!order.cuttingAssignee;
-      });
-      
-      // Then apply search filter
-      const filtered = filteredByProductType.filter(
+      const filtered = filteredByStatus.filter(
         (order) =>
           order.spk.toLowerCase().includes(lowercaseQuery) ||
-          order.customerName.toLowerCase().includes(lowercaseQuery) ||
-          order.productName.toLowerCase().includes(lowercaseQuery)
+          (order.customerName || "").toLowerCase().includes(lowercaseQuery) ||
+          (order.productName || "").toLowerCase().includes(lowercaseQuery)
       );
       setFilteredOrders(filtered);
     } else {
-      // Just filter by product type when no search query
-      const filteredByProductType = orders.filter(order => {
-        const productName = (order.productName || "").toUpperCase();
-        // Ensure it contains CUTTING and has a cutting assignee
-        return productName.includes("CUTTING") && !!order.cuttingAssignee;
-      });
-      setFilteredOrders(filteredByProductType);
+      // If no search query, use the status-filtered orders
+      setFilteredOrders(filteredByStatus);
     }
   }, [searchQuery, orders]);
 
@@ -201,14 +187,14 @@ export default function CuttingInProgressList({ onCuttingComplete }: CuttingInPr
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>SPK</TableHead>
+                  <TableHead className="sticky left-0 bg-muted/50 whitespace-nowrap">SPK</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Started At</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Assignee</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="sticky right-0 bg-muted/90 whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -230,7 +216,7 @@ export default function CuttingInProgressList({ onCuttingComplete }: CuttingInPr
                 ) : (
                   filteredOrders.map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell>{order.spk}</TableCell>
+                      <TableCell className="font-medium sticky left-0 bg-muted/50 whitespace-nowrap">{order.spk}</TableCell>
                       <TableCell>{order.customerName}</TableCell>
                       <TableCell>{order.productName}</TableCell>
                       <TableCell>
@@ -241,23 +227,19 @@ export default function CuttingInProgressList({ onCuttingComplete }: CuttingInPr
                           {order.priority}
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatDate(order.cuttingStartedAt || "")}</TableCell>
-                      <TableCell>{calculateDuration(order.cuttingStartedAt || "")}</TableCell>
-                      <TableCell>{order.cuttingAssignee || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleCompleteCutting(order)}>
-                              <CheckCircle2 className="mr-2 h-4 w-4" />
-                              Complete Cutting
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <TableCell>{formatDate(order.tgl_cutting || "")}</TableCell>
+                      <TableCell>{calculateDuration(order.tgl_cutting || "")}</TableCell>
+                      <TableCell>{order.cutting_id || "-"}</TableCell>
+                      <TableCell className="sticky right-0 bg-muted/90 whitespace-nowrap">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleCompleteCutting(order)}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Complete
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -296,17 +278,13 @@ export default function CuttingInProgressList({ onCuttingComplete }: CuttingInPr
         </CardContent>
       </Card>
 
-      {isCompleteFormOpen && (
-        <Dialog open={isCompleteFormOpen} onOpenChange={setIsCompleteFormOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <CuttingCompleteForm
-              order={selectedOrder}
-              open={isCompleteFormOpen}
-              onOpenChange={setIsCompleteFormOpen}
-              onSuccess={onCuttingComplete}
-            />
-          </DialogContent>
-        </Dialog>
+      {selectedOrder && (
+        <CuttingCompleteForm
+          order={selectedOrder}
+          open={isCompleteFormOpen}
+          onOpenChange={setIsCompleteFormOpen}
+          onSuccess={onCuttingComplete}
+        />
       )}
     </>
   );

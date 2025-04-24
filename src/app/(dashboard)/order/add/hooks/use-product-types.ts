@@ -74,9 +74,9 @@ export function useProductTypes(form: UseFormReturn<OrderFormValues>) {
     const dtfPass = form.getValues("dtfPass")
     
     const updatedNotes = updateNotesWithProductTypes(
+      currentNotes,
       currentJenisProduk,
-      dtfPass,
-      currentNotes
+      dtfPass
     )
     
     form.setValue("notes", updatedNotes)

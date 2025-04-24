@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma";
 
 // Helper to serialize BigInt values for JSON response
 function serializeData(data: any): any {
@@ -18,7 +19,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user) {
       return NextResponse.json(
@@ -39,7 +40,7 @@ export async function GET(
     // Find the draft order
     const order = await prisma.order.findUnique({
       where: {
-        id: BigInt(id),
+        id: id,
         status: "DRAFT",
       },
       include: {
@@ -89,7 +90,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user) {
       return NextResponse.json(
@@ -110,7 +111,7 @@ export async function PUT(
     // Check if order exists and is a draft
     const existingOrder = await prisma.order.findUnique({
       where: {
-        id: BigInt(id),
+        id: id,
         status: "DRAFT",
       },
     });
@@ -137,10 +138,10 @@ export async function PUT(
     // Update order
     const updatedOrder = await prisma.order.update({
       where: {
-        id: BigInt(id),
+        id: id,
       },
       data: {
-        customerId: customerId ? BigInt(customerId) : undefined,
+        customerId: customerId || undefined,
         produk,
         qty,
         spk,
@@ -189,7 +190,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user) {
       return NextResponse.json(
@@ -210,7 +211,7 @@ export async function DELETE(
     // Check if order exists and is a draft
     const existingOrder = await prisma.order.findUnique({
       where: {
-        id: BigInt(id),
+        id: id,
         status: "DRAFT",
       },
     });
@@ -225,7 +226,7 @@ export async function DELETE(
     // Delete the draft order
     await prisma.order.delete({
       where: {
-        id: BigInt(id),
+        id: id,
       },
     });
     

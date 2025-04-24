@@ -101,6 +101,9 @@ export function useOrderSubmit({ setIsSubmitting, spkNumber }: UseOrderSubmitPro
       if (data.unit === "yard" && !isNaN(parseFloat(data.jumlah))) {
         quantity = yardToMeter(parseFloat(data.jumlah)).toFixed(2)
       }
+      if (data.unit === "piece" && !isNaN(parseFloat(data.jumlah))) {
+        quantity = parseFloat(data.jumlah).toString()
+      }
       
       // Convert additionalCostFields values to strings for database compatibility
       Object.keys(additionalCostFields).forEach(key => {

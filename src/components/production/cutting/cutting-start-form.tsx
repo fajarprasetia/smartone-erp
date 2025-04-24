@@ -20,14 +20,12 @@ import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 
 const formSchema = z.object({
-  assignee: z.string().min(2, "Assignee name is required"),
   notes: z.string().optional(),
   cutting_mesin: z.string().min(1, "Cutting machine is required"),
   cutting_speed: z.string().min(1, "Cutting speed is required"),
   acc: z.string().optional(),
   power: z.string().optional(),
   cutting_bagus: z.string().optional(),
-  cutting_reject: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -52,31 +50,44 @@ export function CuttingStartForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      assignee: "",
       notes: "",
       cutting_mesin: "",
       cutting_speed: "",
       acc: "",
       power: "",
       cutting_bagus: "0",
-      cutting_reject: "0"
     },
   });
 
   const handleSubmit = async (values: FormValues) => {
-    if (!order) return;
+    if (!order || !session?.user?.id) {
+      toast.error("Missing required information");
+      return;
+    }
     
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/production/orders/${order.id}/start-cutting`, {
+      const response = await fetch(`/api/production/orders/start-cutting`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...values,
-          orderId: order.id,
-          userId: session?.user?.id, // Current user ID from session
+          // Add order ID to the payload
+          id: order.id,
+          
+          // Required values for status change
+          cutting_id: session.user.id,
+          status: "CUTTING",
+          tgl_cutting: new Date().toISOString(),
+          
+          // Form values mapped to database fields
+          catatan_cutting: values.notes,
+          cutting_mesin: values.cutting_mesin,
+          cutting_speed: values.cutting_speed,
+          acc: values.acc,
+          power: values.power,
+          cutting_bagus: values.cutting_bagus,
         }),
       });
 
@@ -120,24 +131,6 @@ export function CuttingStartForm({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="assignee"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assignee*</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter name of person assigned to cutting"
-                        className="bg-background/50"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -204,48 +197,6 @@ export function CuttingStartForm({
                       <FormControl>
                         <Input
                           placeholder="Power setting"
-                          className="bg-background/50"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="cutting_bagus"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Good Cutting</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="Number of good pieces"
-                          className="bg-background/50"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cutting_reject"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rejected Cutting</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="Number of rejected pieces"
                           className="bg-background/50"
                           {...field}
                         />

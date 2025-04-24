@@ -686,21 +686,6 @@ model OtherConsumable {
   user         User                  @relation("UserAddedConsumable", fields: [added_by], references: [id])
 }
 
-model Asset {
-  id            String    @id @default(cuid())
-  name          String
-  type          String?
-  serial_number String?
-  purchase_date DateTime?
-  supplier      String?
-  value         Decimal?
-  status        String?
-  location      String?
-  notes         String?
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-}
-
 model OthersItem {
   id               String      @id @default(cuid())
   qr_code          String?     @unique
@@ -762,6 +747,42 @@ model OthersLog {
   user              User           @relation("UserOthersLogs", fields: [user_id], references: [id])
 
   @@map("others_log")
+}
+
+model Asset {
+  id                     String                   @id
+  name                   String
+  type                   String
+  supplier               String?
+  status                 String
+  location               String?
+  notes                  String?
+  createdAt              DateTime                 @default(now())
+  lastMaintenanceDate    DateTime?
+  manufacturer           String?
+  model                  String?
+  nextMaintenanceDate    DateTime?
+  purchaseDate           DateTime?
+  purchasePrice          String?
+  serialNumber           String?
+  updatedAt              DateTime
+  warrantyExpiry         DateTime?
+  AssetMaintenanceRecord AssetMaintenanceRecord[]
+}
+
+model AssetMaintenanceRecord {
+  id                  String    @id
+  assetId             String
+  date                DateTime
+  maintenanceType     String
+  description         String
+  performedBy         String
+  cost                Float?
+  nextMaintenanceDate DateTime?
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime
+  Asset               Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
 }
 
 enum PaperRequestStatus {

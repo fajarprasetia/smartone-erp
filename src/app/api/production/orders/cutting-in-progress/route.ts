@@ -38,44 +38,31 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const skip = (page - 1) * limit;
 
+    // Define the query conditions for in-progress cutting orders
+    const whereCondition = {
+      // Orders with status exactly "CUTTING"
+      status: "CUTTING",
+      
+      // Must have started cutting (assigned an operator and have a start date)
+      cutting_id: { 
+        not: null 
+      },
+      tgl_cutting: { 
+        not: null 
+      },
+      
+      // But not completed yet
+      cutting_done: null,
+    };
+
     // Get count of total records for pagination
     const totalCount = await prisma.order.count({
-      where: {
-        cutting_id: { 
-          not: null // Ensure cutting_id has a value
-        },
-        tgl_cutting: { not: null },
-        cutting_done: null,
-        produk: {
-          contains: "CUTTING",
-          mode: "insensitive",
-        },
-        status: {
-          notIn: ["DRAFT", "CANCELLED", "COMPLETED"]
-        }
-      }
+      where: whereCondition
     });
 
-    // Fetch orders that are currently in the cutting process
-    // This means they have started cutting but haven't completed it yet
+    // Fetch orders based on the defined conditions
     const cuttingInProgressOrders = await prisma.order.findMany({
-      where: {
-        // Orders that have started cutting (have a cutting_id) but haven't completed it
-        cutting_id: { 
-          not: null // Ensure cutting_id has a value
-        },
-        tgl_cutting: { not: null },
-        cutting_done: null,
-        // Must contain "CUTTING" in the product name
-        produk: {
-          contains: "CUTTING",
-          mode: "insensitive",
-        },
-        // Make sure the order is still in active status
-        status: {
-          notIn: ["DRAFT", "CANCELLED", "COMPLETED"]
-        }
-      },
+      where: whereCondition,
       orderBy: [
         // High priority orders first
         { prioritas: "desc" },

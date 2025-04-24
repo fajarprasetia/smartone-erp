@@ -661,21 +661,6 @@ exports.Prisma.OtherConsumableScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
-exports.Prisma.AssetScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  type: 'type',
-  serial_number: 'serial_number',
-  purchase_date: 'purchase_date',
-  supplier: 'supplier',
-  value: 'value',
-  status: 'status',
-  location: 'location',
-  notes: 'notes',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
-};
-
 exports.Prisma.OthersItemScalarFieldEnum = {
   id: 'id',
   qr_code: 'qr_code',
@@ -721,6 +706,40 @@ exports.Prisma.OthersLogScalarFieldEnum = {
   others_item_id: 'others_item_id',
   notes: 'notes',
   created_at: 'created_at'
+};
+
+exports.Prisma.AssetScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  supplier: 'supplier',
+  status: 'status',
+  location: 'location',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  lastMaintenanceDate: 'lastMaintenanceDate',
+  manufacturer: 'manufacturer',
+  model: 'model',
+  nextMaintenanceDate: 'nextMaintenanceDate',
+  purchaseDate: 'purchaseDate',
+  purchasePrice: 'purchasePrice',
+  serialNumber: 'serialNumber',
+  updatedAt: 'updatedAt',
+  warrantyExpiry: 'warrantyExpiry'
+};
+
+exports.Prisma.AssetMaintenanceRecordScalarFieldEnum = {
+  id: 'id',
+  assetId: 'assetId',
+  date: 'date',
+  maintenanceType: 'maintenanceType',
+  description: 'description',
+  performedBy: 'performedBy',
+  cost: 'cost',
+  nextMaintenanceDate: 'nextMaintenanceDate',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -786,10 +805,11 @@ exports.Prisma.ModelName = {
   InkRequest: 'InkRequest',
   InkLog: 'InkLog',
   OtherConsumable: 'OtherConsumable',
-  Asset: 'Asset',
   OthersItem: 'OthersItem',
   OthersRequest: 'OthersRequest',
-  OthersLog: 'OthersLog'
+  OthersLog: 'OthersLog',
+  Asset: 'Asset',
+  AssetMaintenanceRecord: 'AssetMaintenanceRecord'
 };
 
 /**

@@ -4,22 +4,18 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 interface StartCuttingParams {
-  assignee: string;
-  notes?: string;
+  catatan_cutting?: string;
   cutting_mesin: string;
   cutting_speed: string;
   acc?: string;
   power?: string;
   cutting_bagus?: string;
-  cutting_reject?: string;
-  userId: string;
-  orderId: string;
+  cutting_id: string;
+  status: string;
+  tgl_cutting: string;
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { orderId: string } }
-) {
+export async function PATCH(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -27,39 +23,28 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const orderId = params.orderId;
-    if (!orderId) {
-      return new NextResponse("Order ID is required", { status: 400 });
-    }
-
     const body = await req.json();
     const {
-      assignee,
-      notes,
+      id: orderId,
+      catatan_cutting,
       cutting_mesin,
       cutting_speed,
       acc,
       power,
       cutting_bagus,
-      cutting_reject,
-      userId
-    } = body as StartCuttingParams;
+      cutting_id,
+      status,
+      tgl_cutting
+    } = body as StartCuttingParams & { id: string };
 
-    // Create a cutting record first
-    const cutting = await prisma.cutting.create({
-      data: {
-        name: assignee,
-        notes: notes || "",
-        cutting_mesin,
-        cutting_speed,
-        acc: acc || "",
-        power: power || "",
-        cutting_bagus: cutting_bagus || "0",
-        cutting_reject: cutting_reject || "0",
-        userId: userId || null,
-        createdAt: new Date(),
-      },
-    });
+    if (!orderId) {
+      return new NextResponse("Order ID is required", { status: 400 });
+    }
+
+    // Validate required fields
+    if (!cutting_id || !cutting_mesin || !cutting_speed) {
+      return new NextResponse("Missing required fields", { status: 400 });
+    }
 
     // Update the order with the cutting information
     const updatedOrder = await prisma.order.update({
@@ -67,11 +52,15 @@ export async function PATCH(
         id: orderId,
       },
       data: {
-        cutting_id: cutting.id, // Link to the newly created cutting record
-        tgl_cutting: new Date(), // Record the current date/time as the cutting start time
-        status: "CUTTING IN PROGRESS", // Update the order status
-        catatan_cutting: notes || "", // Store any cutting notes
-        userId: userId, // Record which user started the cutting process
+        cutting_id, // Use the current user ID
+        tgl_cutting: new Date(tgl_cutting), // Use the provided timestamp
+        status: status || "CUTTING", // Use the provided status or default to "CUTTING"
+        catatan_cutting: catatan_cutting || "", // Store cutting notes
+        cutting_mesin,
+        cutting_speed,
+        acc: acc || "",
+        power: power || "",
+        cutting_bagus: cutting_bagus || "0",
       },
     });
 
@@ -80,7 +69,6 @@ export async function PATCH(
       message: "Cutting process started successfully",
       data: {
         orderId: updatedOrder.id,
-        cuttingId: cutting.id,
         status: updatedOrder.status,
       }
     });

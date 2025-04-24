@@ -71,7 +71,7 @@ export default function SignInPage() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-4">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -84,7 +84,7 @@ export default function SignInPage() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full space-y-4" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </CardFooter>

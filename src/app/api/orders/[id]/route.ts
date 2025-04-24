@@ -56,7 +56,7 @@ const orderUpdateSchema = z.object({
     })
   ]).optional(),
   dtfPass: z.enum(["4 PASS", "6 PASS"]).optional(),
-  unit: z.enum(["meter", "yard"]).optional(), // Unit for fabric measurement
+  unit: z.enum(["meter", "yard", "piece"]).optional(), // Unit for fabric measurement
   namaBahan: z.string().optional(), // Fabric name from form
   nama_kain: z.string().optional(), // DB field name
   jumlah_kain: z.string().optional(), // DB field name for fabric length
@@ -345,7 +345,7 @@ export async function PUT(
     if (customerId) {
       const customer = await db.customer.findUnique({
         where: { 
-          id: customerId 
+          id: BigInt(customerId) 
         }
       });
       
@@ -445,13 +445,16 @@ export async function PUT(
       }
       
       // Also check jenisProduk if available
-      if (validatedData.jenisProduk && validatedData.jenisProduk.DTF === true) {
+      if (validatedData.jenisProduk && 
+          typeof validatedData.jenisProduk === 'object' && 
+          'DTF' in validatedData.jenisProduk && 
+          validatedData.jenisProduk.DTF === true) {
         isDtfOrder = true;
         console.log('[API] DTF product detected from jenisProduk field');
       }
       
       // Check tipe_produk if available
-      if (validatedData.tipe_produk === 'DTF') {
+      if ((validatedData as any).tipe_produk === 'DTF') {
         isDtfOrder = true;
         console.log('[API] DTF product detected from tipe_produk field');
       }
@@ -480,8 +483,8 @@ export async function PUT(
           updateData.jumlah_kain = validatedData.fabricLength || validatedData.jumlah_kain;
         }
         
-        if (validatedData.lebarKain || validatedData.lebar_kain) {
-          updateData.lebar_kain = validatedData.lebarKain || validatedData.lebar_kain;
+        if ((validatedData as any).lebarKain || (validatedData as any).lebar_kain) {
+          updateData.lebar_kain = (validatedData as any).lebarKain || (validatedData as any).lebar_kain;
         }
       }
       
@@ -639,7 +642,9 @@ export async function PUT(
       
       // Handle tax data - store tax percentage in tambah_bahan field
       if (validatedData.tax !== undefined) {
-        const isTaxEnabled = validatedData.tax === true || validatedData.tax === "YES" || validatedData.tax === "true";
+        const isTaxEnabled = validatedData.tax === true || 
+                           String(validatedData.tax) === "YES" || 
+                           String(validatedData.tax) === "true";
         
         if (isTaxEnabled && validatedData.taxPercentage) {
           updateData.tambah_bahan = `Tax: ${validatedData.taxPercentage}%`;
@@ -962,7 +967,7 @@ export async function PATCH(
 
     // Parse request body
     const data = await req.json();
-    console.log("[API] Design update data:", data);
+    console.log("[API] Update data:", data);
 
     // Check if order exists
     const existingOrder = await db.order.findUnique({
@@ -978,20 +983,63 @@ export async function PATCH(
     }
 
     // Prepare update data
-    const updateData: any = {
-      designer_id: session.user.id, // Set current user as designer
-    };
+    const updateData: any = {};
     
-    // Validate and convert data types
-    if (data.lebar_file !== undefined) updateData.lebar_file = String(data.lebar_file);
-    if (data.warna_acuan !== undefined) updateData.warna_acuan = String(data.warna_acuan);
+    // Determine which workflow this update is for
+    const isDesignUpdate = data.lebar_file !== undefined || data.warna_acuan !== undefined;
+    const isPressUpdate = data.press_mesin !== undefined || data.press_presure !== undefined || 
+                          data.press_pressure !== undefined || data.press_suhu !== undefined;
+    const isPressDoneUpdate = data.press_bagus !== undefined || data.press_waste !== undefined;
+    
+    // Set appropriate user ID based on workflow
+    if (isDesignUpdate) {
+      updateData.designer_id = session.user.id; // Set current user as designer
+    } else if (isPressUpdate) {
+      updateData.press_id = data.press_id || session.user.id; // Set press operator
+    }
+    
+    // Handle common fields
+    if (data.status !== undefined) updateData.status = String(data.status);
+    if (data.statusm !== undefined) updateData.statusm = String(data.statusm);
     if (data.qty !== undefined) updateData.qty = String(data.qty);
     if (data.catatan !== undefined) updateData.catatan = String(data.catatan);
-    if (data.statusm !== undefined) updateData.statusm = String(data.statusm);
     
-    // Add capture file paths if they exist
+    // Handle design workflow fields
+    if (data.lebar_file !== undefined) updateData.lebar_file = String(data.lebar_file);
+    if (data.warna_acuan !== undefined) updateData.warna_acuan = String(data.warna_acuan);
     if (data.capture !== undefined) updateData.capture = String(data.capture);
     if (data.capture_name !== undefined) updateData.capture_name = String(data.capture_name);
+    
+    // Handle press workflow fields
+    if (data.press_mesin !== undefined) updateData.press_mesin = String(data.press_mesin);
+    if (data.press_presure !== undefined) updateData.press_presure = String(data.press_presure);
+    if (data.press_pressure !== undefined) updateData.press_pressure = String(data.press_pressure);
+    if (data.press_suhu !== undefined) updateData.press_suhu = String(data.press_suhu);
+    if (data.press_speed !== undefined) {
+      // Convert press_speed to a number or null
+      if (data.press_speed === null || data.press_speed === '') {
+        updateData.press_speed = null;
+      } else if (typeof data.press_speed === 'number') {
+        updateData.press_speed = data.press_speed;
+      } else if (typeof data.press_speed === 'string') {
+        const parsedSpeed = parseFloat(data.press_speed);
+        updateData.press_speed = !isNaN(parsedSpeed) ? parsedSpeed : null;
+      } else {
+        updateData.press_speed = null;
+      }
+    }
+    if (data.press_protect !== undefined) updateData.press_protect = String(data.press_protect);
+    if (data.total_kain !== undefined) updateData.total_kain = String(data.total_kain);
+    if (data.prints_qty !== undefined) updateData.prints_qty = String(data.prints_qty);
+    if (data.tgl_press !== undefined) updateData.tgl_press = parseDateValue(data.tgl_press);
+    
+    // Handle press done workflow fields
+    if (data.press_bagus !== undefined) updateData.press_bagus = String(data.press_bagus);
+    if (data.press_waste !== undefined) updateData.press_waste = String(data.press_waste);
+    if (data.catatan_press !== undefined) updateData.catatan_press = String(data.catatan_press);
+    if (data.press_done !== undefined) updateData.press_done = parseDateValue(data.press_done);
+    
+    console.log("[API] Final update data:", updateData);
 
     // Update the order
     const updatedOrder = await db.order.update({
@@ -1003,14 +1051,14 @@ export async function PATCH(
       },
     });
 
-    console.log(`[API] Order updated successfully for design workflow`);
+    console.log(`[API] Order updated successfully`);
     return NextResponse.json(serializeData(updatedOrder));
   } catch (error: any) {
-    console.error("[API] Error processing design update:", error);
+    console.error("[API] Error processing update:", error);
     
     return NextResponse.json(
       { 
-        error: "Failed to update design",
+        error: "Failed to update order",
         details: error.message || "Unknown error occurred"
       },
       { status: 500 }

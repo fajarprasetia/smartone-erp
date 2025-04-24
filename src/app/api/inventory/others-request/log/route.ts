@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const logEntry = await prisma.OthersLog.create({
+    const logEntry = await prisma.othersLog.create({
       data: {
         action,
         user_id: session.user.id,
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       filters.others_item_id = itemId
     }
 
-    const logs = await prisma.OthersLog.findMany({
+    const logs = await prisma.othersLog.findMany({
       where: filters,
       include: {
         user: {

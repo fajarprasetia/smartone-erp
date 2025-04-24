@@ -1,128 +1,130 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { z } from "zod";
-import { bigIntSerializer } from "@/lib/utils";
 
-// Schema for validating the press done data
-const pressDoneDataSchema = z.object({
-  // Press result fields
-  press_bagus: z.string().min(1, "Total good press count is required"),
-  press_reject: z.string().min(1, "Rejected press count is required"),
-  press_waste: z.string().optional(), // New field for waste
-  catatan_press: z.string().default(""),
-  // These are optional as we'll force correct values
-  status: z.string().optional(), // We always use "PRESS DONE"
-  press_done: z.string().optional(), // We default to current date if not provided
+// Schema validation for press done updates
+const pressDoneSchema = z.object({
+  press_bagus: z.string().min(1, "Number of good items is required"),
+  press_waste: z.string().optional(),
+  catatan_press: z.string().optional(),
+  press_done: z.string().optional(),
+  status: z.string().optional(), // Next status (CUTTING READY or COMPLETED)
+  statusm: z.string().optional(), // Production status (PRESS DONE)
+  // Additional press fields
+  press_mesin: z.string().optional(),
+  press_presure: z.string().optional(),
+  press_suhu: z.string().optional(),
+  press_protect: z.string().optional(),
+  press_speed: z.string().optional(),
+  total_kain: z.string().optional(),
 });
 
-/**
- * API endpoint for marking a press job as done
- * PATCH /api/orders/[id]/production/press-done
- */
 export async function PATCH(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // Check authentication
+    // Get the authenticated session
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get order ID from params
-    const orderId = params.id;
-    if (!orderId) {
+    // Get the order ID from params
+    const { id } = params;
+    if (!id) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+    }
+
+    // Parse request body
+    const requestData = await request.json();
+    
+    // Validate the request data
+    const validationResult = pressDoneSchema.safeParse(requestData);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Order ID is required" },
+        { error: "Invalid data", details: validationResult.error.format() },
         { status: 400 }
       );
     }
-
-    // Parse and validate request body
-    const body = await req.json();
     
-    try {
-      const validatedData = pressDoneDataSchema.parse(body);
-      
-      // Check if order exists
-      const existingOrder = await prisma.order.findUnique({
-        where: { id: orderId },
-      });
-
-      if (!existingOrder) {
-        return NextResponse.json(
-          { error: "Order not found" },
-          { status: 404 }
-        );
-      }
-
-      // Ensure order is in PRESS status
-      if (existingOrder.status !== "PRESS") {
-        return NextResponse.json(
-          { error: "Order is not in PRESS status, cannot mark as done." },
-          { status: 400 }
-        );
-      }
-
-      // Get current timestamp for press_done if not provided
-      const currentTimestamp = new Date();
-
-      // Update the order with press done information
-      const updatedOrder = await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          // Press result details
-          press_bagus: validatedData.press_bagus,
-          press_reject: validatedData.press_reject,
-          press_waste: validatedData.press_waste,
-          catatan_press: validatedData.catatan_press,
-          
-          // Explicitly update status to PRESS DONE
-          status: "PRESS DONE", // Force status to PRESS DONE regardless of input
-          
-          // Update completion timestamp
-          press_done: validatedData.press_done ? new Date(validatedData.press_done) : currentTimestamp,
-        },
-        include: {
-          customer: true,
-          press: true,
-        }
-      });
-
-      // Serialize the order data to handle BigInt values
-      const serializedOrder = bigIntSerializer(updatedOrder);
-
-      // Return the updated order
-      return NextResponse.json({
-        message: "Press job marked as completed",
-        order: serializedOrder
-      });
-      
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { 
-            error: "Invalid press done data",
-            details: error.errors
-          },
-          { status: 400 }
-        );
-      }
-      throw error;
+    const validatedData = validationResult.data;
+    
+    // Get the current order to check status
+    const order = await prisma.order.findUnique({
+      where: { id },
+    });
+    
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
+    
+    // Remove the status check to make the endpoint more flexible
+    // This allows any order to be marked as PRESS DONE regardless of current status
+    
+    // Determine next status based on product type if not provided
+    let nextStatus = validatedData.status;
+    let nextStatusM = validatedData.statusm || "PRESS DONE";
+    
+    if (!nextStatus) {
+      // Check product type to determine status
+      const isPressOnly = order.produk === "PRESS ONLY";
+      const needsCutting = (order.produk || "").includes("CUTTING");
+      
+      if (isPressOnly) {
+        nextStatus = "COMPLETED";
+        nextStatusM = "COMPLETED";
+      } else if (needsCutting) {
+        nextStatus = "CUTTING READY";
+        nextStatusM = "PRESS DONE";
+      } else {
+        // Default to COMPLETED if not press only or needs cutting
+        nextStatus = "COMPLETED";
+        nextStatusM = "PRESS DONE";
+      }
+    }
+    
+    // Parse the press_speed value to a number if it exists
+    let pressSpeed = null;
+    if (validatedData.press_speed && validatedData.press_speed.trim() !== "") {
+      const parsedValue = parseFloat(validatedData.press_speed);
+      if (!isNaN(parsedValue)) {
+        pressSpeed = parsedValue;
+      }
+    }
+    
+    // Prepare the data for database update
+    const updateData = {
+      // Basic completion fields
+      press_bagus: validatedData.press_bagus,
+      press_waste: validatedData.press_waste || undefined,
+      catatan_press: validatedData.catatan_press,
+      press_done: validatedData.press_done || new Date().toISOString(),
+      status: nextStatus,
+      statusm: nextStatusM,
+      
+      // Additional press details (only update if provided)
+      ...(validatedData.press_mesin ? { press_mesin: validatedData.press_mesin } : {}),
+      ...(validatedData.press_presure ? { press_presure: validatedData.press_presure } : {}),
+      ...(validatedData.press_suhu ? { press_suhu: validatedData.press_suhu } : {}),
+      ...(validatedData.press_protect ? { press_protect: validatedData.press_protect } : {}),
+      ...(pressSpeed !== null ? { press_speed: pressSpeed } : {}),
+      ...(validatedData.total_kain ? { total_kain: validatedData.total_kain } : {})
+    };
+    
+    // Update the order
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: updateData,
+    });
+    
+    return NextResponse.json(updatedOrder);
   } catch (error) {
-    console.error("Error marking press as done:", error);
+    console.error("Error updating press done information:", error);
     return NextResponse.json(
-      { 
-        error: "Failed to mark press as done",
-        details: error instanceof Error ? error.message : "Unknown error"
-      },
+      { error: "Failed to complete press job", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

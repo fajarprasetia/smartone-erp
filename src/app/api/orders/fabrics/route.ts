@@ -17,18 +17,20 @@ export async function GET(req: NextRequest) {
     
     try {
       // Fetch fabric information from the database
-      const fabrics = await prisma.fabric.findMany({
+      const fabrics = await prisma.inventory.findMany({
         select: {
           id: true,
-          name: true,
-          description: true,
-          composition: true,
-          weight: true,
-          width: true,
-          remaining_length: true,
+          nama_bahan: true, 
+          asal_bahan: true,
+          lebar_bahan: true,
+          berat_bahan: true,
+          est_pjg_bahan: true,
+          roll: true,
+          keterangan: true,
+          tanggal: true,
         },
         orderBy: {
-          name: 'asc',
+          nama_bahan: 'asc',
         },
       });
 
@@ -37,13 +39,16 @@ export async function GET(req: NextRequest) {
       // Map the data to the expected format
       const formattedFabrics = fabrics.map(fabric => ({
         id: fabric.id,
-        name: fabric.name,
-        description: fabric.description,
-        composition: fabric.composition,
-        weight: fabric.weight,
-        width: fabric.width,
-        remainingLength: fabric.remaining_length,
-        length: fabric.remaining_length ? String(fabric.remaining_length) : undefined,
+        name: fabric.nama_bahan,
+        description: fabric.keterangan,
+        composition: null, // Not available in the model
+        weight: fabric.berat_bahan,
+        width: fabric.lebar_bahan,
+        remainingLength: fabric.est_pjg_bahan,
+        length: fabric.est_pjg_bahan,
+        roll: fabric.roll,
+        date: fabric.tanggal,
+        sourceId: fabric.asal_bahan
       }));
       
       return NextResponse.json(serializeData(formattedFabrics));

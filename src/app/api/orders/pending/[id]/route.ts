@@ -206,8 +206,8 @@ export async function GET(
         ...order,
         // Convert BigInt or other non-serializable types to string
         id: String(order.id),
-        customer_id: order.customer_id ? String(order.customer_id) : null,
-        asal_bahan_id: order.asal_bahan_id ? String(order.asal_bahan_id) : null,
+        customer_id: order.customerId ? String(order.customerId) : null,
+        asal_bahan_id: (order as any).asal_bahan_id ? String((order as any).asal_bahan_id) : null,
         // Add marketing info
         marketingInfo,
         // Format dates
@@ -236,8 +236,8 @@ export async function GET(
       if (order.customer) {
         formattedOrder.customer = {
           ...order.customer,
-          id: String(order.customer.id),
-        };
+          id: String(order.customer.id)
+        } as any;
       }
       
       console.log("API: Successfully formatted order data");

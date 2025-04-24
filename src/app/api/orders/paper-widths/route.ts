@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     
     try {
       // Fetch paper widths from the database
-      const papers = await prisma.paper.findMany({
+      const papers = await prisma.paperStock.findMany({
         select: {
           id: true,
           width: true,
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       console.log(`[API] Found ${papers.length} paper widths`);
       
       // Extract and format the width values
-      const paperWidths = papers.map(paper => ({
+      const paperWidths = papers.map((paper: { id: string; width: number }) => ({
         id: paper.id,
         width: paper.width,
       }));

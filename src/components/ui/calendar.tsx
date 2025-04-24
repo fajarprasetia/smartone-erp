@@ -2,11 +2,16 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, DayPickerSingleProps } from "react-day-picker"
 import { useState, useEffect } from "react"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+
+// Extend the DayPicker props with our custom ones
+interface CalendarProps extends Omit<DayPickerSingleProps, 'onSelect'> {
+  onSelect?: (date: Date | undefined) => void;
+}
 
 function Calendar({
   className,
@@ -16,9 +21,9 @@ function Calendar({
   defaultMonth,
   selected,
   onSelect,
-  mode,
+  mode = "single",
   ...props
-}: React.ComponentProps<typeof DayPicker>) {
+}: CalendarProps) {
   const [month, setMonth] = useState<Date>(
     monthProp || defaultMonth || new Date())
 
@@ -38,8 +43,8 @@ function Calendar({
       month={month}
       onMonthChange={handleMonthChange}
       selected={selected}
-      onSelect={onSelect}
-      mode={mode}
+      mode={mode as any}
+      onSelect={onSelect as any}
       className={cn("p-4", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",

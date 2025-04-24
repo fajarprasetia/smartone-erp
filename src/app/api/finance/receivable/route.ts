@@ -28,11 +28,47 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     
+    // Check if this is a request for the latest invoice number
+    const invoicePrefix = url.searchParams.get("invoicePrefix");
+    if (invoicePrefix) {
+      const latestOrder = await db.order.findFirst({
+        where: {
+          invoice: {
+            startsWith: invoicePrefix
+          }
+        },
+        orderBy: {
+          invoice: 'desc'
+        }
+      });
+      
+      return NextResponse.json({
+        latestInvoice: latestOrder?.invoice || null
+      });
+    }
+    
+    // Regular receivable data fetching
     // Get pagination parameters
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("pageSize") || "10");
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "";
+    const searchAll = url.searchParams.get("searchAll") === "true";
+    
+    // Get month filter parameter (current month by default)
+    const currentDate = new Date();
+    const monthParam = url.searchParams.get("month");
+    const yearParam = url.searchParams.get("year");
+    
+    // If month and year params are provided, use them
+    // Month is 1-12 (January-December)
+    const month = monthParam ? parseInt(monthParam) : currentDate.getMonth() + 1;
+    const year = yearParam ? parseInt(yearParam) : currentDate.getFullYear();
+    
+    // Create start and end date for the specified month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0); // Last day of the month
+    endDate.setHours(23, 59, 59, 999);
     
     // Get sorting parameters
     const sortBy = url.searchParams.get("sortBy") || "tgl_invoice";
@@ -41,17 +77,35 @@ export async function GET(req: NextRequest) {
     // Calculate skip value for pagination
     const skip = (page - 1) * pageSize;
     
-    // Prepare filter conditions - only fetch orders with invoices/payment info
-    let whereCondition: any = {
-      // Only include orders that have invoice information or payments
+    // Prepare filter conditions
+    let whereCondition: any = {};
+    
+    // Add month filter for invoice date, payment dates, or created_at
+    const monthFilter = {
       OR: [
-        { tgl_invoice: { not: null } },
-        { invoice: { not: null } },
-        { dp: { not: null } },
-        { tgl_dp: { not: null } },
-        { tgl_lunas: { not: null } }
+        { tgl_invoice: { gte: startDate, lte: endDate } },
+        { tgl_dp: { gte: startDate, lte: endDate } },
+        { tgl_lunas: { gte: startDate, lte: endDate } },
+        { created_at: { gte: startDate, lte: endDate } }
       ]
     };
+    
+    // If not searching all records, only include orders with invoices/payment info
+    if (!searchAll || !search) {
+      whereCondition = {
+        OR: [
+          { tgl_invoice: { not: null } },
+          { invoice: { not: null } },
+          { dp: { not: null } },
+          { tgl_dp: { not: null } },
+          { tgl_lunas: { not: null } },
+          { status: "COMPLETED" } // Include orders with COMPLETED status
+        ],
+        ...monthFilter
+      };
+    } else {
+      whereCondition = monthFilter;
+    }
 
     // Add search condition if search is provided
     if (search) {
@@ -144,11 +198,12 @@ export async function GET(req: NextRequest) {
       const total = order.nominal ? parseFloat(order.nominal) : 0;
       const downPayment = order.dp ? parseFloat(order.dp) : 0;
       const amountPaid = order.tgl_lunas ? total : downPayment;
-      const balance = total - amountPaid;
+      // Use 'sisa' field for balance if available, otherwise calculate it
+      const balance = order.sisa ? parseFloat(order.sisa) : (total - amountPaid);
       
       // Determine payment status
       let status = "UNPAID";
-      if (order.tgl_lunas) {
+      if (order.tgl_lunas || amountPaid >= total || balance <= 0) {
         status = "PAID";
       } else if (order.tgl_dp) {
         status = "PARTIALLY_PAID";
@@ -187,7 +242,7 @@ export async function GET(req: NextRequest) {
       // Convert order to invoice format
       return {
         id: order.id,
-        invoiceNumber: order.invoice || `INV-${order.spk || order.id}`,
+        invoiceNumber: order.invoice || null,
         invoiceDate: order.tgl_invoice || order.created_at || new Date(),
         dueDate: order.tgl_invoice 
           ? new Date(new Date(order.tgl_invoice).setDate(new Date(order.tgl_invoice).getDate() + 30)) 
@@ -197,7 +252,8 @@ export async function GET(req: NextRequest) {
         order: {
           id: order.id,
           spk: order.spk,
-          produk: order.produk
+          produk: order.produk,
+          created_at: order.created_at
         },
         subtotal: total,
         tax: 0, // Tax information might not be tracked in orders
@@ -205,6 +261,8 @@ export async function GET(req: NextRequest) {
         total,
         amountPaid,
         balance,
+        sisa: order.sisa ? parseFloat(order.sisa) : balance,
+        nominal: total,
         notes: order.catatan || order.catatan_tf,
         transactions
       };
@@ -217,6 +275,9 @@ export async function GET(req: NextRequest) {
     
     // Initialize summary
     const summary = {
+      month: month,
+      year: year,
+      monthName: new Date(year, month - 1, 1).toLocaleString('default', { month: 'long' }),
       totalReceivables: 0,
       overdue: {
         count: 0,
@@ -234,31 +295,38 @@ export async function GET(req: NextRequest) {
     
     // Calculate summary from processed invoices
     for (const invoice of invoices) {
-      // Only count balance for unpaid/partially paid
-      if (invoice.status !== "PAID") {
-        summary.totalReceivables += invoice.balance;
-      }
+      // Calculate total receivables from nominal value (all orders' total value)
+      summary.totalReceivables += invoice.nominal;
       
-      // Count overdue invoices
+      // Count overdue invoices using sisa for remaining balance
       if (invoice.status === "OVERDUE") {
         summary.overdue.count++;
-        summary.overdue.amount += invoice.balance;
+        summary.overdue.amount += invoice.sisa;
       } else if (invoice.dueDate < now && invoice.status !== "PAID") {
         // Also count any past due as overdue
         summary.overdue.count++;
-        summary.overdue.amount += invoice.balance;
+        summary.overdue.amount += invoice.sisa;
       }
       
-      // Count due soon invoices (due within a week, not overdue yet)
-      if (invoice.dueDate >= now && invoice.dueDate <= oneWeekFromNow && invoice.status !== "PAID") {
+      // Count due soon invoices - check orders created in the last 7 days that aren't fully paid
+      const createdDate = invoice.order?.created_at ? new Date(invoice.order.created_at) : null;
+      const isRecentOrder = createdDate && ((now.getTime() - createdDate.getTime()) <= 7 * 24 * 60 * 60 * 1000);
+      
+      if (isRecentOrder && invoice.status !== "PAID") {
         summary.dueSoon.count++;
-        summary.dueSoon.amount += invoice.balance;
+        summary.dueSoon.amount += invoice.sisa;
       }
       
-      // Count paid invoices
+      // Count paid invoices using nominal - sisa for paid amount
       if (invoice.status === "PAID") {
         summary.paid.count++;
-        summary.paid.amount += invoice.total;
+        summary.paid.amount += (invoice.nominal - invoice.sisa);
+      } else if (invoice.sisa < invoice.nominal) {
+        // Also count partial payments for orders that aren't fully paid
+        const partialPayment = invoice.nominal - invoice.sisa;
+        if (partialPayment > 0) {
+          summary.paid.amount += partialPayment;
+        }
       }
     }
 
@@ -272,6 +340,13 @@ export async function GET(req: NextRequest) {
           pageSize,
         },
         summary,
+        timeFrame: {
+          month: month,
+          year: year,
+          monthName: summary.monthName,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        }
       })
     );
   } catch (error: any) {
@@ -308,15 +383,19 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Generate invoice number (INV-YYYYMMDD-XXXX format)
+    // Generate invoice number (SO01MMYYNNNNNN format)
     const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = String(today.getFullYear()).slice(-2);
     
-    // Find the latest invoice number to generate a sequence
+    // Use the prefix if provided, otherwise generate it
+    const prefix = data.invoicePrefix || `SO01${month}${year}`;
+    
+    // Find the latest invoice number with this prefix to determine the sequence
     const latestOrder = await db.order.findFirst({
       where: {
         invoice: {
-          startsWith: `INV-${dateStr}-`
+          startsWith: prefix
         }
       },
       orderBy: {
@@ -326,13 +405,15 @@ export async function POST(req: NextRequest) {
 
     let sequence = 1;
     if (latestOrder?.invoice) {
-      const parts = latestOrder.invoice.split('-');
-      if (parts.length === 3) {
-        sequence = parseInt(parts[2], 10) + 1;
+      // Extract the sequence number (last 6 digits)
+      const sequenceStr = latestOrder.invoice.substring(prefix.length);
+      const parsedSequence = parseInt(sequenceStr, 10);
+      if (!isNaN(parsedSequence)) {
+        sequence = parsedSequence + 1;
       }
     }
 
-    const invoiceNumber = `INV-${dateStr}-${sequence.toString().padStart(4, '0')}`;
+    const invoiceNumber = `${prefix}${sequence.toString().padStart(6, '0')}`;
     
     // Update the order with invoice information
     const order = await db.order.update({
@@ -342,6 +423,7 @@ export async function POST(req: NextRequest) {
       data: {
         invoice: invoiceNumber,
         tgl_invoice: new Date(),
+        status: "COMPLETED", // Set status to COMPLETED when invoice is generated
         // Add any additional invoice data from the request
         ...data.additionalData
       }

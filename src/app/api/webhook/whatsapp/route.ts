@@ -127,7 +127,7 @@ async function logIncomingMessage(message: any, value: any) {
       // Try to find in Customer model first
       customer = await prisma.customer.findFirst({
         where: {
-          phone: from,
+          telp: from,
         },
       });
     } catch (error) {

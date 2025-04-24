@@ -19,25 +19,22 @@ export async function GET(req: NextRequest) {
     const paperWidths = await prisma.paperStock.groupBy({
       by: ['width'],
       where: {
-        gsm: {
-          equals: gsm,
-          mode: 'insensitive'  // Case-insensitive matching
-        },
-        remaining_length: {
+        gsm: parseInt(gsm),
+        remainingLength: {
           gt: 0  // Only include paper with stock available
         },
         width: {
-          not: null
+          not: undefined
         }
       },
       _sum: {
-        remaining_length: true  // Calculate total remaining length per width
+        remainingLength: true  // Calculate total remaining length per width
       },
       orderBy: {
         width: 'asc'  // Order results by width
       },
       having: {
-        remaining_length: {
+        remainingLength: {
           _sum: {
             gt: 0  // Ensure the total remaining length is greater than zero
           }
@@ -53,7 +50,7 @@ export async function GET(req: NextRequest) {
     // Format the response to include width and total remaining length
     const formattedWidths = paperWidths.map(item => ({
       width: item.width,
-      remainingLength: item._sum.remaining_length
+      remainingLength: item._sum?.remainingLength || 0
     }));
 
     return NextResponse.json(formattedWidths);

@@ -52,7 +52,7 @@ export async function PUT(
     }
     
     // Update the order
-    const order = await prisma.Order.update({
+    const order = await prisma.order.update({
       where: { id },
       data: updateData,
       include: {

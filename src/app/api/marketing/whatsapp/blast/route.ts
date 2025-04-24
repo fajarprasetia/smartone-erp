@@ -27,13 +27,13 @@ export async function POST(req: NextRequest) {
     }
     
     // Get customers - try both Customer and customer models
-    let customers = []
+    let customers: any[] = []
     try {
       // Try uppercase Customer model first
       customers = await prisma.customer.findMany({
         where: {
           id: { in: customerIds },
-          phone: { not: null } // Only customers with phone numbers
+          telp: { not: null } // Only customers with phone numbers
         }
       })
     } catch (error) {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       // Try lowercase customer model
       try {
         // Convert string IDs to BigInt for lowercase customer model
-        const bigIntIds = customerIds.map(id => BigInt(id))
+        const bigIntIds = customerIds.map((id: string) => BigInt(id))
         customers = await prisma.customer.findMany({
           where: {
             id: { in: bigIntIds },

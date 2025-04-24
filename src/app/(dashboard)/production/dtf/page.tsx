@@ -1,6 +1,6 @@
 "use client"
 
-import { DTFManagement } from "@/components/production/dtf-management"
+import { DTFManagement } from "@/components/production/dtf/dtf-management"
 
 export default function DTFPage() {
   return (

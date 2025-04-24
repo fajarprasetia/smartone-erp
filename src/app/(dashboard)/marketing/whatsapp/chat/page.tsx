@@ -80,7 +80,7 @@ export default function WhatsAppChatPage() {
     const fetchCustomers = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch('/api/marketing/customers-new', { cache: 'no-store' });
+        const res = await fetch('/api/marketing/customers', { cache: 'no-store' });
         
         if (!res.ok) {
           throw new Error('Failed to fetch customers');
@@ -90,11 +90,11 @@ export default function WhatsAppChatPage() {
         
         // Convert customers to chat contacts format
         const contacts: CustomerContact[] = customers
-          .filter((customer: any) => customer.phone) // Only use customers with phone numbers
+          .filter((customer: any) => customer.telp) // Only use customers with phone numbers
           .map((customer: any) => ({
             id: customer.id,
-            name: customer.name,
-            phoneNumber: customer.phone.startsWith('62') ? customer.phone : `62${customer.phone}`,
+            name: customer.nama,
+            phoneNumber: customer.telp.startsWith('62') ? customer.telp : `62${customer.telp}`,
           }));
           
         setContacts(contacts);
@@ -227,7 +227,7 @@ export default function WhatsAppChatPage() {
 
     try {
       // Use the correct API endpoint
-      const response = await fetch("/api/whatsapp/send", {
+      const response = await fetch("/api/marketing/whatsapp/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -282,7 +282,7 @@ export default function WhatsAppChatPage() {
       }
       
       // Send the template message via API
-      const response = await fetch("/api/whatsapp/send-template", {
+      const response = await fetch("/api/marketing/whatsapp/send-template", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -303,7 +303,7 @@ export default function WhatsAppChatPage() {
       const data = await response.json();
       
       // Create a message object to display in the chat
-      const content = `[Template: ${template.name}]${templateParams.length > 0 ? ` With params: ${templateParams.join(", ")}` : ''}`;
+      const content = data.message?.content || `[Template: ${template.name}]${templateParams.length > 0 ? ` With params: ${templateParams.join(", ")}` : ''}`;
       
       const newMessageObj: Message = {
         id: data.message?.id || `temp-${Date.now()}`,

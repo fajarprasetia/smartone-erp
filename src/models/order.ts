@@ -10,7 +10,7 @@ export interface OrderFormValues {
   };
   dtfPass?: "4 PASS" | "6 PASS";
   jumlah: string;
-  unit: "meter" | "yard";
+  unit: "meter" | "yard" | "piece";
   asalBahan: string;
   namaBahan: string;
   aplikasiProduk: string;

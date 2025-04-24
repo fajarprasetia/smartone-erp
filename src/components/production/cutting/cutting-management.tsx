@@ -2,39 +2,46 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PendingCuttingList from "./pending-cutting-list";
-import CuttingInProgressList from "./cutting-in-progress-list";
+import  PendingCuttingList  from "./pending-cutting-list";
+import  CuttingInProgressList  from "./cutting-in-progress-list";
 
 export function CuttingManagement() {
-  const [activeTab, setActiveTab] = useState("pending");
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<string>("pending");
 
-  // Refresh the lists when a cutting action is initiated
-  const handleCuttingAction = () => {
+  const handleCuttingStart = () => {
+    setRefreshKey(prev => prev + 1);
+    setActiveTab("in-progress");
+  };
+
+  const handleCuttingComplete = () => {
     setRefreshKey(prev => prev + 1);
   };
 
   return (
-    <Tabs
-      defaultValue="pending"
+    <Tabs 
+      defaultValue="pending" 
       value={activeTab}
       onValueChange={setActiveTab}
-      className="w-full"
+      className="space-y-4"
     >
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="pending">Pending Cutting</TabsTrigger>
-        <TabsTrigger value="in-progress">Cutting List</TabsTrigger>
-      </TabsList>
-      <TabsContent value="pending">
+      <div className="flex justify-between items-center">
+        <TabsList>
+          <TabsTrigger value="pending">Pending Cutting</TabsTrigger>
+          <TabsTrigger value="in-progress">Cutting List</TabsTrigger>
+        </TabsList>
+        
+      </div>
+      <TabsContent value="pending" className="space-y-4">
         <PendingCuttingList 
           key={`pending-${refreshKey}`}
-          onCuttingStart={handleCuttingAction} 
+          onCuttingStart={handleCuttingStart} 
         />
       </TabsContent>
-      <TabsContent value="in-progress">
+      <TabsContent value="in-progress" className="space-y-4">
         <CuttingInProgressList 
           key={`in-progress-${refreshKey}`}
-          onCuttingComplete={handleCuttingAction} 
+          onCuttingComplete={handleCuttingComplete} 
         />
       </TabsContent>
     </Tabs>

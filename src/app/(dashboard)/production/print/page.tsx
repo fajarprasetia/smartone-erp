@@ -1,6 +1,6 @@
 "use client"
 
-import { PrintManagement } from "@/components/production/print-management"
+import { PrintManagement } from "@/components/production/print/print-management"
 
 export default function PrintPage() {
   return (

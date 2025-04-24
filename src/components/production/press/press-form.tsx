@@ -31,6 +31,7 @@ import {
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Simple spinner component
 const Spinner = ({ className, size = "md" }: { className?: string; size?: "sm" | "md" | "lg" }) => {
@@ -51,7 +52,6 @@ const pressFormSchema = z.object({
   press_speed: z.string().optional(),
   press_protect: z.string().optional(),
   total_kain: z.string().optional(),
-  press_qty: z.string().min(1, "Quantity is required"),
   press_id: z.string().optional(),
 });
 
@@ -70,6 +70,13 @@ interface Order {
   };
   nama_pesanan?: string;
   status: string;
+  qty?: number;
+  asal_bahan_rel?: {
+    nama: string;
+  };
+  nama_kain?: string;
+  lebar_kain?: number;
+  jumlah_kain?: number;
 }
 
 interface PressFormProps {
@@ -95,7 +102,6 @@ export function PressForm({ order, open, onOpenChange, onSuccess }: PressFormPro
       press_speed: "",
       press_protect: "",
       total_kain: "",
-      press_qty: "",
       press_id: "",
     },
   });
@@ -143,28 +149,104 @@ export function PressForm({ order, open, onOpenChange, onSuccess }: PressFormPro
     }
     
     try {
-      const response = await fetch(`/api/orders/${order.id}/production/press`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...values,
-          tgl_press: new Date().toISOString(), // Add current timestamp
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update press information");
+      console.log("Processing press job for order:", order.id, order.spk);
+      console.log("Form values:", values);
+      
+      // Parse the press_speed value to a number if it exists
+      let press_speed = null;
+      if (values.press_speed && values.press_speed.trim() !== "") {
+        press_speed = parseFloat(values.press_speed);
+        // Validate that it's a valid number
+        if (isNaN(press_speed)) {
+          press_speed = null;
+        }
       }
-
-      onSuccess();
-      onOpenChange(false);
-      toast({
-        title: "Success",
-        description: "Order has been moved to Press status",
-      });
+      
+      // Create a minimal update for exactly what we need
+      const updateData = {
+        // Must have fields
+        status: "PRESS",
+        statusm: "PRESS",
+        
+        // Press machine and settings
+        press_mesin: values.press_mesin,
+        press_presure: values.press_presure, 
+        press_suhu: values.press_suhu,
+        press_speed, // Use the parsed float value
+        press_protect: values.press_protect || "",
+        total_kain: values.total_kain || "",
+        prints_qty: order.qty?.toString() || "0",
+        press_qty: order.qty?.toString() || "0",
+        
+        // Set the press operator and timestamp
+        press_id: values.press_id || session?.user?.id,
+        tgl_press: new Date().toISOString(),
+      };
+      
+      console.log("Simplified update data:", updateData);
+      
+      // Try to update directly via both APIs
+      let success = false;
+      let errorDetails = "";
+      
+      try {
+        // First try the direct order update
+        const directResponse = await fetch(`/api/orders/${order.id}`, {
+          method: "PATCH",
+          headers: { 
+            "Content-Type": "application/json" 
+          },
+          body: JSON.stringify(updateData),
+        });
+        
+        if (directResponse.ok) {
+          console.log("Successfully updated via direct API");
+          success = true;
+        } else {
+          const responseText = await directResponse.text();
+          console.error("Direct API failed:", responseText);
+          errorDetails += "Direct API: " + responseText + "\n";
+        }
+      } catch (error) {
+        console.error("Error with direct API:", error);
+        errorDetails += "Direct API error: " + String(error) + "\n";
+      }
+      
+      // If the first approach failed, try the press-specific endpoint
+      if (!success) {
+        try {
+          const pressResponse = await fetch(`/api/orders/${order.id}/production/press`, {
+            method: "PATCH",
+            headers: { 
+              "Content-Type": "application/json" 
+            },
+            body: JSON.stringify(updateData),
+          });
+          
+          if (pressResponse.ok) {
+            console.log("Successfully updated via press API");
+            success = true;
+          } else {
+            const responseText = await pressResponse.text();
+            console.error("Press API failed:", responseText);
+            errorDetails += "Press API: " + responseText;
+          }
+        } catch (error) {
+          console.error("Error with press API:", error);
+          errorDetails += "Press API error: " + String(error);
+        }
+      }
+      
+      if (success) {
+        onSuccess();
+        onOpenChange(false);
+        toast({
+          title: "Success",
+          description: "Order has been moved to Press status",
+        });
+      } else {
+        throw new Error(`Failed to update: ${errorDetails}`);
+      }
     } catch (error) {
       console.error("Error submitting press form:", error);
       toast({
@@ -179,13 +261,25 @@ export function PressForm({ order, open, onOpenChange, onSuccess }: PressFormPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] relative top-[-120px]">
         <DialogHeader>
           <DialogTitle>Start Press Process</DialogTitle>
           <DialogDescription>
             Update order #{order.spk} to PRESS status and enter press details
           </DialogDescription>
         </DialogHeader>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Press Details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2 p-2 text-sm">
+              <p>Fabric Origin: {order.asal_bahan_rel?.nama}</p>
+              <p>Fabric Name: {order.nama_kain}</p>
+              <p>Fabric Width: {order.lebar_kain}</p>
+              <p>Fabric Length: {order.jumlah_kain}</p>
+            </CardContent>
+        </Card>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -304,24 +398,17 @@ export function PressForm({ order, open, onOpenChange, onSuccess }: PressFormPro
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="press_qty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity*</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Enter quantity"
-                        className="bg-background/50"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Quantity
+                </label>
+                <Input
+                  type="number"
+                  value={order.qty?.toString() || "0"}
+                  className="bg-muted/50"
+                  disabled
+                />
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

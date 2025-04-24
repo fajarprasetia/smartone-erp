@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { ChevronsUpDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { AlertCircle } from "lucide-react"
 
 interface PaperInfoSectionProps {
   form: UseFormReturn<OrderFormValues>
@@ -33,7 +34,18 @@ export function PaperInfoSection({
   const matchingColor = form.watch("matchingColor");
   const fileWidth = form.watch("fileWidth");
   const lebarKain = form.watch("lebarKain");
-  const isDtfSelected = form.watch("jenisProduk")?.DTF === true;
+  const productTypes = form.watch("jenisProduk");
+  const isDtfSelected = productTypes?.DTF === true;
+  
+  // Check if only PRESS is selected and no other product types
+  const isPressOnly = productTypes?.PRESS && 
+    !productTypes?.PRINT && 
+    !productTypes?.CUTTING && 
+    !productTypes?.DTF && 
+    !productTypes?.SEWING;
+  
+  // Determine if section should be disabled
+  const isSectionDisabled = isPressOnly;
   
   console.log("Paper Info Section - Current values:", { 
     gsmKertas, 
@@ -43,7 +55,8 @@ export function PaperInfoSection({
     paperGsmOptions,
     paperWidthOptions,
     lebarKain,
-    isDtfSelected
+    isDtfSelected,
+    isPressOnly
   });
 
   // Check if quantity exceeds available fabric length
@@ -93,110 +106,31 @@ export function PaperInfoSection({
             (DTF Film paper will be used)
           </span>
         )}
+        {isPressOnly && (
+          <span className="ml-2 text-sm text-muted-foreground font-normal">
+            (Not required for PRESS only products)
+          </span>
+        )}
       </h3>
+      
+      {isPressOnly && (
+        <div className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700 mb-4">
+          <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+          <p className="text-sm">When only PRESS is selected, design and paper information is not required. Only quantity field is needed.</p>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Paper GSM */}
+        {/* Quantity Field - Always Active */}
         <FormField
           control={form.control}
-          name="gsmKertas"
+          name="jumlah"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                Paper GSM
-                {isDtfSelected ? 
-                  <span className="ml-2 text-xs text-blue-500">(DTF Film)</span> : 
-                  <span className="ml-2 text-xs text-muted-foreground">(Regular)</span>
-                }
-              </FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value || ""}
-                disabled={isLoadingPaperGsm}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingPaperGsm ? "Loading..." : "Select paper GSM"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {paperGsmOptions.length === 0 ? (
-                    <SelectItem value="no-options" disabled>
-                      No {isDtfSelected ? "DTF Film" : "regular"} paper GSM options available
-                    </SelectItem>
-                  ) : (
-                    paperGsmOptions.map((option) => (
-                      <SelectItem key={option.gsm} value={option.gsm.toString()}>
-                        {option.gsm} gsm {isDtfSelected && "(DTF Film)"}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Paper Width */}
-        <FormField
-          control={form.control}
-          name="lebarKertas"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Paper Width
-                {isDtfSelected ? 
-                  <span className="ml-2 text-xs text-blue-500">(DTF Film)</span> : 
-                  <span className="ml-2 text-xs text-muted-foreground">(Regular)</span>
-                }
-              </FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value || ""}
-                disabled={isLoadingPaperWidth || !form.watch("gsmKertas")}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue 
-                      placeholder={
-                        isLoadingPaperWidth 
-                          ? "Loading..." 
-                          : !form.watch("gsmKertas") 
-                          ? "Select GSM first" 
-                          : "Select paper width"
-                      } 
-                    />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {paperWidthOptions.length === 0 ? (
-                    <SelectItem value="no-options" disabled>
-                      No {isDtfSelected ? "DTF Film" : "regular"} paper width options available
-                    </SelectItem>
-                  ) : (
-                    paperWidthOptions.map((width) => (
-                      <SelectItem key={width} value={width}>
-                        {width} cm {isDtfSelected && "(DTF Film)"}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* File Width */}
-        <FormField
-          control={form.control}
-          name="fileWidth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>File Width</FormLabel>
+              <FormLabel className="font-semibold">Quantity*</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter file width"
+                  placeholder="Enter quantity"
                   {...field}
                   onChange={(e) => {
                     // Only allow numbers and decimal point
@@ -207,24 +141,18 @@ export function PaperInfoSection({
                   }}
                 />
               </FormControl>
-              {hasInsufficientWidthMargin() && (
-                <p className="text-sm text-orange-500 mt-1">
-                  Warning: File width should be at least 4cm less than fabric width.
-                  {getMaxFileWidth() && ` Maximum allowed: ${getMaxFileWidth()} cm`}
-                </p>
-              )}
               <FormMessage />
             </FormItem>
           )}
         />
         
-        {/* Matching Color */}
+        {/* Unit Field - Always Active */}
         <FormField
           control={form.control}
-          name="matchingColor"
+          name="unit"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Matching Color</FormLabel>
+              <FormLabel className="font-semibold">Unit*</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value} 
@@ -232,14 +160,15 @@ export function PaperInfoSection({
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select option">
+                    <SelectValue placeholder="Select unit">
                       {field.value}
                     </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="YES">YES</SelectItem>
-                  <SelectItem value="NO">NO</SelectItem>
+                  <SelectItem value="meter">Meter</SelectItem>
+                  <SelectItem value="yard">Yard</SelectItem>
+                  <SelectItem value="piece">Piece</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -247,85 +176,173 @@ export function PaperInfoSection({
           )}
         />
         
-        {/* Design File */}
-        <FormField
-          control={form.control}
-          name="fileDesain"
-          render={({ field }) => (
-            <FormItem className="col-span-2">
-              <FormLabel>Design File</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter design file PATH"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {/* Quantity with Unit Selection */}
-        <div className="col-span-2">
+        {/* Rest of fields with disabled condition */}
+        <div className={`contents ${isSectionDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+          {/* Paper GSM */}
           <FormField
             control={form.control}
-            name="jumlah"
+            name="gsmKertas"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantity*</FormLabel>
+                <FormLabel>
+                  Paper GSM
+                  {isDtfSelected ? 
+                    <span className="ml-2 text-xs text-blue-500">(DTF Film)</span> : 
+                    <span className="ml-2 text-xs text-muted-foreground">(Regular)</span>
+                  }
+                </FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || ""}
+                  disabled={isSectionDisabled || isLoadingPaperGsm}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingPaperGsm ? "Loading..." : "Select paper GSM"} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {paperGsmOptions.length === 0 ? (
+                      <SelectItem value="no-options" disabled>
+                        No {isDtfSelected ? "DTF Film" : "regular"} paper GSM options available
+                      </SelectItem>
+                    ) : (
+                      paperGsmOptions.map((option) => (
+                        <SelectItem key={option.gsm} value={option.gsm.toString()}>
+                          {option.gsm} gsm {isDtfSelected && "(DTF Film)"}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Paper Width */}
+          <FormField
+            control={form.control}
+            name="lebarKertas"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Paper Width
+                  {isDtfSelected ? 
+                    <span className="ml-2 text-xs text-blue-500">(DTF Film)</span> : 
+                    <span className="ml-2 text-xs text-muted-foreground">(Regular)</span>
+                  }
+                </FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || ""}
+                  disabled={isSectionDisabled || isLoadingPaperWidth || !form.watch("gsmKertas")}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue 
+                        placeholder={
+                          isLoadingPaperWidth 
+                            ? "Loading..." 
+                            : !form.watch("gsmKertas") 
+                            ? "Select GSM first" 
+                            : "Select paper width"
+                        } 
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {paperWidthOptions.length === 0 ? (
+                      <SelectItem value="no-options" disabled>
+                        No {isDtfSelected ? "DTF Film" : "regular"} paper width options available
+                      </SelectItem>
+                    ) : (
+                      paperWidthOptions.map((width) => (
+                        <SelectItem key={width} value={width}>
+                          {width} cm {isDtfSelected && "(DTF Film)"}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* File Width */}
+          <FormField
+            control={form.control}
+            name="fileWidth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>File Width</FormLabel>
                 <FormControl>
-                  <div className="flex space-x-2">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="Enter quantity"
-                      {...field}
-                      className="w-full"
-                      onChange={(e) => {
-                        // Only allow numbers and decimal point
-                        const value = e.target.value;
-                        if (value === "" || /^(\d+)?\.?\d*$/.test(value)) {
-                          field.onChange(value);
-                        }
-                      }}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="unit"
-                      render={({ field }) => (
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="w-[100px]">
-                              <SelectValue placeholder="Unit" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="meter">meter</SelectItem>
-                            <SelectItem value="yard">yard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
+                  <Input
+                    placeholder="Enter file width"
+                    {...field}
+                    onChange={(e) => {
+                      // Only allow numbers and decimal point
+                      const value = e.target.value;
+                      if (value === "" || /^(\d+)?\.?\d*$/.test(value)) {
+                        field.onChange(value);
+                      }
+                    }}
+                  />
                 </FormControl>
-                {/* Show warning if quantity exceeds available fabric stock - Dynamic check based on both yard/meter */}
-                {selectedFabric && selectedFabric.length && parseFloat(form.watch('jumlah')) > 0 && (
-                  (form.watch("unit") === "yard" && yardToMeter(parseFloat(form.watch('jumlah'))) > parseFloat(selectedFabric.length)) ? (
-                    <p className="text-sm text-orange-500 mt-1">
-                      Warning: Quantity exceeds available fabric stock ({selectedFabric.length} m)
-                    </p>
-                  ) : (form.watch("unit") === "meter" && parseFloat(form.watch('jumlah')) > parseFloat(selectedFabric.length)) && (
-                    <p className="text-sm text-orange-500 mt-1">
-                      Warning: Quantity exceeds available fabric stock ({selectedFabric.length} m)
-                    </p>
-                  )
-                )}
-                {/* Show unit conversion if yard is selected */}
-                {form.watch('unit') === 'yard' && parseFloat(form.watch('jumlah')) > 0 && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    = {yardToMeter(parseFloat(form.watch('jumlah'))).toFixed(2)} meters
+                {hasInsufficientWidthMargin() && (
+                  <p className="text-sm text-orange-500 mt-1">
+                    Warning: File width should be at least 4cm less than fabric width.
+                    {getMaxFileWidth() && ` Maximum allowed: ${getMaxFileWidth()} cm`}
                   </p>
                 )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {/* Matching Color */}
+          <FormField
+            control={form.control}
+            name="matchingColor"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Matching Color</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select option">
+                        {field.value}
+                      </SelectValue>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="YES">YES</SelectItem>
+                    <SelectItem value="NO">NO</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {/* Design File */}
+          <FormField
+            control={form.control}
+            name="fileDesain"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Design File</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter design file PATH"
+                    {...field}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

@@ -17,13 +17,13 @@ export async function GET(req: NextRequest) {
     
     try {
       // Fetch fabric names from the database
-      const fabrics = await prisma.fabric.findMany({
+      const fabrics = await prisma.inventory.findMany({
         select: {
           id: true,
-          name: true,
+          nama_bahan: true,
         },
         orderBy: {
-          name: 'asc',
+          nama_bahan: 'asc',
         },
       });
 
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       // Map the data to the expected format
       const fabricNames = fabrics.map(fabric => ({
         id: fabric.id,
-        name: fabric.name,
+        name: fabric.nama_bahan,
       }));
       
       return NextResponse.json(serializeData(fabricNames));

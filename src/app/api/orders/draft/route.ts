@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // Helper to serialize BigInt values for JSON response
 function serializeData(data: any): any {
@@ -15,7 +15,7 @@ function serializeData(data: any): any {
 // GET to fetch all draft orders, optionally filtered
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     
     if (!session?.user) {
       return NextResponse.json(
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     const totalCount = await prisma.order.count({ where });
     
     // Process data for response
-    const processedDrafts = drafts.map(draft => {
+    const processedDrafts = drafts.map((draft: any) => {
       let marketingInfo = null;
       if (draft.marketing) {
         marketingInfo = {
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 // POST to create a new draft order
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     
     if (!session?.user) {
       return NextResponse.json(
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         marketing: body.marketing || null,
         produk: body.produk || null,
         qty: body.qty || null,
-        notes: body.notes || null,
+        catatan: body.catatan || null,
       },
       include: {
         customer: true,
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     };
     
     // Create a log entry for the new draft
-    await prisma.orderLog.create({
+    await (prisma as any).orderLog.create({
       data: {
         orderId: newDraft.id,
         action: "CREATED",

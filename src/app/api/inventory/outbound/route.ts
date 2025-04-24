@@ -3,13 +3,13 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
   try {
-    // Fetch orders with approval_barang set to "APPROVED" and status not "DISERAHKAN"
+    // Fetch orders with status set to "COMPLETED" and not already handed over (status not "DISERAHKAN")
     const ordersRaw = await prisma.$queryRaw`
       SELECT o.*, c.nama as customer_name
       FROM "orders" o
       LEFT JOIN "customer" c ON o.customer_id = c.id
-      WHERE o.approval_barang = 'APPROVED' 
-      AND o.status != 'DISERAHKAN'
+      WHERE o.statusm = 'COMPLETED' 
+      AND (o.approval_barang != 'DISERAHKAN' OR approval_barang IS NULL)
       ORDER BY o.id DESC
     `;
 
@@ -89,7 +89,7 @@ export async function PATCH(req: NextRequest) {
     } catch (queryError) {
       console.error('Database error when updating order:', queryError);
       return NextResponse.json(
-        { error: `Database error: ${queryError.message}` },
+        { error: `Database error: ${queryError instanceof Error ? queryError.message : String(queryError)}` },
         { status: 500 }
       );
     }

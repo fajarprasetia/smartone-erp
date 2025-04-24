@@ -30,7 +30,7 @@ interface RoleTableProps {
 
 export function RoleTable({ roles, permissions }: RoleTableProps) {
   const router = useRouter()
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+  const [selectedRole, setSelectedRole] = useState<(Role & { permissions: Permission[] }) | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import prisma from "@/lib/prisma"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(request: Request) {
   try {
@@ -25,28 +25,15 @@ export async function POST(request: Request) {
     }
 
     // Get WhatsApp settings from database
-    const settings = await prisma.setting.findMany({
-      where: {
-        category: "whatsapp",
-      },
-    })
+    const whatsappConfig = await prisma.whatsAppConfig.findFirst();
 
-    if (!settings || settings.length === 0) {
+    if (!whatsappConfig) {
       return NextResponse.json({ error: "WhatsApp settings not configured" }, { status: 400 })
     }
 
-    // Convert settings array to object for easier access
-    const settingsMap = settings.reduce((acc, setting) => {
-      acc[setting.key] = setting.value
-      return acc
-    }, {} as Record<string, string>)
-
     // Check for required settings
-    const requiredSettings = ["phoneNumberId", "accessToken"]
-    for (const key of requiredSettings) {
-      if (!settingsMap[key]) {
-        return NextResponse.json({ error: `Missing WhatsApp configuration: ${key}` }, { status: 400 })
-      }
+    if (!whatsappConfig.phoneNumberId || !whatsappConfig.accessToken) {
+      return NextResponse.json({ error: "Missing WhatsApp configuration: phoneNumberId or accessToken" }, { status: 400 })
     }
 
     // Format the phone number (remove any spaces, ensure it starts with country code)
@@ -94,12 +81,12 @@ export async function POST(request: Request) {
 
       // Send message to WhatsApp Business API
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${settingsMap.phoneNumberId}/messages`,
+        `https://graph.facebook.com/v18.0/${whatsappConfig.phoneNumberId}/messages`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${settingsMap.accessToken}`,
+            Authorization: `Bearer ${whatsappConfig.accessToken}`,
           },
           body: JSON.stringify(messagePayload),
         }
@@ -119,17 +106,15 @@ export async function POST(request: Request) {
 
       const responseData = await response.json()
 
-      // Log the message in the database
-      await prisma.whatsappMessage.create({
-        data: {
-          messageId: responseData.messages?.[0]?.id || "unknown",
-          phoneNumber: formattedPhone,
-          message: message || JSON.stringify(templateParams),
-          templateName: templateName || null,
-          status: "sent",
-          sentBy: session.user.id,
-        },
-      })
+      // Log message in console since we don't have a dedicated WhatsApp message table
+      console.log("WhatsApp message sent successfully:", {
+        messageId: responseData.messages?.[0]?.id || "unknown",
+        phoneNumber: formattedPhone,
+        message: message || JSON.stringify(templateParams),
+        templateName: templateName || null,
+        status: "sent",
+        sentBy: session.user.id,
+      });
 
       return NextResponse.json({
         status: "success",

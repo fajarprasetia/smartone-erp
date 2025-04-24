@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Order } from "@/types/order";
 import { toast } from "sonner";
 import { 
@@ -27,12 +27,23 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 
+// Add safeStringify helper function
+// Safely stringify values including BigInt
+function safeStringify(obj: any): string {
+  return JSON.stringify(obj, (_, value) => 
+    typeof value === 'bigint' ? value.toString() : value
+  );
+}
+
 // Define the schema
 const formSchema = z.object({
   notes: z.string().optional(),
   cutting_bagus: z.string().optional(),
   cutting_reject: z.string().optional(),
-  isOrderComplete: z.boolean(),
+  cutting_mesin: z.string().optional(),
+  cutting_speed: z.string().optional(),
+  acc: z.string().optional(),
+  power: z.string().optional(),
 });
 
 // Infer the type
@@ -52,45 +63,158 @@ export function CuttingCompleteForm({
   onSuccess,
 }: CuttingCompleteFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Helper function to get initial data from order
+  const getInitialData = () => {
+    if (!order) {
+      return {
+        notes: "",
+        cutting_bagus: "0",
+        cutting_reject: "0",
+        cutting_mesin: "",
+        cutting_speed: "",
+        acc: "",
+        power: "",
+      };
+    }
+    
+    // Get data from order with fallbacks for each field
+    const initialData = {
+      notes: order.catatan_cutting || "",
+      cutting_bagus: order.cutting_bagus || "0",
+      cutting_reject: (order as any).cutting_reject || "0",
+      cutting_mesin: order.cutting_mesin || "",
+      cutting_speed: order.cutting_speed || "",
+      acc: order.acc || "",
+      power: order.power || "",
+    };
+    
+    console.log("Setting initial form data:", initialData);
+    return initialData;
+  };
 
   // Initialize form with correct types
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      notes: "",
-      cutting_bagus: "0",
-      cutting_reject: "0",
-      isOrderComplete: false,
-    } as FormValues,
+    defaultValues: getInitialData(),
   });
 
-  // Handle form submission
-  const handleSubmit = form.handleSubmit(async (values: FormValues) => {
+  // Update form values when order changes
+  useEffect(() => {
+    console.log("Order changed, resetting form with new data");
+    const initialData = getInitialData();
+    form.reset(initialData);
+  }, [order, form]);
+
+  // Check if API supports retrieving current data
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      if (!order?.id) return;
+      
+      try {
+        // Try to fetch more detailed order data if available - suppress 404 errors
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // Timeout after 2 seconds
+        
+        try {
+          const response = await fetch(`/api/production/orders/${order.id}/cutting-details`, {
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            const detailedData = await response.json();
+            console.log("Retrieved detailed order data:", detailedData);
+            
+            // Update form with more detailed data if available
+            form.reset({
+              ...getInitialData(),
+              ...detailedData,
+              notes: detailedData.catatan_cutting || order.catatan_cutting || "",
+            });
+          } else {
+            // Don't log errors for expected 404s
+            console.log("Using default order data for form");
+          }
+        } catch (error) {
+          // Silently handle aborted requests or network errors
+          clearTimeout(timeoutId);
+        }
+      } catch (error) {
+        // Catch any other unexpected errors but don't show them in console
+      }
+    };
+    
+    fetchOrderDetails();
+  }, [order, form]);
+
+  // Update the form submission handler
+  const onSubmit = form.handleSubmit(async (values) => {
     if (!order) return;
     
-    setIsSubmitting(true);
+    console.log("Submitting values:", safeStringify(values));
+    
     try {
-      const response = await fetch(`/api/production/orders/${order.id}/complete-cutting`, {
-        method: "PATCH",
+      setIsSubmitting(true);
+      
+      const submissionData = {
+        ...values,
+        completedAt: new Date().toISOString(),
+        status: "COMPLETED"
+      };
+      
+      console.log("API request data:", safeStringify(submissionData));
+      
+      // Try the specialized endpoint first
+      let response = await fetch(`/api/production/orders/${order.id}/complete-cutting`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...values,
-        }),
+        body: safeStringify(submissionData),
       });
-
+      
+      // If specialized endpoint fails, try the general update endpoint
       if (!response.ok) {
-        throw new Error("Failed to complete cutting process");
+        console.log("Specialized endpoint failed, trying general update endpoint");
+        
+        response = await fetch(`/api/orders/${order.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: safeStringify(submissionData),
+        });
       }
-
-      const newStatus = values.isOrderComplete ? "JOB DONE" : "CUTTING DONE";
-      toast.success(`Cutting completed. Order status: ${newStatus}`);
-      onSuccess();
-      onOpenChange(false);
+      
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log("Success response:", safeStringify(responseData));
+        
+        toast.success("Order cutting completed successfully");
+        
+        onSuccess && onSuccess();
+        onOpenChange && onOpenChange(false);
+      } else {
+        // Handle error response
+        let errorMessage: string;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || "Failed to complete cutting process";
+          console.error("Error response (JSON):", safeStringify(errorData));
+        } catch (parseError) {
+          // If parsing JSON fails, get the text response
+          const errorText = await response.text();
+          errorMessage = `Failed to complete cutting process: ${errorText || response.statusText}`;
+          console.error("Error response (Text):", errorText);
+        }
+        
+        toast.error(errorMessage);
+      }
     } catch (error) {
-      console.error("Error completing cutting process:", error);
-      toast.error("Failed to complete cutting process");
+      console.error("Exception during submission:", error);
+      toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -142,7 +266,86 @@ export function CuttingCompleteForm({
             </div>
 
             <Form {...form}>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={onSubmit} className="space-y-4">
+                {/* Machine and Speed Settings */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="cutting_mesin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cutting Machine</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Machine name/model"
+                            className="bg-background/50"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cutting_speed"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cutting Speed</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Speed setting"
+                            className="bg-background/50"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Acceleration and Power Settings */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="acc"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Acceleration</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Acceleration setting"
+                            className="bg-background/50"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="power"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Power</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Power setting"
+                            className="bg-background/50"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Production Results */}
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -199,27 +402,6 @@ export function CuttingCompleteForm({
                         />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="isOrderComplete"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-background/50">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Mark order as complete</FormLabel>
-                        <FormDescription>
-                          Check this if the entire order is completed and ready for delivery
-                        </FormDescription>
-                      </div>
                     </FormItem>
                   )}
                 />

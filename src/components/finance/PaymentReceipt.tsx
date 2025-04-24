@@ -169,7 +169,7 @@ export function PaymentReceipt({ transaction, onClose }: PaymentReceiptProps) {
         <table className="w-full border-collapse" style={{ borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th width="50%" colSpan={2} className="text-left" style={{ border: '1px solid #ddd', padding: '8px' }}>
+              <th colSpan={2} className="text-left" style={{ border: '1px solid #ddd', padding: '8px', width: '50%' }}>
                 <div className="flex items-center">
                   <img 
                     src="https://erp.smartone.id/vendor/crudbooster/avatar.jpg" 
@@ -180,7 +180,7 @@ export function PaymentReceipt({ transaction, onClose }: PaymentReceiptProps) {
                   <h2 className="text-4xl font-bold">INVOICE</h2>
                 </div>
               </th>
-              <th width="50%" colSpan={2} className="text-right" style={{ border: '1px solid #ddd', padding: '8px' }}>
+              <th colSpan={2} className="text-right" style={{ border: '1px solid #ddd', padding: '8px', width: '50%' }}>
                 <div className="text-sm space-y-1">
                   <div>Project No.: {order?.spk || orderId}</div>
                   <div>Order Date: {formatDate(date)}</div>
@@ -188,8 +188,8 @@ export function PaymentReceipt({ transaction, onClose }: PaymentReceiptProps) {
               </th>
             </tr>
             <tr className="bg-orange" style={{ backgroundColor: '#ec9238', border: '1px solid #ddd' }}>
-              <th width="50%" colSpan={2} style={{ border: '1px solid #ddd', padding: '8px' }}>Detail Invoice</th>
-              <th width="50%" colSpan={2} style={{ border: '1px solid #ddd', padding: '8px' }}>Detail Customer</th>
+              <th colSpan={2} style={{ border: '1px solid #ddd', padding: '8px' }}>Detail Invoice</th>
+              <th colSpan={2} style={{ border: '1px solid #ddd', padding: '8px' }}>Detail Customer</th>
             </tr>
           </thead>
           <tbody>

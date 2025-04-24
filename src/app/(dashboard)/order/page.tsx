@@ -3,28 +3,35 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { 
-  Search, 
-  PlusCircle, 
-  RefreshCw, 
+  Ban, 
+  Banknote, 
+  Check, 
+  CreditCard, 
+  DollarSign, 
   Eye, 
   Pencil, 
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-  X,
-  ChevronUp,
-  ChevronDown,
-  Printer,
-  ArrowLeft,
+  ChevronLeft, 
+  ChevronRight, 
+  MoreHorizontal, 
+  Plus, 
+  Search, 
+  FileEdit, 
+  Trash2, 
+  ClipboardList,
+  PlusCircle,
+  RefreshCw,
   PauseCircle,
   PlayCircle,
   CheckCircle,
-  Truck,
   XCircle,
-  CreditCard,
-  DollarSign,
-  Ban
+  Truck,
+  Printer,
+  Calendar as CalendarIcon,
+  X,
+  ChevronUp,
+  ChevronDown,
+  ArrowLeft,
+  Receipt
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -982,7 +989,8 @@ const NoDpForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => voi
         },
         body: JSON.stringify({
           orderId: order.id,
-          approval: "APPROVED"
+          approval: "APPROVED",
+          sisa: order.nominal // Set the sisa field to the full order amount (nominal)
         })
       })
       
@@ -1043,7 +1051,21 @@ const NoDpForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => voi
 }
 
 // Image Thumbnail component for displaying payment receipts
-const ImageThumbnail = ({ src, alt, onClick, useFallback = false }: { src: string | null | undefined, alt: string, onClick?: () => void, useFallback?: boolean }) => {
+const ImageThumbnail = ({ 
+  src, 
+  alt, 
+  onClick, 
+  useFallback = false,
+  order,
+  onSuccess
+}: { 
+  src: string | null | undefined, 
+  alt: string, 
+  onClick?: () => void, 
+  useFallback?: boolean,
+  order?: OrderItem,
+  onSuccess?: () => void 
+}) => {
   if (!src) return null
   
   // Ensure the src URL is properly formatted with a leading slash if it's a relative path
@@ -1051,9 +1073,19 @@ const ImageThumbnail = ({ src, alt, onClick, useFallback = false }: { src: strin
   
   // Determine which prop to pass based on the alt text
   if (alt.includes("DP")) {
-    return <CaptureThumbnails tf_dp={formattedSrc} altText={alt} useFallback={useFallback} />;
+    return (
+      <div className="flex items-center gap-1">
+        <CaptureThumbnails tf_dp={formattedSrc} altText={alt} useFallback={useFallback} />
+        {order && onSuccess && <EditDpReceiptForm order={order} onSuccess={onSuccess} />}
+      </div>
+    );
   } else if (alt.includes("Settlement") || alt.includes("Pelunasan")) {
-    return <CaptureThumbnails tf_pelunasan={formattedSrc} altText={alt} useFallback={useFallback} />;
+    return (
+      <div className="flex items-center gap-1">
+        <CaptureThumbnails tf_pelunasan={formattedSrc} altText={alt} useFallback={useFallback} />
+        {order && onSuccess && <EditSettlementReceiptForm order={order} onSuccess={onSuccess} />}
+      </div>
+    );
   }
   
   // Fallback to old implementation for other cases
@@ -1105,6 +1137,276 @@ const ReceiptModal = ({
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// Component to replace DP receipt
+const EditDpReceiptForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => void }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!file) {
+      toast.error("Please upload a replacement receipt")
+      return
+    }
+    
+    try {
+      setIsLoading(true)
+      
+      // Create form data for file upload
+      const formUploadData = new FormData()
+      formUploadData.append('file', file)
+      
+      // Upload file
+      const uploadResp = await fetch('/api/upload?folder=tfuploads', {
+        method: 'POST',
+        body: formUploadData
+      })
+      
+      if (!uploadResp.ok) {
+        throw new Error('File upload failed')
+      }
+      
+      const uploadData = await uploadResp.json()
+      const uploadedFilePath = uploadData.path
+      
+      // Update order with new receipt path
+      const updateResp = await fetch(`/api/orders/payment/update-receipt`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          receiptType: 'dp',
+          receiptPath: uploadedFilePath
+        })
+      })
+      
+      if (!updateResp.ok) {
+        const contentType = updateResp.headers.get("content-type")
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await updateResp.json()
+          throw new Error(errorData.error || 'Failed to update receipt')
+        } else {
+          throw new Error(`Failed to update receipt: ${updateResp.status} ${updateResp.statusText}`)
+        }
+      }
+      
+      toast.success("Down payment receipt updated successfully")
+      setIsOpen(false)
+      onSuccess()
+    } catch (error) {
+      console.error("Error updating receipt:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to update receipt")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0])
+    }
+  }
+  
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="p-1 h-7 w-7"
+          disabled={!order.tf_dp}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[350px] p-4">
+        <form onSubmit={handleSubmit}>
+          <h3 className="font-medium text-lg mb-4">Replace DP Receipt</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="replace-dp-file">Upload New Receipt</Label>
+              <Input
+                id="replace-dp-file"
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Accepted formats: JPG, PNG, JPEG (max 5MB)</p>
+            </div>
+            
+            {file && (
+              <div className="mt-2">
+                <p className="text-sm font-medium">Selected file:</p>
+                <p className="text-sm text-muted-foreground">{file.name}</p>
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading || !file}
+              >
+                {isLoading ? "Uploading..." : "Update Receipt"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// Component to replace Settlement receipt
+const EditSettlementReceiptForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () => void }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!file) {
+      toast.error("Please upload a replacement receipt")
+      return
+    }
+    
+    try {
+      setIsLoading(true)
+      
+      // Create form data for file upload
+      const formUploadData = new FormData()
+      formUploadData.append('file', file)
+      
+      // Upload file
+      const uploadResp = await fetch('/api/upload?folder=tfuploads', {
+        method: 'POST',
+        body: formUploadData
+      })
+      
+      if (!uploadResp.ok) {
+        throw new Error('File upload failed')
+      }
+      
+      const uploadData = await uploadResp.json()
+      const uploadedFilePath = uploadData.path
+      
+      // Update order with new receipt path
+      const updateResp = await fetch(`/api/orders/payment/update-receipt`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          receiptType: 'settlement',
+          receiptPath: uploadedFilePath
+        })
+      })
+      
+      if (!updateResp.ok) {
+        const contentType = updateResp.headers.get("content-type")
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await updateResp.json()
+          throw new Error(errorData.error || 'Failed to update receipt')
+        } else {
+          throw new Error(`Failed to update receipt: ${updateResp.status} ${updateResp.statusText}`)
+        }
+      }
+      
+      toast.success("Payment receipt updated successfully")
+      setIsOpen(false)
+      onSuccess()
+    } catch (error) {
+      console.error("Error updating receipt:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to update receipt")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0])
+    }
+  }
+  
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="p-1 h-7 w-7"
+          disabled={!order.tf_pelunasan}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[350px] p-4">
+        <form onSubmit={handleSubmit}>
+          <h3 className="font-medium text-lg mb-4">Replace Settlement Receipt</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="replace-settlement-file">Upload New Receipt</Label>
+              <Input
+                id="replace-settlement-file"
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Accepted formats: JPG, PNG, JPEG (max 5MB)</p>
+            </div>
+            
+            {file && (
+              <div className="mt-2">
+                <p className="text-sm font-medium">Selected file:</p>
+                <p className="text-sm text-muted-foreground">{file.name}</p>
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading || !file}
+              >
+                {isLoading ? "Uploading..." : "Update Receipt"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -2279,20 +2581,39 @@ export default function OrderPage() {
                                     </Badge>
                                   </TableCell>
                                   <TableCell>
-                                    <CaptureThumbnails
-                                      tf_dp={order.tf_dp}
-                                      tf_pelunasan={order.tf_pelunasan}
-                                      altText="Payment"
-                                    />
-                                  </TableCell>
-                                  <TableCell>
                                     <div className="flex items-center space-x-1">
-                                      <NoDpForm order={order} onSuccess={handlePaymentSuccess} />
-                                      <DpPaymentForm order={order} onSuccess={handlePaymentSuccess} />
-                                      <SettlePaymentForm order={order} onSuccess={handlePaymentSuccess} />
+                                      <ImageThumbnail
+                                        src={order.tf_dp}
+                                        alt="DP Receipt"
+                                        onClick={() => handleOpenReceiptModal(order.tf_dp)}
+                                        order={order}
+                                        onSuccess={handlePaymentSuccess}
+                                      />
+                                      <ImageThumbnail
+                                        src={order.tf_pelunasan}
+                                        alt="Settlement Receipt"
+                                        onClick={() => handleOpenReceiptModal(order.tf_pelunasan)}
+                                        order={order}
+                                        onSuccess={handlePaymentSuccess}
+                                      />
                                     </div>
                                   </TableCell>
-                                
+                                  <TableCell>
+                                    <div className="flex items-center space-x-2">
+                                      {order.dp && order.dp > 0 && (
+                                        <EditDpReceiptForm 
+                                          order={order} 
+                                          onSuccess={handlePaymentSuccess} 
+                                        />
+                                      )}
+                                      {order.tgl_lunas && (
+                                        <EditSettlementReceiptForm 
+                                          order={order} 
+                                          onSuccess={handlePaymentSuccess} 
+                                        />
+                                      )}
+                                    </div>
+                                  </TableCell>                                 
                                 </TableRow>
                               ))
                             )}
@@ -2431,15 +2752,36 @@ export default function OrderPage() {
                                     <TableCell>{formatCurrency(order.nominal || 0)}</TableCell>
                                     <TableCell>
                                       <div className="flex items-center space-x-1">
-                                        <ImageThumbnail src={order.tf_dp} alt="DP Receipt" onClick={() => handleOpenReceiptModal(order.tf_dp)} useFallback />
-                                        <ImageThumbnail src={order.tf_pelunasan} alt="Settle Receipt" onClick={() => handleOpenReceiptModal(order.tf_pelunasan)} useFallback />
+                                        <ImageThumbnail
+                                          src={order.tf_dp}
+                                          alt="DP Receipt"
+                                          onClick={() => handleOpenReceiptModal(order.tf_dp)}
+                                          order={order}
+                                          onSuccess={handlePaymentSuccess}
+                                        />
+                                        <ImageThumbnail
+                                          src={order.tf_pelunasan}
+                                          alt="Settlement Receipt"
+                                          onClick={() => handleOpenReceiptModal(order.tf_pelunasan)}
+                                          order={order}
+                                          onSuccess={handlePaymentSuccess}
+                                        />
                                       </div>
                                     </TableCell>
                                     <TableCell>
-                                      <div className="flex items-center space-x-1">
-                                        <NoDpForm order={order} onSuccess={handlePaymentSuccess} />
-                                        <DpPaymentForm order={order} onSuccess={handlePaymentSuccess} />
-                                        <SettlePaymentForm order={order} onSuccess={handlePaymentSuccess} />
+                                      <div className="flex items-center space-x-2">
+                                        <NoDpForm
+                                          order={order}
+                                          onSuccess={handlePaymentSuccess}
+                                        />
+                                        <DpPaymentForm
+                                          order={order}
+                                          onSuccess={handlePaymentSuccess}
+                                        />
+                                        <SettlePaymentForm
+                                          order={order}
+                                          onSuccess={handlePaymentSuccess}
+                                        />
                                       </div>
                                     </TableCell>
                                   </TableRow>

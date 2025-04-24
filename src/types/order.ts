@@ -39,6 +39,16 @@ export interface Order {
   cuttingNotes?: string;
   cuttingWasteQuantity?: number;
   
+  // Cutting Process Fields
+  tgl_cutting?: string;
+  cutting_id?: string;
+  cutting_mesin?: string;
+  cutting_speed?: string;
+  acc?: string;
+  power?: string;
+  catatan_cutting?: string;
+  cutting_bagus?: string;
+  
   // DTF Status
   dtfStartedAt?: string;
   dtfCompletedAt?: string;

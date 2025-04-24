@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PendingPrintTab } from "./print/pending-print-tab";
-import { PrintListTab } from "./print/print-list-tab";
-import { PrintStocksTab } from "./print/print-stocks-tab";
+import { PendingPrintTab } from "./pending-print-tab";
+import { PrintListTab } from "./print-list-tab";
+import { PrintStocksTab } from "./print-stocks-tab";
 
 export function PrintManagement() {
   const [refreshKey, setRefreshKey] = useState<number>(0);
@@ -26,9 +26,7 @@ export function PrintManagement() {
           <TabsTrigger value="list" onClick={() => setActiveTab("list")}>Print List</TabsTrigger>
           <TabsTrigger value="stocks" onClick={() => setActiveTab("stocks")}>Stocks</TabsTrigger>
         </TabsList>
-        <div className="text-sm text-muted-foreground">
-          Note: Orders with "PRESS ONLY" or "CUTTING ONLY" products are automatically filtered out.
-        </div>
+        
       </div>
       <TabsContent value="pending" className="space-y-4">
         <PendingPrintTab 

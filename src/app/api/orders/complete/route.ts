@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma";
 
 // Helper function to serialize data (handle BigInt)
 function serializeData(data: any): any {
@@ -11,7 +12,7 @@ function serializeData(data: any): any {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     // Check if user is authenticated
     if (!session?.user) {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if order is already completed or delivered
-    if (["COMPLETED", "DELIVERED"].includes(order.status)) {
+    if (order.status && ["COMPLETED", "DELIVERED"].includes(order.status)) {
       return NextResponse.json(
         { error: `Order is already ${order.status.toLowerCase()}` },
         { status: 400 }
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if order can be completed (not DRAFT, CANCELLED, etc.)
-    if (["DRAFT", "CANCELLED", "ON_HOLD"].includes(order.status)) {
+    if (order.status && ["DRAFT", "CANCELLED", "ON_HOLD"].includes(order.status)) {
       return NextResponse.json(
         { error: `Cannot mark a ${order.status} order as completed` },
         { status: 400 }
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     });
     
     // Log the completion action
-    await prisma.orderLog.create({
+    await (prisma as any).orderLog.create({
       data: {
         orderId,
         userId: session.user.id,

@@ -34,6 +34,10 @@ const bigIntSerializer = (data: any): any => {
     
     return data;
   };
+
+  // Define record types to fix indexing errors
+  type UserNameRecord = Record<string, string>;
+  
   export async function GET(req: Request) {
     try {
       console.log("Production List API called");
@@ -165,9 +169,9 @@ const bigIntSerializer = (data: any): any => {
       // Fetch marketing users for the orders
       const marketingIds = orders
         .filter(order => order.marketing)
-        .map(order => order.marketing);
+        .map(order => order.marketing as string); // Cast to string to remove null
       
-      let marketingUsers = {};
+      let marketingUsers: UserNameRecord = {};
       
       if (marketingIds.length > 0) {
         try {
@@ -185,7 +189,7 @@ const bigIntSerializer = (data: any): any => {
           });
           
           // Create a lookup map of user IDs to names
-          marketingUsers = users.reduce((acc, user) => {
+          marketingUsers = users.reduce<UserNameRecord>((acc, user) => {
             acc[user.id] = user.name;
             return acc;
           }, {});
@@ -200,9 +204,9 @@ const bigIntSerializer = (data: any): any => {
       // Fetch designer users for the orders
       const designerIds = orders
         .filter(order => order.designer_id)
-        .map(order => order.designer_id)
-        .filter((id, idx, arr) => id && arr.indexOf(id) === idx); // unique, non-null
-      let designerUsers = {};
+        .map(order => order.designer_id as string) // Cast to string to remove null
+        .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique IDs
+      let designerUsers: UserNameRecord = {};
       if (designerIds.length > 0) {
         try {
           const users = await db.user.findMany({
@@ -216,7 +220,7 @@ const bigIntSerializer = (data: any): any => {
               name: true
             }
           });
-          designerUsers = users.reduce((acc, user) => {
+          designerUsers = users.reduce<UserNameRecord>((acc, user) => {
             acc[user.id] = user.name;
             return acc;
           }, {});
@@ -228,7 +232,7 @@ const bigIntSerializer = (data: any): any => {
       
       const modifiedOrders = orders.map(order => ({
         ...order,
-        asal_bahan: order.asal_bahan === 22 ? 'SMARTONE' : 'CUSTOMER',
+        asal_bahan_id: order.asal_bahan_id && Number(order.asal_bahan_id) === 22 ? 'SMARTONE' : 'CUSTOMER',
         marketing: order.marketing
           ? { id: order.marketing, name: marketingUsers[order.marketing] || order.marketing }
           : null,

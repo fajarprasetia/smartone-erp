@@ -19,14 +19,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { MoreHorizontal, RefreshCw, Search } from "lucide-react";
+import { RefreshCw, Search, Play } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import DTFStartForm from "./dtf-start-form";
@@ -36,6 +30,7 @@ interface Order {
   spk: string;
   customer: {
     name: string;
+    nama?: string; // Support both formats
   };
   produk: string;
   status: string;
@@ -43,6 +38,7 @@ interface Order {
   created_at: string;
   est_order: string;
   tgl_dtf: string;
+  capture?: string; // Add design preview field
 }
 
 interface PendingDTFListProps {
@@ -56,6 +52,7 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [startDTFDialogOpen, setStartDTFDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch orders when component mounts
   useEffect(() => {
@@ -72,9 +69,10 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
     const query = searchQuery.toLowerCase();
     const filtered = orders.filter(
       (order) =>
-        order.spk.toLowerCase().includes(query) ||
-        order.customer.name.toLowerCase().includes(query) ||
-        order.produk.toLowerCase().includes(query)
+        order.spk?.toLowerCase().includes(query) ||
+        order.customer?.name?.toLowerCase().includes(query) ||
+        order.customer?.nama?.toLowerCase().includes(query) ||
+        order.produk?.toLowerCase().includes(query)
     );
     setFilteredOrders(filtered);
   }, [searchQuery, orders]);
@@ -82,30 +80,98 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
   // Fetch pending DTF orders from API
   async function fetchPendingDTFOrders() {
     setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch("/api/orders/pending-dtf");
+      // Try dedicated DTF ready endpoint first
+      let response = await fetch("/api/dtf/ready-orders");
+      
+      // Fallback to generic endpoint if dedicated endpoint fails
+      if (!response.ok) {
+        console.log("Dedicated DTF ready API not available, trying generic endpoint");
+        response = await fetch("/api/orders/pending-dtf");
+      }
       
       if (!response.ok) {
         throw new Error("Failed to fetch pending DTF orders");
       }
       
       const data = await response.json();
+      console.log(`Fetched ${data.length} orders`);
       
-      // Map the API response to correctly format customer data
-      const mappedData = data.map((order: any) => ({
-        ...order,
-        customer: {
-          name: order.customer?.nama || "N/A"
-        },
-        product: {
-          name: order.produk
+      // Get orders with any customer data
+      const ordersWithCustomers = data.filter((order: any) => order && order.id);
+      
+      // Process orders with flexible status matching
+      const dtfReadyOrders = ordersWithCustomers.filter((order: any) => {
+        // Get the status and normalize it
+        const status = String(order.status || "").trim().toUpperCase();
+        
+        // Log all orders with DTF in the status for debugging
+        if (status.includes("DTF")) {
+          console.log(`Found potential DTF order: ${order.spk} - Status: "${order.status}"`);
         }
-      }));
+        
+        // Match "DTF READY" with flexible conditions
+        return status === "DTF READY" || 
+              status === "DTFREADY" ||
+              status === "DTF-READY" ||
+              (status.includes("DTF") && status.includes("READY"));
+      });
       
-      setOrders(mappedData);
-      setFilteredOrders(mappedData);
+      console.log(`Found ${dtfReadyOrders.length} orders with DTF READY status`);
+      
+      // Clean up and standardize the data
+      const mappedData = dtfReadyOrders.map((order: any) => {
+        // Log the exact order data for the one we know exists
+        if (order.id === "cm9vl2zle00003ipobc874i86") {
+          console.log("Found order by ID cm9vl2zle00003ipobc874i86:", { 
+            spk: order.spk,
+            status: order.status,
+            raw: order
+          });
+        }
+        
+        return {
+          ...order,
+          // Handle potential missing customer data
+          customer: {
+            name: order.customer?.nama || "N/A",
+            nama: order.customer?.nama
+          },
+          // Ensure other fields exist and have default values
+          prioritas: order.prioritas || 0,
+          produk: order.produk || "Unknown product",
+          status: order.status || "N/A",
+          spk: order.spk || "No SPK"
+        };
+      });
+      
+      // Sort by priority and then creation date
+      const sortedData = [...mappedData].sort((a, b) => {
+        // First by priority (lower number = higher priority)
+        const priorityA = Number(a.prioritas) || 999;
+        const priorityB = Number(b.prioritas) || 999;
+        
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+        
+        // Then by creation date (newest first)
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      setOrders(sortedData);
+      setFilteredOrders(sortedData);
+      
+      // If we found zero orders, show an error
+      if (sortedData.length === 0) {
+        setError(`No DTF READY orders found (checked ${data.length} orders)`);
+      }
     } catch (error) {
       console.error("Error fetching pending DTF orders:", error);
+      setError("Failed to load pending DTF orders");
       toast.error("Failed to load pending DTF orders");
     } finally {
       setIsLoading(false);
@@ -119,7 +185,9 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
   }
 
   // Get priority badge color
-  function getPriorityColorClass(priority: number) {
+  function getPriorityColorClass(priority?: number) {
+    if (priority === undefined || priority === null) return "bg-gray-500";
+    
     switch (priority) {
       case 1:
         return "bg-red-500";
@@ -137,9 +205,14 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
   }
 
   // Format date as relative time
-  function formatDate(dateString: string) {
+  function formatDate(dateString?: string) {
     if (!dateString) return "N/A";
-    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (e) {
+      console.warn("Invalid date format:", dateString);
+      return "Invalid date";
+    }
   }
 
   return (
@@ -147,7 +220,7 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Pending DTF</CardTitle>
-          <CardDescription>Orders ready for DTF processing</CardDescription>
+          <CardDescription>Orders with "DTF READY" status</CardDescription>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative w-64">
@@ -171,17 +244,22 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
         </div>
       </CardHeader>
       <CardContent>
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-md">
+            {error}
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>SPK</TableHead>
+              <TableHead className="text-center sticky left-0 bg-card">SPK</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Product</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
               <TableHead>Deadline</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right sticky right-0 bg-card">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -190,7 +268,7 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {isLoading
                     ? "Loading pending DTF orders..."
-                    : "No pending DTF orders found"}
+                    : "No orders with 'DTF READY' status found"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -199,31 +277,27 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
                   <TableCell>
                     {order.created_at ? formatDate(order.created_at) : "N/A"}
                   </TableCell>
-                  <TableCell className="font-medium">{order.spk}</TableCell>
-                  <TableCell>{order.customer.name}</TableCell>
+                  <TableCell className="font-medium text-center sticky left-0 bg-card">{order.spk}</TableCell>
+                  <TableCell>{order.customer?.name || order.customer?.nama || "N/A"}</TableCell>
                   <TableCell>{order.produk}</TableCell>
                   <TableCell>{order.status}</TableCell>
                   <TableCell>
                     <Badge className={getPriorityColorClass(order.prioritas)}>
-                      {order.prioritas}
+                      {order.prioritas || "N/A"}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     {order.est_order ? formatDate(order.est_order) : "N/A"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleStartDTF(order)}>
-                          Start DTF Process
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <TableCell className="text-right sticky right-0 bg-card">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleStartDTF(order)}
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Start
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -239,13 +313,14 @@ export function PendingDTFList({ onOrderProcessed }: PendingDTFListProps) {
           {selectedOrder && (
             <DTFStartForm
               order={selectedOrder}
+              open={startDTFDialogOpen}
+              onOpenChange={setStartDTFDialogOpen}
               onSuccess={() => {
                 setStartDTFDialogOpen(false);
                 fetchPendingDTFOrders();
                 if (onOrderProcessed) onOrderProcessed();
                 toast.success("DTF process started successfully");
               }}
-              onCancel={() => setStartDTFDialogOpen(false)}
             />
           )}
         </DialogContent>

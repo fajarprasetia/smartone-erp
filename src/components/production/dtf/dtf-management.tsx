@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PendingDTFList } from "./pending-dtf-list";
-import  DTFInProgressList from "./dtf-in-progress-list";
+import DTFInProgressList from "./dtf-in-progress-list";
 import { Card } from "@/components/ui/card";
 
 export function DTFManagement() {

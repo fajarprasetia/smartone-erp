@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
           notIn: ["DRAFT", "CANCELLED", "COMPLETED"],
         },
         statusm: {
-          notIn: ["JOB DONE"],
+          notIn: ["COMPLETED"],
         },
         produk: {
           contains: "CUTTING",

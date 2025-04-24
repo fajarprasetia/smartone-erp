@@ -66,7 +66,7 @@ interface PaperStock {
   length: string | number | null
   used: string | null
   waste: string | null
-  remaining_length: string | null
+  remaining_length: string
   remainingLength: string | number | null
   addedByUserId: string
   added_by: string
@@ -94,7 +94,7 @@ const addPaperSchema = z.object({
   length: z.string().min(1, { message: "Length is required" }),
   remaining_length: z.string().min(1, { message: "Remaining length is required" }),
   notes: z.string().optional(),
-  created_at: z.date().optional().default(new Date()),
+  created_at: z.date().optional(),
 })
 
 type AddPaperFormValues = z.infer<typeof addPaperSchema>
@@ -174,7 +174,7 @@ export function PaperAvailableTab() {
   };
 
   // Handle edit paper form submission
-  const onEditPaperSubmit = async (data: AddPaperFormValues & { remaining_length: string }) => {
+  const onEditPaperSubmit = async (data: Omit<AddPaperFormValues, 'remaining_length'> & { remaining_length: string }) => {
     if (!selectedStock) return Promise.reject(new Error("No stock selected"));
     
     try {

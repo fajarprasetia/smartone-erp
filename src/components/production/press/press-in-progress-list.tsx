@@ -98,56 +98,24 @@ export function PressInProgressList({ onPressComplete }: PressInProgressListProp
   async function fetchPressInProgressOrders() {
     setLoading(true);
     try {
-      console.log("Fetching orders with PRESS status...");
-      let response;
-      let data;
+      console.log("Fetching press in-progress orders...");
       
-      try {
-        // First try the dedicated status endpoint
-        response = await fetch("/api/orders/status?status=PRESS");
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching orders: ${response.status}`);
-        }
-        
-        data = await response.json();
-        console.log("API Response from status endpoint:", data);
-      } catch (error) {
-        console.warn("Dedicated status endpoint failed, trying fallback:", error);
-        
-        // Fallback to the main orders endpoint
-        response = await fetch("/api/orders?status=PRESS");
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching orders from fallback: ${response.status}`);
-        }
-        
-        data = await response.json();
-        console.log("API Response from fallback endpoint:", data);
+      // Use dedicated API route for press in-progress orders
+      const response = await fetch("/api/production/orders/press-in-progress");
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
       }
       
-      // The new endpoint returns the array directly, but we'll keep the check for robustness
-      let ordersData: Order[] = [];
-      if (Array.isArray(data)) {
-        console.log("Data is an array");
-        ordersData = data;
-      } else if (data && typeof data === 'object' && Array.isArray(data.orders)) {
-        console.log("Data has orders array property");
-        ordersData = data.orders;
-      } else {
-        console.error("Unexpected data format:", data);
-        throw new Error("Received unexpected data format from API");
-      }
+      const data = await response.json();
+      console.log("API Response from press-in-progress endpoint:", data);
       
-      // Filter out "PRINT ONLY" and "CUTTING ONLY" orders
-      ordersData = ordersData.filter(order => {
-        const produk = (order.produk || "").toUpperCase();
-        return produk !== "PRINT ONLY" && produk !== "CUTTING ONLY";
-      });
+      // Set orders directly from the API response - no need to filter
+      const pressOrders = Array.isArray(data) ? data : [];
       
-      console.log("Orders to display:", ordersData);
-      setOrders(ordersData);
-      setFilteredOrders(ordersData);
+      console.log("Press in-progress orders:", pressOrders);
+      setOrders(pressOrders);
+      setFilteredOrders(pressOrders);
       setError(null);
     } catch (err) {
       console.error("Failed to fetch press in progress orders:", err);
@@ -166,22 +134,15 @@ export function PressInProgressList({ onPressComplete }: PressInProgressListProp
     fetchPressInProgressOrders();
   }, []);
 
-  // Filter orders based on search query and exclude PRINT ONLY and CUTTING ONLY
+  // Filter orders based on search query
   useEffect(() => {
     if (!Array.isArray(orders)) return;
     
-    // First filter by product type
-    const filteredByProductType = orders.filter(order => {
-      const produk = (order.produk || "").toUpperCase();
-      return produk !== "PRINT ONLY" && produk !== "CUTTING ONLY";
-    });
-    
-    // Then apply search filter if needed
     if (!searchQuery.trim()) {
-      setFilteredOrders(filteredByProductType);
+      setFilteredOrders(orders);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = filteredByProductType.filter(order => 
+      const filtered = orders.filter(order => 
         order.spk?.toLowerCase().includes(query) ||
         order.customer?.nama?.toLowerCase().includes(query) ||
         order.produk?.toLowerCase().includes(query) ||
@@ -219,7 +180,7 @@ export function PressInProgressList({ onPressComplete }: PressInProgressListProp
       <CardHeader>
         <CardTitle>Press In Progress</CardTitle>
         <CardDescription>
-          Orders that are currently in press process (PRESS status)
+          Orders currently in press process - filtered by status "PRESS"
         </CardDescription>
         {/* Add search bar */}
         <div className="flex flex-col sm:flex-row gap-2 mt-2">
@@ -260,7 +221,7 @@ export function PressInProgressList({ onPressComplete }: PressInProgressListProp
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">SPK</TableHead>
+                  <TableHead className="sticky left-0 bg-muted/50 whitespace-nowrap">SPK</TableHead>
                   <TableHead className="whitespace-nowrap">Customer</TableHead>
                   <TableHead className="whitespace-nowrap">Product</TableHead>
                   <TableHead className="whitespace-nowrap">Priority</TableHead>
@@ -275,15 +236,14 @@ export function PressInProgressList({ onPressComplete }: PressInProgressListProp
                   <TableHead className="whitespace-nowrap">Fabric Used</TableHead>
                   <TableHead className="whitespace-nowrap">Quantity</TableHead>
                   <TableHead className="whitespace-nowrap">Good (ACC)</TableHead>
-                  <TableHead className="whitespace-nowrap">Rejected</TableHead>
                   <TableHead className="whitespace-nowrap">Waste</TableHead>
-                  <TableHead className="whitespace-nowrap">Action</TableHead>
+                  <TableHead className="sticky right-0 bg-muted/90 whitespace-nowrap">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium whitespace-nowrap">{order.spk}</TableCell>
+                    <TableCell className="font-medium sticky left-0 bg-muted/50 whitespace-nowrap">{order.spk}</TableCell>
                     <TableCell className="whitespace-nowrap">{order.customer?.nama || ""}</TableCell>
                     <TableCell className="max-w-[150px] truncate" title={order.produk || order.nama_pesanan || ""}>
                       {order.produk === "PRESS ONLY" ? (
@@ -310,9 +270,8 @@ export function PressInProgressList({ onPressComplete }: PressInProgressListProp
                     <TableCell className="whitespace-nowrap">{order.total_kain || ""}</TableCell>
                     <TableCell className="whitespace-nowrap">{order.prints_qty || ""}</TableCell>
                     <TableCell className="whitespace-nowrap">{order.press_bagus || ""}</TableCell>
-                    <TableCell className="whitespace-nowrap">{order.press_reject || ""}</TableCell>
                     <TableCell className="whitespace-nowrap">{order.press_waste || ""}</TableCell>
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell className="sticky right-0 bg-muted/90 whitespace-nowrap">
                       <Button
                         variant="secondary"
                         size="sm"
@@ -332,8 +291,8 @@ export function PressInProgressList({ onPressComplete }: PressInProgressListProp
       {isFormOpen && selectedOrder && (
         <PressDoneForm
           order={selectedOrder}
-          isOpen={isFormOpen}
-          onClose={handleFormClose}
+          open={isFormOpen}
+          onOpenChange={() => handleFormClose()}
           onSuccess={handlePressCompleteSuccess}
         />
       )}
