@@ -48,6 +48,7 @@ model User {
   paperStocksAdded   PaperStock[]           @relation("UserAddedPaper")
   paperStocksTaken   PaperStock[]           @relation("UserTookPaper")
   paperStocksUpdated PaperStock[]           @relation("UserUpdatedPaper")
+  financialPeriods   FinancialPeriod[]      @relation("UserCreatedPeriods")
 }
 
 model Role {
@@ -308,15 +309,25 @@ model ChartOfAccount {
 }
 
 model FinancialPeriod {
-  id             String         @id @default(cuid())
-  name           String
-  startDate      DateTime
-  endDate        DateTime
-  isClosed       Boolean        @default(false)
-  closedAt       DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id           String         @id @default(cuid())
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  type         String   // ANNUAL, QUARTERLY, MONTHLY, CUSTOM
+  year         Int
+  quarter      Int?     // 1-4
+  month        Int?     // 1-12
+  status       String   // OPEN, CLOSED
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    String
+  user         User          @relation("UserCreatedPeriods", fields: [createdBy], references: [id], onDelete: Cascade)
   journalEntries JournalEntry[]
+
+  @@index([year])
+  @@index([type])
+  @@index([status])
+  @@index([createdBy])
 }
 
 model JournalEntry {

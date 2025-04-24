@@ -104,20 +104,43 @@ export async function GET(req: NextRequest) {
         ...monthFilter
       };
     } else {
-      whereCondition = monthFilter;
+      // When searching the entire database (searchAll = true)
+      // If no search term is provided but searchAll is true, limit to recent orders
+      if (!search) {
+        whereCondition = {
+          ...monthFilter,
+          // Only return the most recent orders to avoid performance issues
+          created_at: {
+            gte: new Date(new Date().setDate(new Date().getDate() - 14)) // last 14 days
+          }
+        };
+      } else {
+        whereCondition = {
+          ...monthFilter
+        };
+      }
     }
 
     // Add search condition if search is provided
     if (search) {
-      whereCondition.OR = [
-        ...(whereCondition.OR || []),
-        { spk: { contains: search, mode: "insensitive" } },
-        { invoice: { contains: search, mode: "insensitive" } },
-        { produk: { contains: search, mode: "insensitive" } },
-        { catatan: { contains: search, mode: "insensitive" } },
-        { customer: { nama: { contains: search, mode: "insensitive" } } },
-        { customer: { telp: { contains: search, mode: "insensitive" } } },
-      ];
+      if (searchAll) {
+        // When searching all records, focus on finding matches by SPK or customer
+        whereCondition.OR = [
+          { spk: { contains: search, mode: "insensitive" } },
+          { customer: { nama: { contains: search, mode: "insensitive" } } },
+        ];
+      } else {
+        // Regular search with more fields
+        whereCondition.OR = [
+          ...(whereCondition.OR || []),
+          { spk: { contains: search, mode: "insensitive" } },
+          { invoice: { contains: search, mode: "insensitive" } },
+          { produk: { contains: search, mode: "insensitive" } },
+          { catatan: { contains: search, mode: "insensitive" } },
+          { customer: { nama: { contains: search, mode: "insensitive" } } },
+          { customer: { telp: { contains: search, mode: "insensitive" } } },
+        ];
+      }
     }
 
     // Add status filter if provided

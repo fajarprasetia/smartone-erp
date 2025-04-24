@@ -257,6 +257,15 @@ export default function BudgetsPage() {
     return newBudgetItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
   };
 
+  // Custom handlers for filter changes
+  const handleYearChange = (value: string) => {
+    setSelectedYear(value === "ALL" ? "" : value);
+  };
+
+  const handleDepartmentChange = (value: string) => {
+    setSelectedDepartment(value === "ALL" ? "" : value);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -264,12 +273,12 @@ export default function BudgetsPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Label>Year:</Label>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <Select value={selectedYear} onValueChange={handleYearChange}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="All Years" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Years</SelectItem>
+                <SelectItem value="ALL">All Years</SelectItem>
                 {years.map((year) => (
                   <SelectItem key={year} value={year.toString()}>
                     {year}
@@ -280,12 +289,12 @@ export default function BudgetsPage() {
           </div>
           <div className="flex items-center gap-2">
             <Label>Department:</Label>
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+            <Select value={selectedDepartment} onValueChange={handleDepartmentChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Departments" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Departments</SelectItem>
+                <SelectItem value="ALL">All Departments</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
@@ -350,7 +359,7 @@ export default function BudgetsPage() {
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="NONE">None</SelectItem>
                       {departments.map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           {dept.name}

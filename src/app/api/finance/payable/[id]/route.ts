@@ -1,323 +1,198 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { db } from "@/lib/db";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Get specific bill
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await auth();
-
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const billId = params.id;
+    const { id } = params;
     
-    // Fetch the bill with its vendor
     const bill = await db.bill.findUnique({
-      where: { id: billId },
+      where: { id },
       include: {
-        vendor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
+        vendor: true,
+        payments: true,
         items: true,
+        transactions: true,
         attachments: true,
-        payments: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
       },
     });
-
+    
     if (!bill) {
-      return NextResponse.json(
-        { error: "Bill not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Bill not found" }, { status: 404 });
     }
-
-    // Transform the data for the frontend
-    const billResponse = {
-      id: bill.id,
-      billNumber: bill.billNumber,
-      vendorId: bill.vendorId,
-      vendorName: bill.vendor.name,
-      description: bill.description,
-      notes: bill.notes || "",
-      issueDate: bill.issueDate.toISOString(),
-      dueDate: bill.dueDate.toISOString(),
-      items: bill.items.map(item => ({
-        id: item.id,
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: Number(item.unitPrice),
-        amount: Number(item.amount),
-      })),
-      attachments: bill.attachments.map(attachment => ({
-        id: attachment.id,
-        fileName: attachment.fileName,
-        fileUrl: attachment.fileUrl,
-        uploadDate: attachment.createdAt.toISOString(),
-      })),
-      totalAmount: Number(bill.totalAmount),
-      paidAmount: Number(bill.paidAmount),
-      status: bill.status,
-      createdAt: bill.createdAt.toISOString(),
-      updatedAt: bill.updatedAt.toISOString(),
-      payments: bill.payments.map(payment => ({
-        id: payment.id,
-        amount: Number(payment.amount),
-        date: payment.createdAt.toISOString(),
-        notes: payment.notes || "",
-      })),
-    };
-
-    return NextResponse.json(billResponse);
+    
+    // Calculate paid amount and remaining amount
+    const paidAmount = bill.payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const remainingAmount = bill.totalAmount - paidAmount;
+    
+    return NextResponse.json({
+      bill: {
+        ...bill,
+        paidAmount,
+        remainingAmount,
+      }
+    });
   } catch (error) {
-    console.error("Error fetching bill details:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch bill details" },
-      { status: 500 }
-    );
+    console.error("Error fetching bill:", error);
+    return NextResponse.json({ 
+      error: "Failed to fetch bill data",
+      message: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 });
   }
 }
 
-// PUT endpoint - update bill by ID
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Update bill
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Get user and check authentication
-    const user = await auth();
-    if (!user) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Get bill ID from params
     const { id } = params;
-    if (!id) {
-      return NextResponse.json(
-        { message: "Bill ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Parse request body
-    const data = await request.json();
-    const {
-      vendorId,
-      description,
-      issueDate,
-      dueDate,
-      items,
-      notes,
-    } = data;
-
-    // Validate required fields
-    if (!vendorId || !description || !issueDate || !dueDate || !items || items.length === 0) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // Check if the bill exists
+    const body = await req.json();
+    
+    // Check if bill exists
     const existingBill = await db.bill.findUnique({
       where: { id },
       include: {
-        items: true,
         payments: true,
       },
     });
-
+    
     if (!existingBill) {
-      return NextResponse.json(
-        { message: "Bill not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Bill not found" }, { status: 404 });
     }
-
-    // Check if bill is paid or partially paid (can't edit in those states)
-    if (existingBill.status === "paid" || existingBill.status === "partially_paid") {
-      return NextResponse.json(
-        { message: "Paid or partially paid bills cannot be edited" },
-        { status: 400 }
-      );
+    
+    // Don't allow updating if bill is already paid
+    if (existingBill.status === "PAID") {
+      return NextResponse.json({ error: "Cannot update a paid bill" }, { status: 400 });
     }
-
-    // Calculate the total amount of the bill
-    const totalAmount = items.reduce(
-      (sum: number, item: any) => sum + Number(item.amount),
-      0
-    );
-
-    // Determine the bill status
-    let status = existingBill.status;
-    if (status === "draft" || status === "pending" || status === "overdue") {
-      // If due date has passed, mark as overdue
-      if (new Date(dueDate) < new Date() && status !== "draft") {
-        status = "overdue";
-      } else if (status !== "draft") {
-        status = "pending";
-      }
-    }
-
-    // Update bill in a transaction to ensure data consistency
-    const updatedBill = await db.$transaction(async (tx) => {
-      // Update the bill
-      const bill = await tx.bill.update({
-        where: { id },
-        data: {
-          vendorId,
-          description,
-          issueDate: new Date(issueDate),
-          dueDate: new Date(dueDate),
-          totalAmount,
-          status,
-          notes: notes || "",
-          updatedAt: new Date(),
-        },
+    
+    // Prepare update data
+    const updateData: any = {};
+    
+    if (body.issueDate) updateData.issueDate = new Date(body.issueDate);
+    if (body.dueDate) updateData.dueDate = new Date(body.dueDate);
+    if (body.description) updateData.description = body.description;
+    if (body.reference) updateData.reference = body.reference;
+    if (body.notes) updateData.notes = body.notes;
+    
+    // If updating the bill's vendor
+    if (body.vendorId) {
+      // Verify vendor exists
+      const vendor = await db.vendor.findUnique({
+        where: { id: body.vendorId },
       });
-
-      // Get existing item IDs for comparison
-      const existingItemIds = existingBill.items.map(item => item.id);
-      const updatedItemIds = items.filter(item => item.id).map(item => item.id);
-
-      // Find items to delete (items that exist in the database but not in the updated list)
-      const itemsToDelete = existingItemIds.filter(id => !updatedItemIds.includes(id));
-      if (itemsToDelete.length > 0) {
-        await tx.billItem.deleteMany({
-          where: {
-            id: {
-              in: itemsToDelete,
-            },
+      
+      if (!vendor) {
+        return NextResponse.json({ error: "Vendor not found" }, { status: 400 });
+      }
+      
+      updateData.vendorId = body.vendorId;
+    }
+    
+    // If updating bill items
+    if (body.items) {
+      // Delete existing items and recreate them
+      await db.billItem.deleteMany({
+        where: { billId: id },
+      });
+      
+      // Calculate new total amount
+      const totalAmount = body.items.reduce((sum: number, item: any) => {
+        return sum + (item.quantity * item.unitPrice);
+      }, 0);
+      
+      updateData.totalAmount = totalAmount;
+      
+      // Create new items
+      await Promise.all(body.items.map((item: any) => {
+        return db.billItem.create({
+          data: {
+            billId: id,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            amount: item.quantity * item.unitPrice,
+            taxRate: item.taxRate || 0,
+            accountId: item.accountId,
           },
         });
-      }
-
-      // Update or create items
-      for (const item of items) {
-        if (item.id && existingItemIds.includes(item.id)) {
-          // Update existing item
-          await tx.billItem.update({
-            where: { id: item.id },
-            data: {
-              description: item.description,
-              quantity: Number(item.quantity),
-              unitPrice: Number(item.unitPrice),
-              amount: Number(item.amount),
-            },
-          });
-        } else {
-          // Create new item
-          await tx.billItem.create({
-            data: {
-              billId: id,
-              description: item.description,
-              quantity: Number(item.quantity),
-              unitPrice: Number(item.unitPrice),
-              amount: Number(item.amount),
-            },
-          });
-        }
-      }
-
-      return bill;
+      }));
+    }
+    
+    // Update the bill
+    const updatedBill = await db.bill.update({
+      where: { id },
+      data: updateData,
+      include: {
+        vendor: true,
+        payments: true,
+        items: true,
+      },
     });
-
+    
     return NextResponse.json({
-      message: "Bill updated successfully",
       bill: updatedBill,
+      message: "Bill updated successfully",
     });
   } catch (error) {
     console.error("Error updating bill:", error);
-    return NextResponse.json(
-      { message: "Error updating bill", error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      error: "Failed to update bill",
+      message: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 });
   }
 }
 
-// DELETE endpoint - cancel a bill
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Delete bill
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Get user and check authentication
-    const user = await auth();
-    if (!user) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Get bill ID from params
     const { id } = params;
-    if (!id) {
-      return NextResponse.json(
-        { message: "Bill ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Check if the bill exists
-    const existingBill = await db.bill.findUnique({
+    
+    // Check if bill exists
+    const bill = await db.bill.findUnique({
       where: { id },
       include: {
         payments: true,
       },
     });
-
-    if (!existingBill) {
-      return NextResponse.json(
-        { message: "Bill not found" },
-        { status: 404 }
-      );
+    
+    if (!bill) {
+      return NextResponse.json({ error: "Bill not found" }, { status: 404 });
     }
-
-    // Check if bill is paid or partially paid (can't cancel in those states)
-    if (existingBill.status === "paid" || existingBill.status === "partially_paid") {
-      return NextResponse.json(
-        { message: "Paid or partially paid bills cannot be cancelled" },
-        { status: 400 }
-      );
+    
+    // Don't allow deletion if bill has payments
+    if (bill.payments.length > 0) {
+      return NextResponse.json({ 
+        error: "Cannot delete a bill with payments",
+        message: "Please delete all payments first or mark the bill as cancelled instead."
+      }, { status: 400 });
     }
-
-    // Mark the bill as cancelled in a transaction
-    const cancelledBill = await db.bill.update({
-      where: { id },
-      data: {
-        status: "cancelled",
-        updatedAt: new Date(),
-      },
+    
+    // Delete related records first
+    await db.billItem.deleteMany({
+      where: { billId: id },
     });
-
+    
+    await db.attachment.deleteMany({
+      where: { billId: id },
+    });
+    
+    // Delete financial transactions related to this bill
+    await db.financialTransaction.deleteMany({
+      where: { billId: id },
+    });
+    
+    // Delete the bill
+    await db.bill.delete({
+      where: { id },
+    });
+    
     return NextResponse.json({
-      message: "Bill cancelled successfully",
-      bill: cancelledBill,
+      message: "Bill deleted successfully",
     });
   } catch (error) {
-    console.error("Error cancelling bill:", error);
-    return NextResponse.json(
-      { message: "Error cancelling bill", error: error.message },
-      { status: 500 }
-    );
+    console.error("Error deleting bill:", error);
+    return NextResponse.json({ 
+      error: "Failed to delete bill",
+      message: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 });
   }
 } 

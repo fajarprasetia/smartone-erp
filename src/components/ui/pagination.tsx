@@ -8,7 +8,9 @@ import { ButtonProps, buttonVariants } from "@/components/ui/button"
 const Pagination = ({
   className,
   ...props
-}: React.ComponentProps<"nav">) => (
+}: React.ComponentProps<"nav"> & {
+  className?: string;
+}) => (
   <nav
     role="navigation"
     aria-label="pagination"
@@ -40,22 +42,30 @@ PaginationItem.displayName = "PaginationItem"
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<ButtonProps, "size"> &
-  React.ComponentProps<typeof Link>
+  isDisabled?: boolean
+  size?: "default" | "sm" | "lg"
+} & Pick<ButtonProps, "variant"> &
+  React.ComponentProps<"a">
 
 const PaginationLink = ({
   className,
   isActive,
-  size = "icon",
+  isDisabled,
+  size = "default",
+  variant = "outline",
   ...props
 }: PaginationLinkProps) => (
-  <Link
+  <a
+    aria-disabled={isDisabled}
     aria-current={isActive ? "page" : undefined}
     className={cn(
       buttonVariants({
-        variant: isActive ? "default" : "outline",
+        variant: isActive ? "default" : variant,
         size,
       }),
+      {
+        "pointer-events-none opacity-50": isDisabled,
+      },
       className
     )}
     {...props}
@@ -69,12 +79,12 @@ const PaginationPrevious = ({
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
     aria-label="Go to previous page"
-    size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    size="sm"
+    className={cn("gap-1", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
-    <span>Previous</span>
+    <span className="sr-only">Previous</span>
   </PaginationLink>
 )
 PaginationPrevious.displayName = "PaginationPrevious"
@@ -85,11 +95,11 @@ const PaginationNext = ({
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
     aria-label="Go to next page"
-    size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    size="sm"
+    className={cn("gap-1", className)}
     {...props}
   >
-    <span>Next</span>
+    <span className="sr-only">Next</span>
     <ChevronRight className="h-4 w-4" />
   </PaginationLink>
 )
@@ -110,6 +120,112 @@ const PaginationEllipsis = ({
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
+// Main pagination component that builds pages based on current page and total pages
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  showEdges?: boolean;
+  siblingCount?: number;
+}
+
+function PaginationWithPages({
+  currentPage,
+  totalPages,
+  onPageChange,
+  showEdges = true,
+  siblingCount = 1,
+}: PaginationProps) {
+  // Generate page numbers
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+
+    // Add first page
+    if (showEdges && leftSiblingIndex > 1) {
+      pageNumbers.push(1);
+      // Add ellipsis if there are pages between first page and left sibling
+      if (leftSiblingIndex > 2) {
+        pageNumbers.push("ellipsis-left");
+      }
+    }
+
+    // Add page numbers between (and including) left and right siblings
+    for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
+      pageNumbers.push(i);
+    }
+
+    // Add last page
+    if (showEdges && rightSiblingIndex < totalPages) {
+      // Add ellipsis if there are pages between right sibling and last page
+      if (rightSiblingIndex < totalPages - 1) {
+        pageNumbers.push("ellipsis-right");
+      }
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
+  };
+
+  const pageNumbers = getPageNumbers();
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onPageChange(Math.max(1, currentPage - 1));
+            }}
+            isDisabled={currentPage === 1}
+          />
+        </PaginationItem>
+
+        {pageNumbers.map((page, index) => {
+          if (page === "ellipsis-left" || page === "ellipsis-right") {
+            return (
+              <PaginationItem key={`ellipsis-${index}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            );
+          }
+
+          return (
+            <PaginationItem key={page}>
+              <PaginationLink
+                href="#"
+                isActive={page === currentPage}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(page as number);
+                }}
+              >
+                {page}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        })}
+
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onPageChange(Math.min(totalPages, currentPage + 1));
+            }}
+            isDisabled={currentPage === totalPages}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
 export {
   Pagination,
   PaginationContent,
@@ -118,4 +234,5 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationWithPages,
 } 

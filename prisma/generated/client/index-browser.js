@@ -353,10 +353,14 @@ exports.Prisma.FinancialPeriodScalarFieldEnum = {
   name: 'name',
   startDate: 'startDate',
   endDate: 'endDate',
-  isClosed: 'isClosed',
-  closedAt: 'closedAt',
+  type: 'type',
+  year: 'year',
+  quarter: 'quarter',
+  month: 'month',
+  status: 'status',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  createdBy: 'createdBy'
 };
 
 exports.Prisma.JournalEntryScalarFieldEnum = {

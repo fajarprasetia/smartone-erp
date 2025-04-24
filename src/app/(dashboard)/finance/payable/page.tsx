@@ -1,644 +1,695 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { 
+  PlusCircle, RefreshCw, Search, FileText, Calculator, 
+  Calendar, Check, Clock, AlertTriangle, X, ArrowUp, ArrowDown, Download, Filter
+} from "lucide-react";
+import { format, isAfter, isBefore, isToday, addDays, parseISO } from "date-fns";
+import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  PlusCircle, Search, FileText, ArrowUpDown, 
-  Loader2, AlertCircle, Calendar, DollarSign, Plus, ArrowDown, ArrowUp, Users, RefreshCw, Upload
-} from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format, isAfter, isBefore, isToday, addDays } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import Link from "next/link";
-import { ColumnDef } from "@tanstack/react-table";
-import { usePathname } from "next/navigation";
-import { PayableFilter, FilterValues } from './components/PayableFilter';
-import { PayableTable } from './components/PayableTable';
-import { BillFormDialog } from "./components/BillFormDialog";
-import { PaymentDialog } from "./components/PaymentDialog";
-import { formatCurrency } from "@/lib/utils";
-import { PageContainer } from "@/components/layout/page-container";
-import { PayableSummaryCards } from "./components/PayableSummaryCards";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PaymentForm } from "@/components/finance/payment-form";
+import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
+  DropdownMenuTrigger, DropdownMenuSeparator 
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { formatCurrency } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { PaginationWithPages } from "@/components/ui/pagination";
+import { PaymentForm } from "./components/PaymentForm";
 
 // Types
-type Bill = {
+export interface Bill {
   id: string;
   billNumber: string;
-  description: string;
   vendorId: string;
   vendorName: string;
   issueDate: string;
   dueDate: string;
-  totalAmount: number;
+  amount: number;
+  status: string;
   paidAmount: number;
-  status: "draft" | "open" | "paid" | "partial" | "cancelled" | "overdue";
-};
-
-type BillsResponse = {
-  bills: Bill[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
-  summary: {
-    totalDue: number;
-    totalOverdue: number;
-    dueSoon: number;
-  };
-};
-
-// Status badge component
-const StatusBadge = ({ status }: { status: Bill["status"] }) => {
-  const statusConfig = {
-    draft: { label: "Draft", variant: "outline" as const },
-    open: { label: "Open", variant: "secondary" as const },
-    paid: { label: "Paid", variant: "success" as const },
-    partial: { label: "Partial", variant: "warning" as const },
-    cancelled: { label: "Cancelled", variant: "destructive" as const },
-    overdue: { label: "Overdue", variant: "destructive" as const },
-  };
-
-  const config = statusConfig[status] || { label: status, variant: "outline" as const };
-
-  return (
-    <Badge variant={config.variant}>
-      {config.label}
-    </Badge>
-  );
-};
+  remainingAmount: number;
+  totalAmount: number;
+  attachmentUrl?: string;
+  description?: string;
+  reference?: string;
+}
 
 export interface PayableSummary {
   totalPayable: number;
-  totalOverdue: number;
+  overdue: number;
+  dueSoon: number;
   overdueCount: number;
-  totalDueSoon: number;
   dueSoonCount: number;
   vendorCount: number;
   newVendorCount: number;
-  percentChange: number;
+}
+
+export interface PayableData {
+  bills: Bill[];
+  summary: PayableSummary;
+  totalCount: number;
+  pageCount: number;
+  vendors?: {
+    id: string;
+    name: string;
+  }[];
 }
 
 export default function AccountsPayablePage() {
+  // Router and navigation
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [activeTab, setActiveTab] = useState("all");
-  const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [startDateOpen, setStartDateOpen] = useState(false);
-  const [endDateOpen, setEndDateOpen] = useState(false);
-  const [vendorFilter, setVendorFilter] = useState("");
-  const [vendors, setVendors] = useState<{ id: string; name: string }[]>([]);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [summary, setSummary] = useState({
-    total: 0,
-    overdue: 0,
-    dueSoon: 0,
-  });
-  const [filters, setFilters] = useState<FilterValues>({
-    search: '',
-    vendorId: '',
-    dueDateStart: undefined,
-    dueDateEnd: undefined,
-  });
-  const [openBillForm, setOpenBillForm] = useState(false);
-  const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
-  const [selectedBill, setSelectedBill] = useState(null);
-  const [summaryData, setSummaryData] = useState<PayableSummary>({
-    totalPayable: 0,
-    totalOverdue: 0,
-    overdueCount: 0,
-    totalDueSoon: 0,
-    dueSoonCount: 0,
-    vendorCount: 0,
-    newVendorCount: 0,
-    percentChange: 0
-  });
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // State
+  const [activeTab, setActiveTab] = useState("overview");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [showBillDetail, setShowBillDetail] = useState(false);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<PayableData | null>(null);
+  
+  // Pagination and filtering
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    vendorId: "",
+    status: "",
+    dateRange: {
+      from: undefined as Date | undefined,
+      to: undefined as Date | undefined,
+    },
+  });
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
+  // Initialize state from URL params
+  useEffect(() => {
+    const page = searchParams.get("page");
+    const search = searchParams.get("search");
+    const vendorId = searchParams.get("vendorId");
+    const status = searchParams.get("status");
+    const fromDate = searchParams.get("fromDate");
+    const toDate = searchParams.get("toDate");
+    const tab = searchParams.get("tab");
 
-  // Format date
-  const formatDate = (dateString: string) => {
+    if (tab && ['overview', 'all', 'unpaid', 'overdue'].includes(tab)) {
+      setActiveTab(tab);
+    }
+    
+    setCurrentPage(page ? parseInt(page) : 1);
+    setSearchQuery(search || "");
+    setFilters({
+      vendorId: vendorId || "",
+      status: status || "",
+      dateRange: {
+        from: fromDate ? parseISO(fromDate) : undefined,
+        to: toDate ? parseISO(toDate) : undefined,
+      },
+    });
+  }, [searchParams]);
+
+  // Fetch data with current filters
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      return format(new Date(dateString), "MMM dd, yyyy");
-    } catch (error) {
-      return "Invalid Date";
-    }
-  };
+      const queryParams = new URLSearchParams();
+      queryParams.append("page", currentPage.toString());
+      queryParams.append("tab", activeTab);
+      if (searchQuery) queryParams.append("search", searchQuery);
+      if (filters.vendorId) queryParams.append("vendorId", filters.vendorId);
+      if (filters.status) queryParams.append("status", filters.status);
+      if (filters.dateRange.from) queryParams.append("fromDate", filters.dateRange.from.toISOString());
+      if (filters.dateRange.to) queryParams.append("toDate", filters.dateRange.to.toISOString());
 
-  // Load vendors
-  useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const response = await fetch("/api/vendors");
-        if (!response.ok) {
-          throw new Error("Failed to fetch vendors");
-        }
-        const data = await response.json();
-        setVendors(data.vendors || []);
-      } catch (error) {
-        console.error("Error fetching vendors:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load vendors",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchVendors();
-  }, [toast]);
-
-  // Load bills with filters
-  useEffect(() => {
-    const fetchBills = async () => {
-      try {
-        setLoading(true);
-
-        // Build query parameters
-        const params = new URLSearchParams();
-        
-        if (search) params.append("search", search);
-        if (vendorFilter) params.append("vendorId", vendorFilter);
-        if (startDate) params.append("dueDateStart", startDate.toISOString());
-        if (endDate) params.append("dueDateEnd", endDate.toISOString());
-        
-        // Set status filter based on active tab or explicit status filter
-        let statusParam = statusFilter;
-        if (activeTab === "open") statusParam = "open";
-        if (activeTab === "overdue") statusParam = "overdue";
-        if (activeTab === "paid") statusParam = "paid";
-        if (statusParam) params.append("status", statusParam);
-        
-        params.append("page", currentPage.toString());
-        params.append("pageSize", pageSize.toString());
-
-        // Fetch bills
-        const response = await fetch(`/api/finance/payable?${params.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch bills");
-        }
-        
-        const data: BillsResponse = await response.json();
-        setBills(data.bills || []);
-        setTotalPages(data.pagination.totalPages);
-        setTotalItems(data.pagination.totalItems);
-        setSummary(data.summary);
-      } catch (error) {
-        console.error("Error fetching bills:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load bills",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBills();
-  }, [
-    search, 
-    vendorFilter, 
-    startDate, 
-    endDate, 
-    statusFilter, 
-    activeTab, 
-    currentPage, 
-    pageSize,
-    toast
-  ]);
-
-  // Reset pagination when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, vendorFilter, startDate, endDate, statusFilter, activeTab]);
-
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setStatusFilter(""); // Reset explicit status filter when changing tabs
-    
-    // Update filters based on tab selection
-    const newFilters = {...filters};
-    
-    // Reset date filters when changing tabs
-    newFilters.dueDateStart = undefined;
-    newFilters.dueDateEnd = undefined;
-    
-    if (value === 'overdue') {
-      const today = new Date();
-      newFilters.dueDateEnd = today;
-    } else if (value === 'upcoming') {
-      const today = new Date();
-      const nextWeek = new Date();
-      nextWeek.setDate(today.getDate() + 7);
-      
-      newFilters.dueDateStart = today;
-      newFilters.dueDateEnd = nextWeek;
-    }
-    
-    setFilters(newFilters);
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setSearch("");
-    setVendorFilter("");
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setStatusFilter("");
-    setCurrentPage(1);
-  };
-
-  // Generate pagination links
-  const generatePaginationLinks = () => {
-    const links = [];
-    const maxDisplayed = 5;
-    const halfMaxDisplayed = Math.floor(maxDisplayed / 2);
-    
-    let startPage = Math.max(1, currentPage - halfMaxDisplayed);
-    let endPage = Math.min(totalPages, startPage + maxDisplayed - 1);
-    
-    if (endPage - startPage + 1 < maxDisplayed) {
-      startPage = Math.max(1, endPage - maxDisplayed + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      links.push(
-        <PaginationItem key={i}>
-          <PaginationLink
-            isActive={i === currentPage}
-            onClick={() => setCurrentPage(i)}
-          >
-            {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-    
-    return links;
-  };
-
-  const handleCreateBill = async (formData: any) => {
-    try {
-      const response = await fetch("/api/finance/payable", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(`/api/finance/payable?${queryParams.toString()}`);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create bill");
+        throw new Error(`Error: ${response.status}`);
       }
-      
-      toast({
-        title: "Success",
-        description: "Bill created successfully",
-      });
-      setIsCreateDialogOpen(false);
-      fetchSummaryData();
-      return true;
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create bill",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
 
-  const handleFilterChange = (newFilters: FilterValues) => {
-    setFilters(newFilters);
-  };
-
-  useEffect(() => {
-    fetchSummaryData();
-  }, [refreshTrigger]);
-
-  const fetchSummaryData = async () => {
-    try {
-      const response = await fetch("/api/finance/payable?page=1&pageSize=1");
-      if (!response.ok) throw new Error("Failed to fetch summary data");
-      
-      const data = await response.json();
-      setSummaryData({
-        totalPayable: data.summary.totalOutstanding,
-        totalOverdue: data.summary.totalOverdue,
-        overdueCount: data.summary.overdueCount,
-        totalDueSoon: data.summary.totalDueSoon,
-        dueSoonCount: data.summary.dueSoonCount,
-        vendorCount: data.summary.vendorCount || 0,
-        newVendorCount: data.summary.newVendorCount || 0,
-        percentChange: data.summary.percentChange || 0
-      });
-    } catch (error) {
-      console.error("Error fetching summary data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load summary data",
-        variant: "destructive"
-      });
+      const responseData = await response.json();
+      setData(responseData);
+    } catch (err) {
+      console.error("Failed to fetch payable data:", err);
+      setError("Failed to load accounts payable data. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBillFormSubmit = async (data, billId = null) => {
-    if (billId) {
-      return handleUpdateBill(data, billId);
-    } else {
-      return handleCreateBill(data);
-    }
+  // Fetch initial data
+  useEffect(() => {
+    fetchData();
+  }, [currentPage, activeTab]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", currentPage.toString());
+    params.set("tab", activeTab);
+    if (searchQuery) params.set("search", searchQuery);
+    if (filters.vendorId) params.set("vendorId", filters.vendorId);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.dateRange.from) params.set("fromDate", filters.dateRange.from.toISOString());
+    if (filters.dateRange.to) params.set("toDate", filters.dateRange.to.toISOString());
+
+    router.push(`${pathname}?${params.toString()}`);
+  }, [currentPage, searchQuery, filters, activeTab, pathname, router, searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
-  const handleEditBill = (bill) => {
+  const handleSearch = () => {
+    setCurrentPage(1); // Reset to first page on search
+    fetchData();
+  };
+
+  const applyFilters = () => {
+    setCurrentPage(1); // Reset to first page when applying filters
+    setIsFilterSheetOpen(false);
+    fetchData();
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      vendorId: "",
+      status: "",
+      dateRange: {
+        from: undefined,
+        to: undefined,
+      },
+    });
+    setCurrentPage(1);
+    fetchData();
+  };
+
+  const handleRefresh = () => {
+    fetchData();
+    toast({
+      title: "Data refreshed",
+      description: "The latest accounts payable data has been loaded.",
+    });
+  };
+
+  const handleCreateBill = () => {
+    router.push("/finance/payable/create");
+  };
+
+  const handleViewBill = (bill: Bill) => {
     setSelectedBill(bill);
-    setOpenBillForm(true);
+    setShowBillDetail(true);
   };
 
-  const handleRecordPayment = (bill) => {
+  const handlePayBill = (bill: Bill) => {
     setSelectedBill(bill);
     setIsPaymentDialogOpen(true);
   };
 
-  const handleRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
-  };
-
-  const handleViewBill = (bill: Bill) => {
-    // Navigate to bill detail page
-    router.push(`/finance/payable/${bill.id}`);
-  };
-
-  const handleDownloadBill = (bill: Bill) => {
-    toast.info(`Preparing PDF for bill ${bill.billNumber}...`);
-    // In a real implementation, you'd call your API to generate and download a PDF
-    setTimeout(() => {
-      toast.success(`Bill ${bill.billNumber} ready for download`);
-    }, 1500);
-  };
-
-  const handleUploadAttachment = (bill: Bill) => {
-    setSelectedBill(bill);
-    setIsUploadDialogOpen(true);
-  };
-
-  const handlePaymentSubmit = async (values: any) => {
-    if (!selectedBill) return;
-    
+  const handleDeleteBill = async (id: string) => {
     try {
-      setIsProcessingPayment(true);
-      
-      // In a real implementation, you'd call your API to record the payment
-      // await fetch('/api/finance/bills/payment', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     billId: selectedBill.id,
-      //     ...values
-      //   })
-      // })
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast.success(`Payment recorded for bill ${selectedBill.billNumber}`);
-      setIsPaymentDialogOpen(false);
-      fetchBills(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to record payment:", error);
-      toast.error("Failed to record payment. Please try again.");
-    } finally {
-      setIsProcessingPayment(false);
+      const response = await fetch(`/api/finance/payable/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      toast({
+        title: "Bill deleted",
+        description: "The bill has been successfully deleted.",
+      });
+      fetchData(); // Refresh data after deletion
+    } catch (err) {
+      console.error("Failed to delete bill:", err);
+      toast({
+        title: "Error",
+        description: "Failed to delete bill. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'PAID':
+        return <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30"><Check className="w-3 h-3 mr-1" /> Paid</Badge>;
+      case 'PARTIAL':
+        return <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-400 hover:bg-blue-500/30"><Clock className="w-3 h-3 mr-1" /> Partial</Badge>;
+      case 'OVERDUE':
+        return <Badge className="bg-red-500/20 text-red-700 dark:text-red-400 hover:bg-red-500/30"><AlertTriangle className="w-3 h-3 mr-1" /> Overdue</Badge>;
+      case 'UNPAID':
+        return <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/30"><Clock className="w-3 h-3 mr-1" /> Unpaid</Badge>;
+      default:
+        return <Badge className="bg-gray-500/20 text-gray-700 dark:text-gray-400 hover:bg-gray-500/30">{status}</Badge>;
+    }
+  };
+
+  const SummaryCards = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Total Payable</CardTitle>
+          <CardDescription>Outstanding balance</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-8 w-full" />
+          ) : (
+            <div className="text-2xl font-bold">{formatCurrency(data?.summary?.totalPayable || 0)}</div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+          <CardDescription>Past due payments</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-8 w-full" />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-red-600">{formatCurrency(data?.summary?.overdue || 0)}</div>
+              <div className="text-xs text-red-600">{data?.summary?.overdueCount || 0} bills overdue</div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Due Soon</CardTitle>
+          <CardDescription>Next 7 days</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-8 w-full" />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-amber-600">{formatCurrency(data?.summary?.dueSoon || 0)}</div>
+              <div className="text-xs text-amber-600">{data?.summary?.dueSoonCount || 0} bills due soon</div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Vendors</CardTitle>
+          <CardDescription>Active suppliers</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-8 w-full" />
+          ) : (
+            <>
+              <div className="text-2xl font-bold">{data?.summary?.vendorCount || 0}</div>
+              <div className="text-xs text-muted-foreground">+{data?.summary?.newVendorCount || 0} new this month</div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Main bills table
+  const BillsTable = () => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Bill #</TableHead>
+            <TableHead>Vendor</TableHead>
+            <TableHead>Issue Date</TableHead>
+            <TableHead>Due Date</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            Array(5).fill(0).map((_, index) => (
+              <TableRow key={`skeleton-${index}`}>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+              </TableRow>
+            ))
+          ) : error ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8 text-red-500">
+                <AlertTriangle className="w-5 h-5 mx-auto mb-2" />
+                {error}
+              </TableCell>
+            </TableRow>
+          ) : data?.bills && data.bills.length > 0 ? (
+            data.bills.map((bill) => (
+              <TableRow 
+                key={bill.id} 
+                className="group cursor-pointer hover:bg-muted/50"
+              >
+                <TableCell onClick={() => handleViewBill(bill)} className="font-medium">{bill.billNumber}</TableCell>
+                <TableCell onClick={() => handleViewBill(bill)}>{bill.vendorName}</TableCell>
+                <TableCell onClick={() => handleViewBill(bill)}>{format(new Date(bill.issueDate), 'dd MMM yyyy')}</TableCell>
+                <TableCell onClick={() => handleViewBill(bill)}>
+                  <div className="flex items-center">
+                    {format(new Date(bill.dueDate), 'dd MMM yyyy')}
+                    {isAfter(new Date(), new Date(bill.dueDate)) && bill.status !== 'PAID' && (
+                      <Badge variant="outline" className="ml-2 text-red-500 border-red-200 text-xs">
+                        Overdue
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell onClick={() => handleViewBill(bill)}>{formatCurrency(bill.totalAmount)}</TableCell>
+                <TableCell onClick={() => handleViewBill(bill)}>{getStatusBadge(bill.status)}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleViewBill(bill)}>
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePayBill(bill)}>
+                        Record Payment
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteBill(bill.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                No bills found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      
+      {data && data.pageCount > 1 && (
+        <div className="flex items-center justify-center py-4 border-t">
+          <PaginationWithPages
+            currentPage={currentPage}
+            totalPages={data.pageCount}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  // Filter sidebar
+  const FilterSidebar = () => (
+    <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" className="ml-auto">
+          <Filter className="h-4 w-4 mr-2" />
+          Filter
+        </Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Filter Bills</SheetTitle>
+          <SheetDescription>
+            Apply filters to narrow down your bill list
+          </SheetDescription>
+        </SheetHeader>
+        
+        <div className="py-6 space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Vendor</label>
+            <Select
+              value={filters.vendorId}
+              onValueChange={(value) => setFilters({...filters, vendorId: value === "ALL" ? "" : value})}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All vendors" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All vendors</SelectItem>
+                {data?.vendors?.map(vendor => (
+                  <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Status</label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) => setFilters({...filters, status: value === "ALL" ? "" : value})}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All statuses</SelectItem>
+                <SelectItem value="UNPAID">Unpaid</SelectItem>
+                <SelectItem value="PAID">Paid</SelectItem>
+                <SelectItem value="PARTIAL">Partially Paid</SelectItem>
+                <SelectItem value="OVERDUE">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Date Range</label>
+            <DatePickerWithRange
+              date={filters.dateRange}
+              setDate={(range: any) => setFilters({...filters, dateRange: range})}
+            />
+          </div>
+        </div>
+        
+        <SheetFooter>
+          <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
+          <Button onClick={applyFilters}>Apply Filters</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+
+  // Bill detail view in a dialog
+  const BillDetailView = () => (
+    <Dialog open={showBillDetail} onOpenChange={setShowBillDetail}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Bill #{selectedBill?.billNumber}</DialogTitle>
+          <DialogDescription>
+            Issued to {selectedBill?.vendorName} on {selectedBill?.issueDate ? format(new Date(selectedBill.issueDate), 'dd MMMM yyyy') : ''}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Bill Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Vendor:</span>
+                <span className="font-medium">{selectedBill?.vendorName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Issue Date:</span>
+                <span>{selectedBill?.issueDate ? format(new Date(selectedBill.issueDate), 'dd MMM yyyy') : ''}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Due Date:</span>
+                <span>{selectedBill?.dueDate ? format(new Date(selectedBill.dueDate), 'dd MMM yyyy') : ''}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Reference:</span>
+                <span>{selectedBill?.reference || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Description:</span>
+                <span className="text-right max-w-[70%]">{selectedBill?.description || 'N/A'}</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Payment Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Amount:</span>
+                <span className="font-medium">{selectedBill ? formatCurrency(selectedBill.totalAmount) : ''}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount Paid:</span>
+                <span className="text-green-600">{selectedBill ? formatCurrency(selectedBill.paidAmount) : ''}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span className="font-medium">Balance Due:</span>
+                <span className="font-bold text-red-600">{selectedBill ? formatCurrency(selectedBill.remainingAmount) : ''}</span>
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-muted-foreground">Status:</span>
+                <span>{selectedBill ? getStatusBadge(selectedBill.status) : ''}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => setShowBillDetail(false)}>
+            Close
+          </Button>
+          <Button 
+            variant="default" 
+            onClick={() => {
+              setShowBillDetail(false);
+              if (selectedBill) handlePayBill(selectedBill);
+            }}
+            disabled={selectedBill?.status === 'PAID'}
+          >
+            Record Payment
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <PageContainer>
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Accounts Payable</h2>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Accounts Payable</h1>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleRefresh}
+            disabled={loading}
           >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button onClick={handleCreateBill}>
+            <PlusCircle className="mr-2 h-4 w-4" />
             Create Bill
-          </button>
+          </Button>
         </div>
       </div>
       
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="all">All Bills</TabsTrigger>
-          <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
-          <TabsTrigger value="overdue">Overdue</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Payable</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {loading ? "Loading..." : formatCurrency(summaryData.totalPayable)}
-                </div>
-                <div className="flex items-center text-xs text-muted-foreground">
-                  {summaryData.percentChange > 0 ? (
-                    <>
-                      <ArrowUp className="mr-1 h-4 w-4 text-rose-500" />
-                      <span className="text-rose-500">+{summaryData.percentChange.toFixed(1)}%</span>
-                    </>
-                  ) : (
-                    <>
-                      <ArrowDown className="mr-1 h-4 w-4 text-emerald-500" />
-                      <span className="text-emerald-500">{Math.abs(summaryData.percentChange).toFixed(1)}%</span>
-                    </>
-                  )}
-                  <span className="ml-1">from last month</span>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {loading ? "Loading..." : formatCurrency(summaryData.totalOverdue)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {loading ? "" : `${summaryData.overdueCount} ${summaryData.overdueCount === 1 ? 'invoice' : 'invoices'}`}
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Due Soon</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {loading ? "Loading..." : formatCurrency(summaryData.totalDueSoon)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {loading ? "" : `${summaryData.dueSoonCount} ${summaryData.dueSoonCount === 1 ? 'invoice' : 'invoices'}`}
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Vendors</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {loading ? "Loading..." : summaryData.vendorCount}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {loading ? "" : `${summaryData.newVendorCount} new this month`}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+      <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="all">All Bills</TabsTrigger>
+            <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
+            <TabsTrigger value="overdue">Overdue</TabsTrigger>
+          </TabsList>
           
-          <div className="grid gap-4 md:grid-cols-1">
-            <Card className="col-span-4">
-              <CardHeader>
-                <CardTitle>Recent Payables</CardTitle>
-                <CardDescription>Recent bills and their status</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PayableTable 
-                  initialTab="overview"
-                  onRefreshData={fetchSummaryData}
-                />
-              </CardContent>
-            </Card>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <div className="flex w-full sm:w-auto gap-2">
+              <Input
+                placeholder="Search bills..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-auto"
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button variant="outline" size="icon" onClick={handleSearch}>
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+            <FilterSidebar />
           </div>
+        </div>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <SummaryCards />
+          <BillsTable />
         </TabsContent>
         
-        <TabsContent value="all" className="space-y-4">
-          <PayableTable 
-            initialTab="all"
-            onRefreshData={fetchSummaryData}
-          />
+        <TabsContent value="all" className="space-y-6">
+          <BillsTable />
         </TabsContent>
         
-        <TabsContent value="unpaid" className="space-y-4">
-          <PayableTable 
-            initialTab="unpaid"
-            onRefreshData={fetchSummaryData}
-          />
+        <TabsContent value="unpaid" className="space-y-6">
+          <BillsTable />
         </TabsContent>
         
-        <TabsContent value="overdue" className="space-y-4">
-          <PayableTable 
-            initialTab="overdue"
-            onRefreshData={fetchSummaryData}
-          />
+        <TabsContent value="overdue" className="space-y-6">
+          <BillsTable />
         </TabsContent>
       </Tabs>
+
+      {/* Bill Detail Dialog */}
+      {selectedBill && <BillDetailView />}
       
-      <BillFormDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSubmit={handleCreateBill}
+      {/* Payment Form */}
+      <PaymentForm
+        isOpen={isPaymentDialogOpen}
+        onClose={() => setIsPaymentDialogOpen(false)}
+        bill={selectedBill}
+        onSuccess={fetchData}
       />
-      
-      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-          </DialogHeader>
-          {selectedBill && (
-            <PaymentForm
-              isProcessing={isProcessingPayment}
-              documentId={selectedBill.id}
-              documentNumber={selectedBill.billNumber}
-              documentTotal={selectedBill.totalAmount}
-              documentBalance={selectedBill.totalAmount - selectedBill.paidAmount}
-              documentType="bill"
-              onSubmit={handlePaymentSubmit}
-              onCancel={() => setIsPaymentDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Attachment</DialogTitle>
-          </DialogHeader>
-          {/* Insert attachment upload form here */}
-          <div className="space-y-4">
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <label htmlFor="attachment" className="text-sm font-medium">
-                Select File
-              </label>
-              <Input id="attachment" type="file" />
-              <p className="text-sm text-muted-foreground">
-                Max size: 5MB. Supported formats: PDF, JPG, PNG
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </PageContainer>
   );
-}
+} 

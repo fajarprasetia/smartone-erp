@@ -1,527 +1,334 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { addDays, format, isAfter, isBefore, parseISO, subDays } from "date-fns";
 
-// Check if bill model exists in the db object
-const billModelExists = () => {
-  return typeof db.bill === 'object' && db.bill !== null;
-};
-
-// Check if vendor model exists in the db object
-const vendorModelExists = () => {
-  return typeof db.vendor === 'object' && db.vendor !== null;
-};
-
-// Mock data for development
-const mockVendors = [
-  { id: "vendor-1", name: "ABC Suppliers", email: "contact@abcsuppliers.com", phone: "123-456-7890" },
-  { id: "vendor-2", name: "XYZ Distribution", email: "info@xyzdist.com", phone: "987-654-3210" },
-  { id: "vendor-3", name: "Global Materials Inc.", email: "sales@globalmaterials.com", phone: "555-123-4567" },
-  { id: "vendor-4", name: "Tech Parts Co.", email: "support@techparts.co", phone: "444-333-2222" },
-  { id: "vendor-5", name: "Industrial Solutions", email: "hello@industrialsolutions.com", phone: "777-888-9999" }
-];
-
-const getRandomDate = (start, end) => {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-};
-
-const today = new Date();
-const thirtyDaysAgo = new Date(today);
-thirtyDaysAgo.setDate(today.getDate() - 30);
-const sixtyDaysAgo = new Date(today);
-sixtyDaysAgo.setDate(today.getDate() - 60);
-const thirtyDaysFromNow = new Date(today);
-thirtyDaysFromNow.setDate(today.getDate() + 30);
-
-// Generate mock bills
-const generateMockBills = (count = 20) => {
-  const statuses = ["PENDING", "PARTIAL", "PAID", "PAID", "PENDING"];
-  const bills = [];
-
-  for (let i = 0; i < count; i++) {
-    const vendor = mockVendors[Math.floor(Math.random() * mockVendors.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const issueDate = getRandomDate(sixtyDaysAgo, today);
-    
-    // Determine due date - some overdue, some upcoming
-    let dueDate;
-    if (Math.random() > 0.7) {
-      // 30% are overdue
-      dueDate = getRandomDate(sixtyDaysAgo, thirtyDaysAgo);
-    } else if (Math.random() > 0.5) {
-      // 20% are due soon
-      dueDate = getRandomDate(today, thirtyDaysFromNow);
-    } else {
-      // 50% are due beyond 30 days
-      dueDate = getRandomDate(thirtyDaysFromNow, new Date(thirtyDaysFromNow.getTime() + 60 * 24 * 60 * 60 * 1000));
-    }
-
-    const totalAmount = Math.floor(Math.random() * 10000) + 500;
-    let paidAmount = 0;
-    
-    // Calculate paid amount based on status
-    if (status === "PAID") {
-      paidAmount = totalAmount;
-    } else if (status === "PARTIAL") {
-      paidAmount = Math.floor(totalAmount * (Math.random() * 0.8 + 0.1)); // 10% to 90% paid
-    }
-
-    bills.push({
-      id: `bill-${i + 1}`,
-      billNumber: `INV-${2023}-${1000 + i}`,
-      vendorId: vendor.id,
-      vendorName: vendor.name,
-      description: `Purchase of materials and supplies - Batch ${1000 + i}`,
-      issueDate: issueDate.toISOString(),
-      dueDate: dueDate.toISOString(),
-      totalAmount,
-      paidAmount,
-      status,
-      reference: `PO-${2023}-${2000 + i}`,
-      vendor
-    });
-  }
-
-  return bills;
-};
-
-const mockBills = generateMockBills(35);
-
-// Get accounts payable data
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
-    // Check if required models exist
-    const modelsExist = billModelExists() && vendorModelExists();
+    const url = new URL(req.url);
     
-    if (!modelsExist) {
-      console.log("Required models not found, returning mock data");
-      
-      const { searchParams } = new URL(req.url);
-      const id = searchParams.get("id"); // Bill ID if requesting a specific bill
-      const vendorId = searchParams.get("vendorId"); // Filter by vendor
-      const status = searchParams.get("status"); // Filter by status
-      const dueDateStart = searchParams.get("dueDateStart");
-      const dueDateEnd = searchParams.get("dueDateEnd");
-      const page = parseInt(searchParams.get("page") || "1");
-      const pageSize = parseInt(searchParams.get("pageSize") || "10");
-      const search = searchParams.get("search") || "";
-      
-      // Return a specific bill if ID is provided
-      if (id) {
-        const bill = mockBills.find(b => b.id === id);
-        
-        if (!bill) {
-          return NextResponse.json({ error: "Bill not found" }, { status: 404 });
-        }
-        
-        // Add payments array for mock bill
-        bill.payments = [];
-        
-        return NextResponse.json(bill);
-      }
-      
-      // Filter the mock bills based on query parameters
-      let filteredBills = [...mockBills];
-      
-      if (vendorId) {
-        filteredBills = filteredBills.filter(bill => bill.vendorId === vendorId);
-      }
-      
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredBills = filteredBills.filter(bill => 
-          bill.billNumber.toLowerCase().includes(searchLower) ||
-          bill.vendorName.toLowerCase().includes(searchLower) ||
-          bill.description.toLowerCase().includes(searchLower) ||
-          bill.reference?.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      if (status) {
-        if (status === "overdue") {
-          filteredBills = filteredBills.filter(bill => 
-            (bill.status === "PENDING" || bill.status === "PARTIAL") &&
-            new Date(bill.dueDate) < today
-          );
-        } else if (status === "open" || status === "OPEN") {
-          filteredBills = filteredBills.filter(bill => bill.status === "PENDING");
-        } else {
-          filteredBills = filteredBills.filter(bill => bill.status === status);
-        }
-      }
-      
-      if (dueDateStart) {
-        const startDate = new Date(dueDateStart);
-        filteredBills = filteredBills.filter(bill => new Date(bill.dueDate) >= startDate);
-      }
-      
-      if (dueDateEnd) {
-        const endDate = new Date(dueDateEnd);
-        filteredBills = filteredBills.filter(bill => new Date(bill.dueDate) <= endDate);
-      }
-      
-      // Calculate summary data
-      const totalDue = filteredBills.reduce((sum, bill) => sum + (bill.totalAmount - bill.paidAmount), 0);
-      
-      const overdueBills = filteredBills.filter(bill => 
-        (bill.status === "PENDING" || bill.status === "PARTIAL") && 
-        new Date(bill.dueDate) < today
-      );
-      const totalOverdue = overdueBills.reduce((sum, bill) => sum + (bill.totalAmount - bill.paidAmount), 0);
-      
-      const dueSoonBills = filteredBills.filter(bill => 
-        (bill.status === "PENDING" || bill.status === "PARTIAL") && 
-        new Date(bill.dueDate) >= today && 
-        new Date(bill.dueDate) <= thirtyDaysFromNow
-      );
-      const dueSoonAmount = dueSoonBills.reduce((sum, bill) => sum + (bill.totalAmount - bill.paidAmount), 0);
-      
-      // Paginate the results
-      const offset = (page - 1) * pageSize;
-      const paginatedBills = filteredBills.slice(offset, offset + pageSize);
-      
-      return NextResponse.json({
-        bills: paginatedBills,
-        pagination: {
-          totalItems: filteredBills.length,
-          totalPages: Math.ceil(filteredBills.length / pageSize),
-          page,
-          pageSize
-        },
-        summary: {
-          totalDue,
-          totalOverdue,
-          dueSoon: dueSoonAmount
-        },
-        topVendors: mockVendors.slice(0, 5).map(vendor => ({
-          id: vendor.id,
-          name: vendor.name,
-          outstandingAmount: Math.floor(Math.random() * 50000),
-          billsCount: Math.floor(Math.random() * 10) + 1
-        }))
-      });
-    }
-
-    // Real database implementation - retained but not used if models don't exist
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id"); // Bill ID if requesting a specific bill
-    const vendorId = searchParams.get("vendorId"); // Filter by vendor
-    const status = searchParams.get("status"); // Filter by status (PENDING, PARTIAL, PAID, OVERDUE)
-    const dueDateStart = searchParams.get("dueDateStart");
-    const dueDateEnd = searchParams.get("dueDateEnd");
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "10");
-    const search = searchParams.get("search") || "";
+    // Get pagination parameters
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "10");
+    const search = url.searchParams.get("search") || "";
+    const vendorId = url.searchParams.get("vendorId");
+    const status = url.searchParams.get("status");
+    const fromDate = url.searchParams.get("fromDate");
+    const toDate = url.searchParams.get("toDate");
+    const tab = url.searchParams.get("tab") || "overview";
     
-    // Return a specific bill if ID is provided
-    if (id) {
-      const bill = await db.bill.findUnique({
-        where: { id },
-        include: {
-          vendor: true,
-          items: true,
-          payments: true
-        }
-      });
-      
-      if (!bill) {
-        return NextResponse.json({ error: "Bill not found" }, { status: 404 });
-      }
-      
-      return NextResponse.json(bill);
-    }
+    // Calculate skip value for pagination
+    const skip = (page - 1) * pageSize;
     
-    // Build filter for bills list
-    const filter: any = {};
+    // Prepare filter conditions
+    let whereCondition: any = {};
     
-    if (vendorId) {
-      filter.vendorId = vendorId;
-    }
-    
+    // Add search condition if search term is provided
     if (search) {
-      filter.OR = [
+      whereCondition.OR = [
         { billNumber: { contains: search, mode: 'insensitive' } },
-        { vendor: { name: { contains: search, mode: 'insensitive' } } },
-        { reference: { contains: search, mode: 'insensitive' } }
+        { description: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } },
+        { vendor: { name: { contains: search, mode: 'insensitive' } } }
       ];
     }
     
+    // Add vendor filter if provided
+    if (vendorId) {
+      whereCondition.vendorId = vendorId;
+    }
+    
+    // Status filter
     if (status) {
-      switch (status) {
-        case "PENDING":
-          filter.status = "PENDING";
-          break;
-        case "PARTIAL":
-          filter.status = "PARTIAL";
-          break;
-        case "PAID":
-          filter.status = "PAID";
-          break;
-        case "OVERDUE":
-          filter.dueDate = { lt: today };
-          filter.status = { in: ["PENDING", "PARTIAL"] };
-          break;
-        default:
-          break;
-      }
+      whereCondition.status = status;
+    } else if (tab === "unpaid") {
+      whereCondition.status = "UNPAID";
+    } else if (tab === "overdue") {
+      whereCondition.OR = [
+        { 
+          AND: [
+            { status: "UNPAID" },
+            { dueDate: { lt: new Date() } }
+          ]
+        },
+        { status: "OVERDUE" }
+      ];
     }
     
-    if (dueDateStart) {
-      filter.dueDate = {
-        ...(filter.dueDate || {}),
-        gte: new Date(dueDateStart)
+    // Date range filter
+    if (fromDate) {
+      whereCondition.issueDate = {
+        ...(whereCondition.issueDate || {}),
+        gte: new Date(fromDate)
       };
     }
     
-    if (dueDateEnd) {
-      filter.dueDate = {
-        ...(filter.dueDate || {}),
-        lte: new Date(dueDateEnd)
+    if (toDate) {
+      whereCondition.issueDate = {
+        ...(whereCondition.issueDate || {}),
+        lte: new Date(toDate)
       };
+    }
+    
+    // Check if db.bill exists before accessing count method
+    if (!db.bill) {
+      console.error("Bill model not found in database client");
+      return NextResponse.json({ 
+        bills: [],
+        summary: {
+          totalPayable: 0,
+          overdue: 0,
+          dueSoon: 0,
+          overdueCount: 0,
+          dueSoonCount: 0,
+          vendorCount: 0,
+          newVendorCount: 0
+        },
+        totalCount: 0,
+        pageCount: 0,
+        vendors: []
+      });
     }
     
     // Get total count for pagination
     let totalCount = 0;
     try {
       totalCount = await db.bill.count({
-        where: filter
+        where: whereCondition
       });
     } catch (countError) {
       console.error("Error counting bills:", countError);
+      // Continue with zero count
     }
     
     // Get bills with pagination
     let bills = [];
     try {
       bills = await db.bill.findMany({
-        where: filter,
-        orderBy: [
-          { dueDate: 'asc' },
-          { createdAt: 'desc' }
-        ],
+        where: whereCondition,
         include: {
           vendor: true,
-          payments: true
+          payments: true,
+          items: true
         },
-        skip: (page - 1) * pageSize,
+        orderBy: {
+          issueDate: 'desc'
+        },
+        skip,
         take: pageSize
       });
     } catch (findError) {
       console.error("Error finding bills:", findError);
+      // Continue with empty bills array
     }
     
-    // Calculate total amounts
-    const totalBillsAmount = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
-    const totalPaidAmount = bills.reduce((sum, bill) => sum + bill.paidAmount, 0);
-    const totalOutstandingAmount = totalBillsAmount - totalPaidAmount;
+    // Prepare data for client
+    const processedBills = bills.map(bill => {
+      // Calculate paid amount and remaining amount
+      const paidAmount = bill.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+      const remainingAmount = bill.totalAmount - paidAmount;
+      
+      // Determine status based on dueDate and payments
+      let status = bill.status;
+      if (status === "UNPAID" && isAfter(new Date(), new Date(bill.dueDate))) {
+        status = "OVERDUE";
+      }
+      
+      return {
+        id: bill.id,
+        billNumber: bill.billNumber,
+        vendorId: bill.vendorId,
+        vendorName: bill.vendor?.name || "Unknown Vendor",
+        issueDate: bill.issueDate.toISOString(),
+        dueDate: bill.dueDate.toISOString(),
+        totalAmount: bill.totalAmount,
+        paidAmount: paidAmount,
+        remainingAmount: remainingAmount,
+        status: paidAmount === 0 ? (status === "UNPAID" ? status : "OVERDUE") : 
+                paidAmount < bill.totalAmount ? "PARTIAL" : "PAID",
+        description: bill.description || "",
+        reference: bill.reference || "",
+        attachmentUrl: bill.attachmentUrl || null
+      };
+    });
     
-    // Calculate bills due within the next 30 days
-    let dueSoonBills = [];
-    try {
-      dueSoonBills = await db.bill.findMany({
-        where: {
-          status: { in: ["PENDING", "PARTIAL"] },
-          dueDate: {
-            gte: today,
-            lte: thirtyDaysFromNow
-          }
-        }
-      });
-    } catch (dueSoonError) {
-      console.error("Error finding due soon bills:", dueSoonError);
-    }
+    // Get summary data
+    const today = new Date();
+    const sevenDaysFromNow = addDays(today, 7);
     
-    const dueSoonAmount = dueSoonBills.reduce((sum, bill) => sum + (bill.totalAmount - bill.paidAmount), 0);
-    
-    // Calculate overdue bills
+    // Initialize with default values
     let overdueBills = [];
+    let dueSoonBills = [];
+    let vendorCount = 0;
+    let newVendorCount = 0;
+    let vendors = [];
+
     try {
+      // Count overdue bills
       overdueBills = await db.bill.findMany({
         where: {
-          status: { in: ["PENDING", "PARTIAL"] },
-          dueDate: { lt: today }
-        }
-      });
-    } catch (overdueError) {
-      console.error("Error finding overdue bills:", overdueError);
-    }
-    
-    const overdueAmount = overdueBills.reduce((sum, bill) => sum + (bill.totalAmount - bill.paidAmount), 0);
-    
-    // Get top vendors by outstanding amount
-    let vendors = [];
-    try {
-      vendors = await db.vendor.findMany({
-        where: {
-          bills: {
-            some: {
-              status: { in: ["PENDING", "PARTIAL"] }
-            }
-          }
+          AND: [
+            { status: "UNPAID" },
+            { dueDate: { lt: today } }
+          ]
         },
         include: {
-          bills: {
-            where: {
-              status: { in: ["PENDING", "PARTIAL"] }
-            }
-          }
-        },
-        take: 5
-      });
-    } catch (vendorsError) {
-      console.error("Error finding top vendors:", vendorsError);
-    }
-    
-    const topVendors = vendors.map(vendor => {
-      const outstandingAmount = vendor.bills.reduce((sum, bill) => sum + (bill.totalAmount - bill.paidAmount), 0);
-      return {
-        id: vendor.id,
-        name: vendor.name,
-        outstandingAmount,
-        billsCount: vendor.bills.length
-      };
-    }).sort((a, b) => b.outstandingAmount - a.outstandingAmount);
-    
-    // Create age analysis (current, 1-30 days, 31-60 days, 61-90 days, 90+ days)
-    const ageAnalysis = {
-      current: 0,
-      "1-30": 0,
-      "31-60": 0,
-      "61-90": 0,
-      "90+": 0
-    };
-    
-    let allOutstandingBills = [];
-    try {
-      allOutstandingBills = await db.bill.findMany({
-        where: {
-          status: { in: ["PENDING", "PARTIAL"] }
+          payments: true
         }
       });
-    } catch (outstandingError) {
-      console.error("Error finding outstanding bills:", outstandingError);
+      
+      // Count bills due in the next 7 days
+      dueSoonBills = await db.bill.findMany({
+        where: {
+          AND: [
+            { status: "UNPAID" },
+            { dueDate: { gte: today, lte: sevenDaysFromNow } }
+          ]
+        },
+        include: {
+          payments: true
+        }
+      });
+      
+      // Get vendor counts
+      vendorCount = await db.vendor.count({
+        where: {
+          status: "ACTIVE"
+        }
+      });
+      
+      // Get new vendors in the last 30 days
+      const thirtyDaysAgo = subDays(today, 30);
+      newVendorCount = await db.vendor.count({
+        where: {
+          status: "ACTIVE",
+          createdAt: {
+            gte: thirtyDaysAgo
+          }
+        }
+      });
+      
+      // Get all vendors for filtering
+      vendors = await db.vendor.findMany({
+        where: { status: "ACTIVE" },
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' }
+      });
+    } catch (summaryError) {
+      console.error("Error getting summary data:", summaryError);
+      // Continue with default values
     }
     
-    allOutstandingBills.forEach(bill => {
-      const daysOverdue = bill.dueDate < today ? 
-        Math.floor((today.getTime() - bill.dueDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-      
-      const outstandingAmount = bill.totalAmount - bill.paidAmount;
-      
-      if (daysOverdue === 0) {
-        ageAnalysis.current += outstandingAmount;
-      } else if (daysOverdue <= 30) {
-        ageAnalysis["1-30"] += outstandingAmount;
-      } else if (daysOverdue <= 60) {
-        ageAnalysis["31-60"] += outstandingAmount;
-      } else if (daysOverdue <= 90) {
-        ageAnalysis["61-90"] += outstandingAmount;
-      } else {
-        ageAnalysis["90+"] += outstandingAmount;
-      }
-    });
+    // Calculate total outstanding, overdue, and due soon amounts
+    const totalPayable = processedBills.reduce((sum, bill) => {
+      return sum + (bill.status !== "PAID" ? bill.remainingAmount : 0);
+    }, 0);
     
-    return NextResponse.json({
-      bills,
-      pagination: {
-        totalItems: totalCount,
-        totalPages: Math.ceil(totalCount / pageSize),
-        page: page,
-        pageSize: pageSize
-      },
+    const overdueAmount = overdueBills.reduce((sum, bill) => {
+      const paidAmount = bill.payments?.reduce((pSum, payment) => pSum + payment.amount, 0) || 0;
+      return sum + (bill.totalAmount - paidAmount);
+    }, 0);
+    
+    const dueSoonAmount = dueSoonBills.reduce((sum, bill) => {
+      const paidAmount = bill.payments?.reduce((pSum, payment) => pSum + payment.amount, 0) || 0;
+      return sum + (bill.totalAmount - paidAmount);
+    }, 0);
+    
+    // Prepare response
+    const response = {
+      bills: processedBills,
       summary: {
-        totalDue: totalBillsAmount,
-        totalOverdue: overdueAmount,
-        dueSoon: dueSoonAmount
+        totalPayable,
+        overdue: overdueAmount,
+        dueSoon: dueSoonAmount,
+        overdueCount: overdueBills.length,
+        dueSoonCount: dueSoonBills.length,
+        vendorCount,
+        newVendorCount
       },
-      topVendors,
-      ageAnalysis
-    });
+      totalCount,
+      pageCount: Math.ceil(totalCount / pageSize) || 1,
+      vendors
+    };
+    
+    return NextResponse.json(response);
   } catch (error) {
-    console.error("Error in payable API:", error);
-    
-    // Return mock data on error
-    return NextResponse.json({
-      bills: mockBills.slice(0, 10),
-      pagination: {
-        totalItems: mockBills.length,
-        totalPages: Math.ceil(mockBills.length / 10),
-        page: 1,
-        pageSize: 10
-      },
+    console.error("Error fetching payable data:", error);
+    // Return a default response structure to avoid client-side errors
+    return NextResponse.json({ 
+      bills: [],
       summary: {
-        totalDue: 75000,
-        totalOverdue: 25000,
-        dueSoon: 15000
+        totalPayable: 0,
+        overdue: 0,
+        dueSoon: 0,
+        overdueCount: 0,
+        dueSoonCount: 0,
+        vendorCount: 0,
+        newVendorCount: 0
       },
-      topVendors: mockVendors.slice(0, 5).map(vendor => ({
-        id: vendor.id,
-        name: vendor.name,
-        outstandingAmount: Math.floor(Math.random() * 50000),
-        billsCount: Math.floor(Math.random() * 10) + 1
-      }))
-    });
+      totalCount: 0,
+      pageCount: 1,
+      vendors: [],
+      error: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
   }
 }
 
-// Create a new bill
-export async function POST(req: Request) {
+// Create a bill
+export async function POST(req: NextRequest) {
   try {
-    if (!billModelExists() || !vendorModelExists()) {
-      // Return mock success for development
-      const body = await req.json();
-      
-      return NextResponse.json({
-        id: `bill-${Date.now()}`,
-        billNumber: `INV-${Math.floor(Math.random() * 10000)}`,
-        ...body,
-        createdAt: new Date().toISOString(),
-        message: "Mock bill created (using mock data)"
-      }, { status: 201 });
-    }
-    
     const body = await req.json();
-    const { 
-      vendorId, 
-      billNumber, 
-      issueDate, 
-      dueDate, 
-      description, 
-      reference,
-      items = [],
-      notes
-    } = body;
     
-    // Validate required fields
-    if (!vendorId || !issueDate || !dueDate) {
-      return NextResponse.json({ 
-        error: "Vendor, issue date, and due date are required" 
-      }, { status: 400 });
+    // Validate the request body
+    if (!body.vendorId || !body.issueDate || !body.dueDate || !body.items || body.items.length === 0) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
     
-    // Calculate total amount from items
-    const totalAmount = items.reduce((sum, item) => {
+    // Generate bill number (you might want to implement a more sophisticated logic)
+    const date = new Date();
+    const yearMonth = format(date, "yyMM");
+    const latestBill = await db.bill.findFirst({
+      where: {
+        billNumber: {
+          startsWith: `BILL-${yearMonth}`
+        }
+      },
+      orderBy: {
+        billNumber: 'desc'
+      }
+    });
+    
+    let billNumber;
+    if (latestBill) {
+      const lastNumber = parseInt(latestBill.billNumber.split('-')[2]);
+      billNumber = `BILL-${yearMonth}-${(lastNumber + 1).toString().padStart(4, '0')}`;
+    } else {
+      billNumber = `BILL-${yearMonth}-0001`;
+    }
+    
+    // Calculate total amount
+    const totalAmount = body.items.reduce((sum: number, item: any) => {
       return sum + (item.quantity * item.unitPrice);
     }, 0);
     
-    // Create bill
+    // Create bill with items
     const bill = await db.bill.create({
       data: {
-        vendorId,
-        billNumber: billNumber || `BILL-${Date.now()}`,
-        issueDate: new Date(issueDate),
-        dueDate: new Date(dueDate),
-        description,
-        reference,
+        billNumber,
+        vendorId: body.vendorId,
+        issueDate: new Date(body.issueDate),
+        dueDate: new Date(body.dueDate),
+        status: "UNPAID",
+        notes: body.notes,
+        description: body.description,
+        reference: body.reference,
         totalAmount,
-        notes,
-        status: "PENDING",
-        paidAmount: 0,
         items: {
-          create: items.map(item => ({
+          create: body.items.map((item: any) => ({
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             amount: item.quantity * item.unitPrice,
+            taxRate: item.taxRate || 0,
             accountId: item.accountId
           }))
         }
@@ -532,104 +339,12 @@ export async function POST(req: Request) {
       }
     });
     
-    return NextResponse.json(bill, { status: 201 });
+    return NextResponse.json(bill);
   } catch (error) {
     console.error("Error creating bill:", error);
-    
-    // Return mock success
-    return NextResponse.json({
-      id: `bill-${Date.now()}`,
-      billNumber: `INV-${Math.floor(Math.random() * 10000)}`,
-      createdAt: new Date().toISOString(),
-      message: "Mock bill created (real creation failed)"
-    }, { status: 201 });
+    return NextResponse.json({ 
+      error: "Failed to create bill",
+      message: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 });
   }
-}
-
-// Process a bill payment
-export async function PUT(req: Request) {
-  try {
-    const { id, paymentAmount, paymentDate, paymentMethod, paymentReference, notes } = await req.json();
-    
-    if (!id || !paymentAmount || !paymentDate || !paymentMethod) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-    
-    const bill = await db.bill.findUnique({
-      where: { id },
-      include: { vendor: true }
-    });
-    
-    if (!bill) {
-      return NextResponse.json({ error: "Bill not found" }, { status: 404 });
-    }
-    
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
-      return NextResponse.json({ error: "Invalid payment amount" }, { status: 400 });
-    }
-    
-    return await db.$transaction(async (tx) => {
-      // Create payment record
-      const payment = await tx.payment.create({
-        data: {
-          billId: id,
-          amount,
-          paymentDate: new Date(paymentDate),
-          paymentMethod,
-          paymentReference,
-          notes
-        }
-      });
-      
-      // Create transaction record
-      await tx.financialTransaction.create({
-        data: {
-          type: "PAYMENT",
-          amount,
-          description: `Payment for bill #${bill.billNumber}`,
-          category: "ACCOUNTS_PAYABLE",
-          date: new Date(paymentDate),
-          billId: id
-        }
-      });
-      
-      // Update bill paid amount and status
-      const newPaidAmount = bill.paidAmount + amount;
-      let newStatus: string;
-      
-      if (Math.abs(newPaidAmount - bill.totalAmount) < 0.01) { // Allow for small floating point differences
-        newStatus = "PAID";
-      } else if (newPaidAmount > 0) {
-        newStatus = "PARTIAL";
-      } else {
-        newStatus = "PENDING";
-      }
-      
-      await tx.bill.update({
-        where: { id },
-        data: {
-          paidAmount: newPaidAmount,
-          status: newStatus
-        }
-      });
-      
-      // Return the updated bill with payments
-      const updatedBill = await tx.bill.findUnique({
-        where: { id },
-        include: {
-          vendor: true,
-          payments: true
-        }
-      });
-      
-      return NextResponse.json(updatedBill);
-    });
-  } catch (error) {
-    console.error("Error processing payment:", error);
-    return NextResponse.json(
-      { error: "Failed to process payment", message: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
-  }
-}
+} 

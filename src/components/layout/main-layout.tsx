@@ -45,17 +45,26 @@ export function MainLayout({ children }: MainLayoutProps) {
                 SmartOne ERP
               </h1>
             )}
-            {/* Desktop Sidebar Collapse Button */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-full hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
-            >
-              {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-            </button>
           </div>
           <MainNav isCollapsed={sidebarCollapsed} />
         </div>
       </aside>
+
+      {/* Desktop Sidebar Collapse Button - Repositioned to overlap sidebar and header */}
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className={cn(
+          "absolute p-2 rounded-full glass-effect shadow-md border border-white/30 dark:border-white/10 z-50",
+          "transition-all duration-300 ease-in-out",
+          "hidden lg:flex items-center justify-center",
+          sidebarCollapsed 
+            ? "left-14" 
+            : "left-[15.5rem]",
+          "top-4"
+        )}
+      >
+        {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+      </button>
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">

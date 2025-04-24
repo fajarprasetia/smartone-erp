@@ -4298,6 +4298,7 @@ export namespace Prisma {
     paperStocksAdded: number
     paperStocksTaken: number
     paperStocksUpdated: number
+    financialPeriods: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4333,6 +4334,7 @@ export namespace Prisma {
     paperStocksAdded?: boolean | UserCountOutputTypeCountPaperStocksAddedArgs
     paperStocksTaken?: boolean | UserCountOutputTypeCountPaperStocksTakenArgs
     paperStocksUpdated?: boolean | UserCountOutputTypeCountPaperStocksUpdatedArgs
+    financialPeriods?: boolean | UserCountOutputTypeCountFinancialPeriodsArgs
   }
 
   // Custom InputTypes
@@ -4568,6 +4570,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountPaperStocksUpdatedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PaperStockWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountFinancialPeriodsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FinancialPeriodWhereInput
   }
 
 
@@ -5477,6 +5486,7 @@ export namespace Prisma {
     paperStocksAdded?: boolean | User$paperStocksAddedArgs<ExtArgs>
     paperStocksTaken?: boolean | User$paperStocksTakenArgs<ExtArgs>
     paperStocksUpdated?: boolean | User$paperStocksUpdatedArgs<ExtArgs>
+    financialPeriods?: boolean | User$financialPeriodsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -5544,6 +5554,7 @@ export namespace Prisma {
     paperStocksAdded?: boolean | User$paperStocksAddedArgs<ExtArgs>
     paperStocksTaken?: boolean | User$paperStocksTakenArgs<ExtArgs>
     paperStocksUpdated?: boolean | User$paperStocksUpdatedArgs<ExtArgs>
+    financialPeriods?: boolean | User$financialPeriodsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5589,6 +5600,7 @@ export namespace Prisma {
       paperStocksAdded: Prisma.$PaperStockPayload<ExtArgs>[]
       paperStocksTaken: Prisma.$PaperStockPayload<ExtArgs>[]
       paperStocksUpdated: Prisma.$PaperStockPayload<ExtArgs>[]
+      financialPeriods: Prisma.$FinancialPeriodPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6024,6 +6036,7 @@ export namespace Prisma {
     paperStocksAdded<T extends User$paperStocksAddedArgs<ExtArgs> = {}>(args?: Subset<T, User$paperStocksAddedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     paperStocksTaken<T extends User$paperStocksTakenArgs<ExtArgs> = {}>(args?: Subset<T, User$paperStocksTakenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     paperStocksUpdated<T extends User$paperStocksUpdatedArgs<ExtArgs> = {}>(args?: Subset<T, User$paperStocksUpdatedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaperStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    financialPeriods<T extends User$financialPeriodsArgs<ExtArgs> = {}>(args?: Subset<T, User$financialPeriodsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FinancialPeriodPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7220,6 +7233,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PaperStockScalarFieldEnum | PaperStockScalarFieldEnum[]
+  }
+
+  /**
+   * User.financialPeriods
+   */
+  export type User$financialPeriodsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinancialPeriod
+     */
+    select?: FinancialPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FinancialPeriod
+     */
+    omit?: FinancialPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinancialPeriodInclude<ExtArgs> | null
+    where?: FinancialPeriodWhereInput
+    orderBy?: FinancialPeriodOrderByWithRelationInput | FinancialPeriodOrderByWithRelationInput[]
+    cursor?: FinancialPeriodWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FinancialPeriodScalarFieldEnum | FinancialPeriodScalarFieldEnum[]
   }
 
   /**
@@ -28951,8 +28988,22 @@ export namespace Prisma {
 
   export type AggregateFinancialPeriod = {
     _count: FinancialPeriodCountAggregateOutputType | null
+    _avg: FinancialPeriodAvgAggregateOutputType | null
+    _sum: FinancialPeriodSumAggregateOutputType | null
     _min: FinancialPeriodMinAggregateOutputType | null
     _max: FinancialPeriodMaxAggregateOutputType | null
+  }
+
+  export type FinancialPeriodAvgAggregateOutputType = {
+    year: number | null
+    quarter: number | null
+    month: number | null
+  }
+
+  export type FinancialPeriodSumAggregateOutputType = {
+    year: number | null
+    quarter: number | null
+    month: number | null
   }
 
   export type FinancialPeriodMinAggregateOutputType = {
@@ -28960,10 +29011,14 @@ export namespace Prisma {
     name: string | null
     startDate: Date | null
     endDate: Date | null
-    isClosed: boolean | null
-    closedAt: Date | null
+    type: string | null
+    year: number | null
+    quarter: number | null
+    month: number | null
+    status: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    createdBy: string | null
   }
 
   export type FinancialPeriodMaxAggregateOutputType = {
@@ -28971,10 +29026,14 @@ export namespace Prisma {
     name: string | null
     startDate: Date | null
     endDate: Date | null
-    isClosed: boolean | null
-    closedAt: Date | null
+    type: string | null
+    year: number | null
+    quarter: number | null
+    month: number | null
+    status: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    createdBy: string | null
   }
 
   export type FinancialPeriodCountAggregateOutputType = {
@@ -28982,23 +29041,43 @@ export namespace Prisma {
     name: number
     startDate: number
     endDate: number
-    isClosed: number
-    closedAt: number
+    type: number
+    year: number
+    quarter: number
+    month: number
+    status: number
     createdAt: number
     updatedAt: number
+    createdBy: number
     _all: number
   }
 
+
+  export type FinancialPeriodAvgAggregateInputType = {
+    year?: true
+    quarter?: true
+    month?: true
+  }
+
+  export type FinancialPeriodSumAggregateInputType = {
+    year?: true
+    quarter?: true
+    month?: true
+  }
 
   export type FinancialPeriodMinAggregateInputType = {
     id?: true
     name?: true
     startDate?: true
     endDate?: true
-    isClosed?: true
-    closedAt?: true
+    type?: true
+    year?: true
+    quarter?: true
+    month?: true
+    status?: true
     createdAt?: true
     updatedAt?: true
+    createdBy?: true
   }
 
   export type FinancialPeriodMaxAggregateInputType = {
@@ -29006,10 +29085,14 @@ export namespace Prisma {
     name?: true
     startDate?: true
     endDate?: true
-    isClosed?: true
-    closedAt?: true
+    type?: true
+    year?: true
+    quarter?: true
+    month?: true
+    status?: true
     createdAt?: true
     updatedAt?: true
+    createdBy?: true
   }
 
   export type FinancialPeriodCountAggregateInputType = {
@@ -29017,10 +29100,14 @@ export namespace Prisma {
     name?: true
     startDate?: true
     endDate?: true
-    isClosed?: true
-    closedAt?: true
+    type?: true
+    year?: true
+    quarter?: true
+    month?: true
+    status?: true
     createdAt?: true
     updatedAt?: true
+    createdBy?: true
     _all?: true
   }
 
@@ -29062,6 +29149,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: FinancialPeriodAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: FinancialPeriodSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: FinancialPeriodMinAggregateInputType
@@ -29092,6 +29191,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: FinancialPeriodCountAggregateInputType | true
+    _avg?: FinancialPeriodAvgAggregateInputType
+    _sum?: FinancialPeriodSumAggregateInputType
     _min?: FinancialPeriodMinAggregateInputType
     _max?: FinancialPeriodMaxAggregateInputType
   }
@@ -29101,11 +29202,17 @@ export namespace Prisma {
     name: string
     startDate: Date
     endDate: Date
-    isClosed: boolean
-    closedAt: Date | null
+    type: string
+    year: number
+    quarter: number | null
+    month: number | null
+    status: string
     createdAt: Date
     updatedAt: Date
+    createdBy: string
     _count: FinancialPeriodCountAggregateOutputType | null
+    _avg: FinancialPeriodAvgAggregateOutputType | null
+    _sum: FinancialPeriodSumAggregateOutputType | null
     _min: FinancialPeriodMinAggregateOutputType | null
     _max: FinancialPeriodMaxAggregateOutputType | null
   }
@@ -29129,10 +29236,15 @@ export namespace Prisma {
     name?: boolean
     startDate?: boolean
     endDate?: boolean
-    isClosed?: boolean
-    closedAt?: boolean
+    type?: boolean
+    year?: boolean
+    quarter?: boolean
+    month?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    createdBy?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
     journalEntries?: boolean | FinancialPeriod$journalEntriesArgs<ExtArgs>
     _count?: boolean | FinancialPeriodCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["financialPeriod"]>
@@ -29142,10 +29254,15 @@ export namespace Prisma {
     name?: boolean
     startDate?: boolean
     endDate?: boolean
-    isClosed?: boolean
-    closedAt?: boolean
+    type?: boolean
+    year?: boolean
+    quarter?: boolean
+    month?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    createdBy?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["financialPeriod"]>
 
   export type FinancialPeriodSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -29153,10 +29270,15 @@ export namespace Prisma {
     name?: boolean
     startDate?: boolean
     endDate?: boolean
-    isClosed?: boolean
-    closedAt?: boolean
+    type?: boolean
+    year?: boolean
+    quarter?: boolean
+    month?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    createdBy?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["financialPeriod"]>
 
   export type FinancialPeriodSelectScalar = {
@@ -29164,23 +29286,33 @@ export namespace Prisma {
     name?: boolean
     startDate?: boolean
     endDate?: boolean
-    isClosed?: boolean
-    closedAt?: boolean
+    type?: boolean
+    year?: boolean
+    quarter?: boolean
+    month?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    createdBy?: boolean
   }
 
-  export type FinancialPeriodOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "startDate" | "endDate" | "isClosed" | "closedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["financialPeriod"]>
+  export type FinancialPeriodOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "startDate" | "endDate" | "type" | "year" | "quarter" | "month" | "status" | "createdAt" | "updatedAt" | "createdBy", ExtArgs["result"]["financialPeriod"]>
   export type FinancialPeriodInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
     journalEntries?: boolean | FinancialPeriod$journalEntriesArgs<ExtArgs>
     _count?: boolean | FinancialPeriodCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type FinancialPeriodIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type FinancialPeriodIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type FinancialPeriodIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type FinancialPeriodIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
 
   export type $FinancialPeriodPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "FinancialPeriod"
     objects: {
+      user: Prisma.$UserPayload<ExtArgs>
       journalEntries: Prisma.$JournalEntryPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -29188,10 +29320,14 @@ export namespace Prisma {
       name: string
       startDate: Date
       endDate: Date
-      isClosed: boolean
-      closedAt: Date | null
+      type: string
+      year: number
+      quarter: number | null
+      month: number | null
+      status: string
       createdAt: Date
       updatedAt: Date
+      createdBy: string
     }, ExtArgs["result"]["financialPeriod"]>
     composites: {}
   }
@@ -29586,6 +29722,7 @@ export namespace Prisma {
    */
   export interface Prisma__FinancialPeriodClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     journalEntries<T extends FinancialPeriod$journalEntriesArgs<ExtArgs> = {}>(args?: Subset<T, FinancialPeriod$journalEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JournalEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -29620,10 +29757,14 @@ export namespace Prisma {
     readonly name: FieldRef<"FinancialPeriod", 'String'>
     readonly startDate: FieldRef<"FinancialPeriod", 'DateTime'>
     readonly endDate: FieldRef<"FinancialPeriod", 'DateTime'>
-    readonly isClosed: FieldRef<"FinancialPeriod", 'Boolean'>
-    readonly closedAt: FieldRef<"FinancialPeriod", 'DateTime'>
+    readonly type: FieldRef<"FinancialPeriod", 'String'>
+    readonly year: FieldRef<"FinancialPeriod", 'Int'>
+    readonly quarter: FieldRef<"FinancialPeriod", 'Int'>
+    readonly month: FieldRef<"FinancialPeriod", 'Int'>
+    readonly status: FieldRef<"FinancialPeriod", 'String'>
     readonly createdAt: FieldRef<"FinancialPeriod", 'DateTime'>
     readonly updatedAt: FieldRef<"FinancialPeriod", 'DateTime'>
+    readonly createdBy: FieldRef<"FinancialPeriod", 'String'>
   }
     
 
@@ -29873,6 +30014,10 @@ export namespace Prisma {
      */
     data: FinancialPeriodCreateManyInput | FinancialPeriodCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinancialPeriodIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -29943,6 +30088,10 @@ export namespace Prisma {
      * Limit how many FinancialPeriods to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinancialPeriodIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -53122,10 +53271,14 @@ export namespace Prisma {
     name: 'name',
     startDate: 'startDate',
     endDate: 'endDate',
-    isClosed: 'isClosed',
-    closedAt: 'closedAt',
+    type: 'type',
+    year: 'year',
+    quarter: 'quarter',
+    month: 'month',
+    status: 'status',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    createdBy: 'createdBy'
   };
 
   export type FinancialPeriodScalarFieldEnum = (typeof FinancialPeriodScalarFieldEnum)[keyof typeof FinancialPeriodScalarFieldEnum]
@@ -53761,6 +53914,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockListRelationFilter
     paperStocksTaken?: PaperStockListRelationFilter
     paperStocksUpdated?: PaperStockListRelationFilter
+    financialPeriods?: FinancialPeriodListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -53803,6 +53957,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockOrderByRelationAggregateInput
     paperStocksTaken?: PaperStockOrderByRelationAggregateInput
     paperStocksUpdated?: PaperStockOrderByRelationAggregateInput
+    financialPeriods?: FinancialPeriodOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -53848,6 +54003,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockListRelationFilter
     paperStocksTaken?: PaperStockListRelationFilter
     paperStocksUpdated?: PaperStockListRelationFilter
+    financialPeriods?: FinancialPeriodListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -55335,10 +55491,15 @@ export namespace Prisma {
     name?: StringFilter<"FinancialPeriod"> | string
     startDate?: DateTimeFilter<"FinancialPeriod"> | Date | string
     endDate?: DateTimeFilter<"FinancialPeriod"> | Date | string
-    isClosed?: BoolFilter<"FinancialPeriod"> | boolean
-    closedAt?: DateTimeNullableFilter<"FinancialPeriod"> | Date | string | null
+    type?: StringFilter<"FinancialPeriod"> | string
+    year?: IntFilter<"FinancialPeriod"> | number
+    quarter?: IntNullableFilter<"FinancialPeriod"> | number | null
+    month?: IntNullableFilter<"FinancialPeriod"> | number | null
+    status?: StringFilter<"FinancialPeriod"> | string
     createdAt?: DateTimeFilter<"FinancialPeriod"> | Date | string
     updatedAt?: DateTimeFilter<"FinancialPeriod"> | Date | string
+    createdBy?: StringFilter<"FinancialPeriod"> | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     journalEntries?: JournalEntryListRelationFilter
   }
 
@@ -55347,10 +55508,15 @@ export namespace Prisma {
     name?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
-    isClosed?: SortOrder
-    closedAt?: SortOrderInput | SortOrder
+    type?: SortOrder
+    year?: SortOrder
+    quarter?: SortOrderInput | SortOrder
+    month?: SortOrderInput | SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    createdBy?: SortOrder
+    user?: UserOrderByWithRelationInput
     journalEntries?: JournalEntryOrderByRelationAggregateInput
   }
 
@@ -55362,10 +55528,15 @@ export namespace Prisma {
     name?: StringFilter<"FinancialPeriod"> | string
     startDate?: DateTimeFilter<"FinancialPeriod"> | Date | string
     endDate?: DateTimeFilter<"FinancialPeriod"> | Date | string
-    isClosed?: BoolFilter<"FinancialPeriod"> | boolean
-    closedAt?: DateTimeNullableFilter<"FinancialPeriod"> | Date | string | null
+    type?: StringFilter<"FinancialPeriod"> | string
+    year?: IntFilter<"FinancialPeriod"> | number
+    quarter?: IntNullableFilter<"FinancialPeriod"> | number | null
+    month?: IntNullableFilter<"FinancialPeriod"> | number | null
+    status?: StringFilter<"FinancialPeriod"> | string
     createdAt?: DateTimeFilter<"FinancialPeriod"> | Date | string
     updatedAt?: DateTimeFilter<"FinancialPeriod"> | Date | string
+    createdBy?: StringFilter<"FinancialPeriod"> | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     journalEntries?: JournalEntryListRelationFilter
   }, "id">
 
@@ -55374,13 +55545,19 @@ export namespace Prisma {
     name?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
-    isClosed?: SortOrder
-    closedAt?: SortOrderInput | SortOrder
+    type?: SortOrder
+    year?: SortOrder
+    quarter?: SortOrderInput | SortOrder
+    month?: SortOrderInput | SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    createdBy?: SortOrder
     _count?: FinancialPeriodCountOrderByAggregateInput
+    _avg?: FinancialPeriodAvgOrderByAggregateInput
     _max?: FinancialPeriodMaxOrderByAggregateInput
     _min?: FinancialPeriodMinOrderByAggregateInput
+    _sum?: FinancialPeriodSumOrderByAggregateInput
   }
 
   export type FinancialPeriodScalarWhereWithAggregatesInput = {
@@ -55391,10 +55568,14 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"FinancialPeriod"> | string
     startDate?: DateTimeWithAggregatesFilter<"FinancialPeriod"> | Date | string
     endDate?: DateTimeWithAggregatesFilter<"FinancialPeriod"> | Date | string
-    isClosed?: BoolWithAggregatesFilter<"FinancialPeriod"> | boolean
-    closedAt?: DateTimeNullableWithAggregatesFilter<"FinancialPeriod"> | Date | string | null
+    type?: StringWithAggregatesFilter<"FinancialPeriod"> | string
+    year?: IntWithAggregatesFilter<"FinancialPeriod"> | number
+    quarter?: IntNullableWithAggregatesFilter<"FinancialPeriod"> | number | null
+    month?: IntNullableWithAggregatesFilter<"FinancialPeriod"> | number | null
+    status?: StringWithAggregatesFilter<"FinancialPeriod"> | string
     createdAt?: DateTimeWithAggregatesFilter<"FinancialPeriod"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"FinancialPeriod"> | Date | string
+    createdBy?: StringWithAggregatesFilter<"FinancialPeriod"> | string
   }
 
   export type JournalEntryWhereInput = {
@@ -57756,6 +57937,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -57797,6 +57979,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -57838,6 +58021,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -57879,6 +58063,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -59525,10 +59710,14 @@ export namespace Prisma {
     name: string
     startDate: Date | string
     endDate: Date | string
-    isClosed?: boolean
-    closedAt?: Date | string | null
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutFinancialPeriodsInput
     journalEntries?: JournalEntryCreateNestedManyWithoutPeriodInput
   }
 
@@ -59537,10 +59726,14 @@ export namespace Prisma {
     name: string
     startDate: Date | string
     endDate: Date | string
-    isClosed?: boolean
-    closedAt?: Date | string | null
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    createdBy: string
     journalEntries?: JournalEntryUncheckedCreateNestedManyWithoutPeriodInput
   }
 
@@ -59549,10 +59742,14 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    isClosed?: BoolFieldUpdateOperationsInput | boolean
-    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutFinancialPeriodsNestedInput
     journalEntries?: JournalEntryUpdateManyWithoutPeriodNestedInput
   }
 
@@ -59561,10 +59758,14 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    isClosed?: BoolFieldUpdateOperationsInput | boolean
-    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: StringFieldUpdateOperationsInput | string
     journalEntries?: JournalEntryUncheckedUpdateManyWithoutPeriodNestedInput
   }
 
@@ -59573,10 +59774,14 @@ export namespace Prisma {
     name: string
     startDate: Date | string
     endDate: Date | string
-    isClosed?: boolean
-    closedAt?: Date | string | null
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    createdBy: string
   }
 
   export type FinancialPeriodUpdateManyMutationInput = {
@@ -59584,8 +59789,11 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    isClosed?: BoolFieldUpdateOperationsInput | boolean
-    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -59595,10 +59803,14 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    isClosed?: BoolFieldUpdateOperationsInput | boolean
-    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: StringFieldUpdateOperationsInput | string
   }
 
   export type JournalEntryCreateInput = {
@@ -62391,6 +62603,12 @@ export namespace Prisma {
     none?: PaperStockWhereInput
   }
 
+  export type FinancialPeriodListRelationFilter = {
+    every?: FinancialPeriodWhereInput
+    some?: FinancialPeriodWhereInput
+    none?: FinancialPeriodWhereInput
+  }
+
   export type FinancialTransactionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -62440,6 +62658,10 @@ export namespace Prisma {
   }
 
   export type PaperStockOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type FinancialPeriodOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -63684,6 +63906,22 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
   export type JournalEntryListRelationFilter = {
     every?: JournalEntryWhereInput
     some?: JournalEntryWhereInput
@@ -63699,10 +63937,20 @@ export namespace Prisma {
     name?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
-    isClosed?: SortOrder
-    closedAt?: SortOrder
+    type?: SortOrder
+    year?: SortOrder
+    quarter?: SortOrder
+    month?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    createdBy?: SortOrder
+  }
+
+  export type FinancialPeriodAvgOrderByAggregateInput = {
+    year?: SortOrder
+    quarter?: SortOrder
+    month?: SortOrder
   }
 
   export type FinancialPeriodMaxOrderByAggregateInput = {
@@ -63710,10 +63958,14 @@ export namespace Prisma {
     name?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
-    isClosed?: SortOrder
-    closedAt?: SortOrder
+    type?: SortOrder
+    year?: SortOrder
+    quarter?: SortOrder
+    month?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    createdBy?: SortOrder
   }
 
   export type FinancialPeriodMinOrderByAggregateInput = {
@@ -63721,10 +63973,36 @@ export namespace Prisma {
     name?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
-    isClosed?: SortOrder
-    closedAt?: SortOrder
+    type?: SortOrder
+    year?: SortOrder
+    quarter?: SortOrder
+    month?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    createdBy?: SortOrder
+  }
+
+  export type FinancialPeriodSumOrderByAggregateInput = {
+    year?: SortOrder
+    quarter?: SortOrder
+    month?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type FinancialPeriodScalarRelationFilter = {
@@ -63830,17 +64108,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type ProdukNullableScalarRelationFilter = {
@@ -64338,30 +64605,9 @@ export namespace Prisma {
     _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
   export type OrderScalarRelationFilter = {
     is?: OrderWhereInput
     isNot?: OrderWhereInput
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type OrderLogCountOrderByAggregateInput = {
@@ -65346,6 +65592,13 @@ export namespace Prisma {
     connect?: PaperStockWhereUniqueInput | PaperStockWhereUniqueInput[]
   }
 
+  export type FinancialPeriodCreateNestedManyWithoutUserInput = {
+    create?: XOR<FinancialPeriodCreateWithoutUserInput, FinancialPeriodUncheckedCreateWithoutUserInput> | FinancialPeriodCreateWithoutUserInput[] | FinancialPeriodUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinancialPeriodCreateOrConnectWithoutUserInput | FinancialPeriodCreateOrConnectWithoutUserInput[]
+    createMany?: FinancialPeriodCreateManyUserInputEnvelope
+    connect?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+  }
+
   export type FinancialTransactionUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<FinancialTransactionCreateWithoutUserInput, FinancialTransactionUncheckedCreateWithoutUserInput> | FinancialTransactionCreateWithoutUserInput[] | FinancialTransactionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: FinancialTransactionCreateOrConnectWithoutUserInput | FinancialTransactionCreateOrConnectWithoutUserInput[]
@@ -65568,6 +65821,13 @@ export namespace Prisma {
     connectOrCreate?: PaperStockCreateOrConnectWithoutUpdatedByUserInput | PaperStockCreateOrConnectWithoutUpdatedByUserInput[]
     createMany?: PaperStockCreateManyUpdatedByUserInputEnvelope
     connect?: PaperStockWhereUniqueInput | PaperStockWhereUniqueInput[]
+  }
+
+  export type FinancialPeriodUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<FinancialPeriodCreateWithoutUserInput, FinancialPeriodUncheckedCreateWithoutUserInput> | FinancialPeriodCreateWithoutUserInput[] | FinancialPeriodUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinancialPeriodCreateOrConnectWithoutUserInput | FinancialPeriodCreateOrConnectWithoutUserInput[]
+    createMany?: FinancialPeriodCreateManyUserInputEnvelope
+    connect?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -66034,6 +66294,20 @@ export namespace Prisma {
     deleteMany?: PaperStockScalarWhereInput | PaperStockScalarWhereInput[]
   }
 
+  export type FinancialPeriodUpdateManyWithoutUserNestedInput = {
+    create?: XOR<FinancialPeriodCreateWithoutUserInput, FinancialPeriodUncheckedCreateWithoutUserInput> | FinancialPeriodCreateWithoutUserInput[] | FinancialPeriodUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinancialPeriodCreateOrConnectWithoutUserInput | FinancialPeriodCreateOrConnectWithoutUserInput[]
+    upsert?: FinancialPeriodUpsertWithWhereUniqueWithoutUserInput | FinancialPeriodUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: FinancialPeriodCreateManyUserInputEnvelope
+    set?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    disconnect?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    delete?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    connect?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    update?: FinancialPeriodUpdateWithWhereUniqueWithoutUserInput | FinancialPeriodUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: FinancialPeriodUpdateManyWithWhereWithoutUserInput | FinancialPeriodUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: FinancialPeriodScalarWhereInput | FinancialPeriodScalarWhereInput[]
+  }
+
   export type FinancialTransactionUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<FinancialTransactionCreateWithoutUserInput, FinancialTransactionUncheckedCreateWithoutUserInput> | FinancialTransactionCreateWithoutUserInput[] | FinancialTransactionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: FinancialTransactionCreateOrConnectWithoutUserInput | FinancialTransactionCreateOrConnectWithoutUserInput[]
@@ -66480,6 +66754,20 @@ export namespace Prisma {
     update?: PaperStockUpdateWithWhereUniqueWithoutUpdatedByUserInput | PaperStockUpdateWithWhereUniqueWithoutUpdatedByUserInput[]
     updateMany?: PaperStockUpdateManyWithWhereWithoutUpdatedByUserInput | PaperStockUpdateManyWithWhereWithoutUpdatedByUserInput[]
     deleteMany?: PaperStockScalarWhereInput | PaperStockScalarWhereInput[]
+  }
+
+  export type FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<FinancialPeriodCreateWithoutUserInput, FinancialPeriodUncheckedCreateWithoutUserInput> | FinancialPeriodCreateWithoutUserInput[] | FinancialPeriodUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinancialPeriodCreateOrConnectWithoutUserInput | FinancialPeriodCreateOrConnectWithoutUserInput[]
+    upsert?: FinancialPeriodUpsertWithWhereUniqueWithoutUserInput | FinancialPeriodUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: FinancialPeriodCreateManyUserInputEnvelope
+    set?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    disconnect?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    delete?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    connect?: FinancialPeriodWhereUniqueInput | FinancialPeriodWhereUniqueInput[]
+    update?: FinancialPeriodUpdateWithWhereUniqueWithoutUserInput | FinancialPeriodUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: FinancialPeriodUpdateManyWithWhereWithoutUserInput | FinancialPeriodUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: FinancialPeriodScalarWhereInput | FinancialPeriodScalarWhereInput[]
   }
 
   export type UserCreateNestedManyWithoutRoleInput = {
@@ -67462,6 +67750,12 @@ export namespace Prisma {
     deleteMany?: JournalEntryItemScalarWhereInput | JournalEntryItemScalarWhereInput[]
   }
 
+  export type UserCreateNestedOneWithoutFinancialPeriodsInput = {
+    create?: XOR<UserCreateWithoutFinancialPeriodsInput, UserUncheckedCreateWithoutFinancialPeriodsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFinancialPeriodsInput
+    connect?: UserWhereUniqueInput
+  }
+
   export type JournalEntryCreateNestedManyWithoutPeriodInput = {
     create?: XOR<JournalEntryCreateWithoutPeriodInput, JournalEntryUncheckedCreateWithoutPeriodInput> | JournalEntryCreateWithoutPeriodInput[] | JournalEntryUncheckedCreateWithoutPeriodInput[]
     connectOrCreate?: JournalEntryCreateOrConnectWithoutPeriodInput | JournalEntryCreateOrConnectWithoutPeriodInput[]
@@ -67474,6 +67768,22 @@ export namespace Prisma {
     connectOrCreate?: JournalEntryCreateOrConnectWithoutPeriodInput | JournalEntryCreateOrConnectWithoutPeriodInput[]
     createMany?: JournalEntryCreateManyPeriodInputEnvelope
     connect?: JournalEntryWhereUniqueInput | JournalEntryWhereUniqueInput[]
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type UserUpdateOneRequiredWithoutFinancialPeriodsNestedInput = {
+    create?: XOR<UserCreateWithoutFinancialPeriodsInput, UserUncheckedCreateWithoutFinancialPeriodsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFinancialPeriodsInput
+    upsert?: UserUpsertWithoutFinancialPeriodsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFinancialPeriodsInput, UserUpdateWithoutFinancialPeriodsInput>, UserUncheckedUpdateWithoutFinancialPeriodsInput>
   }
 
   export type JournalEntryUpdateManyWithoutPeriodNestedInput = {
@@ -67703,14 +68013,6 @@ export namespace Prisma {
   }
 
   export type NullableFloatFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
     decrement?: number
@@ -69090,22 +69392,6 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
-  }
-
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -69120,6 +69406,22 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumInventoryAvailabilityFilter<$PrismaModel = never> = {
@@ -73044,6 +73346,46 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type FinancialPeriodCreateWithoutUserInput = {
+    id?: string
+    name: string
+    startDate: Date | string
+    endDate: Date | string
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    journalEntries?: JournalEntryCreateNestedManyWithoutPeriodInput
+  }
+
+  export type FinancialPeriodUncheckedCreateWithoutUserInput = {
+    id?: string
+    name: string
+    startDate: Date | string
+    endDate: Date | string
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    journalEntries?: JournalEntryUncheckedCreateNestedManyWithoutPeriodInput
+  }
+
+  export type FinancialPeriodCreateOrConnectWithoutUserInput = {
+    where: FinancialPeriodWhereUniqueInput
+    create: XOR<FinancialPeriodCreateWithoutUserInput, FinancialPeriodUncheckedCreateWithoutUserInput>
+  }
+
+  export type FinancialPeriodCreateManyUserInputEnvelope = {
+    data: FinancialPeriodCreateManyUserInput | FinancialPeriodCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type FinancialTransactionUpsertWithWhereUniqueWithoutUserInput = {
     where: FinancialTransactionWhereUniqueInput
     update: XOR<FinancialTransactionUpdateWithoutUserInput, FinancialTransactionUncheckedUpdateWithoutUserInput>
@@ -73964,6 +74306,40 @@ export namespace Prisma {
     data: XOR<PaperStockUpdateManyMutationInput, PaperStockUncheckedUpdateManyWithoutUpdatedByUserInput>
   }
 
+  export type FinancialPeriodUpsertWithWhereUniqueWithoutUserInput = {
+    where: FinancialPeriodWhereUniqueInput
+    update: XOR<FinancialPeriodUpdateWithoutUserInput, FinancialPeriodUncheckedUpdateWithoutUserInput>
+    create: XOR<FinancialPeriodCreateWithoutUserInput, FinancialPeriodUncheckedCreateWithoutUserInput>
+  }
+
+  export type FinancialPeriodUpdateWithWhereUniqueWithoutUserInput = {
+    where: FinancialPeriodWhereUniqueInput
+    data: XOR<FinancialPeriodUpdateWithoutUserInput, FinancialPeriodUncheckedUpdateWithoutUserInput>
+  }
+
+  export type FinancialPeriodUpdateManyWithWhereWithoutUserInput = {
+    where: FinancialPeriodScalarWhereInput
+    data: XOR<FinancialPeriodUpdateManyMutationInput, FinancialPeriodUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type FinancialPeriodScalarWhereInput = {
+    AND?: FinancialPeriodScalarWhereInput | FinancialPeriodScalarWhereInput[]
+    OR?: FinancialPeriodScalarWhereInput[]
+    NOT?: FinancialPeriodScalarWhereInput | FinancialPeriodScalarWhereInput[]
+    id?: StringFilter<"FinancialPeriod"> | string
+    name?: StringFilter<"FinancialPeriod"> | string
+    startDate?: DateTimeFilter<"FinancialPeriod"> | Date | string
+    endDate?: DateTimeFilter<"FinancialPeriod"> | Date | string
+    type?: StringFilter<"FinancialPeriod"> | string
+    year?: IntFilter<"FinancialPeriod"> | number
+    quarter?: IntNullableFilter<"FinancialPeriod"> | number | null
+    month?: IntNullableFilter<"FinancialPeriod"> | number | null
+    status?: StringFilter<"FinancialPeriod"> | string
+    createdAt?: DateTimeFilter<"FinancialPeriod"> | Date | string
+    updatedAt?: DateTimeFilter<"FinancialPeriod"> | Date | string
+    createdBy?: StringFilter<"FinancialPeriod"> | string
+  }
+
   export type UserCreateWithoutRoleInput = {
     id?: string
     name: string
@@ -74002,6 +74378,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRoleInput = {
@@ -74042,6 +74419,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRoleInput = {
@@ -75729,6 +76107,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTransactionsInput = {
@@ -75769,6 +76148,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTransactionsInput = {
@@ -76246,6 +76626,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTransactionsInput = {
@@ -76286,6 +76667,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type BillCreateWithoutVendorInput = {
@@ -77906,6 +78288,93 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"JournalEntryItem"> | Date | string
   }
 
+  export type UserCreateWithoutFinancialPeriodsInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    isActive?: boolean
+    transactions?: FinancialTransactionCreateNestedManyWithoutUserInput
+    otherConsumables?: OtherConsumableCreateNestedManyWithoutUserInput
+    role: RoleCreateNestedOneWithoutUsersInput
+    inkLogs?: InkLogCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserUncheckedCreateWithoutFinancialPeriodsInput = {
+    id?: string
+    name: string
+    email: string
+    password: string
+    roleId: string
+    isActive?: boolean
+    transactions?: FinancialTransactionUncheckedCreateNestedManyWithoutUserInput
+    otherConsumables?: OtherConsumableUncheckedCreateNestedManyWithoutUserInput
+    inkLogs?: InkLogUncheckedCreateNestedManyWithoutUserInput
+    inkApprovals?: InkRequestUncheckedCreateNestedManyWithoutApproverInput
+    inkRejections?: InkRequestUncheckedCreateNestedManyWithoutRejecterInput
+    inkRequests?: InkRequestUncheckedCreateNestedManyWithoutRequesterInput
+    inkStocksAdded?: InkStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    inkStocksTaken?: InkStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    inkStocksUpdated?: InkStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    orderLogs?: OrderLogUncheckedCreateNestedManyWithoutUserInput
+    ordersCutting?: OrderUncheckedCreateNestedManyWithoutCuttingInput
+    ordersDesigned?: OrderUncheckedCreateNestedManyWithoutDesignerInput
+    ordersDTF?: OrderUncheckedCreateNestedManyWithoutDtfInput
+    ordersManaged?: OrderUncheckedCreateNestedManyWithoutManagerInput
+    ordersOperated?: OrderUncheckedCreateNestedManyWithoutOperatorInput
+    ordersHandled?: OrderUncheckedCreateNestedManyWithoutPenyerahanInput
+    ordersPress?: OrderUncheckedCreateNestedManyWithoutPressInput
+    ordersPrint?: OrderUncheckedCreateNestedManyWithoutPrintInput
+    ordersCreated?: OrderUncheckedCreateNestedManyWithoutUserInput
+    othersItemsTaken?: OthersItemUncheckedCreateNestedManyWithoutTaken_by_userInput
+    othersItemsAdded?: OthersItemUncheckedCreateNestedManyWithoutUserInput
+    othersLogs?: OthersLogUncheckedCreateNestedManyWithoutUserInput
+    othersApprovals?: OthersRequestUncheckedCreateNestedManyWithoutApproverInput
+    othersRejections?: OthersRequestUncheckedCreateNestedManyWithoutRejectorInput
+    othersRequests?: OthersRequestUncheckedCreateNestedManyWithoutUserInput
+    paperLogs?: PaperLogUncheckedCreateNestedManyWithoutUserInput
+    paperApprovals?: PaperRequestUncheckedCreateNestedManyWithoutApproverInput
+    paperRejections?: PaperRequestUncheckedCreateNestedManyWithoutRejecterInput
+    paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
+    paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
+    paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+  }
+
+  export type UserCreateOrConnectWithoutFinancialPeriodsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutFinancialPeriodsInput, UserUncheckedCreateWithoutFinancialPeriodsInput>
+  }
+
   export type JournalEntryCreateWithoutPeriodInput = {
     id?: string
     entryNumber: string
@@ -77938,6 +78407,99 @@ export namespace Prisma {
   export type JournalEntryCreateManyPeriodInputEnvelope = {
     data: JournalEntryCreateManyPeriodInput | JournalEntryCreateManyPeriodInput[]
     skipDuplicates?: boolean
+  }
+
+  export type UserUpsertWithoutFinancialPeriodsInput = {
+    update: XOR<UserUpdateWithoutFinancialPeriodsInput, UserUncheckedUpdateWithoutFinancialPeriodsInput>
+    create: XOR<UserCreateWithoutFinancialPeriodsInput, UserUncheckedCreateWithoutFinancialPeriodsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutFinancialPeriodsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutFinancialPeriodsInput, UserUncheckedUpdateWithoutFinancialPeriodsInput>
+  }
+
+  export type UserUpdateWithoutFinancialPeriodsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    transactions?: FinancialTransactionUpdateManyWithoutUserNestedInput
+    otherConsumables?: OtherConsumableUpdateManyWithoutUserNestedInput
+    role?: RoleUpdateOneRequiredWithoutUsersNestedInput
+    inkLogs?: InkLogUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUpdateManyWithoutUserNestedInput
+    ordersCutting?: OrderUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUpdateManyWithoutUserNestedInput
+    paperLogs?: PaperLogUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutFinancialPeriodsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    roleId?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    transactions?: FinancialTransactionUncheckedUpdateManyWithoutUserNestedInput
+    otherConsumables?: OtherConsumableUncheckedUpdateManyWithoutUserNestedInput
+    inkLogs?: InkLogUncheckedUpdateManyWithoutUserNestedInput
+    inkApprovals?: InkRequestUncheckedUpdateManyWithoutApproverNestedInput
+    inkRejections?: InkRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    inkRequests?: InkRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    inkStocksAdded?: InkStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    inkStocksTaken?: InkStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    inkStocksUpdated?: InkStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    orderLogs?: OrderLogUncheckedUpdateManyWithoutUserNestedInput
+    ordersCutting?: OrderUncheckedUpdateManyWithoutCuttingNestedInput
+    ordersDesigned?: OrderUncheckedUpdateManyWithoutDesignerNestedInput
+    ordersDTF?: OrderUncheckedUpdateManyWithoutDtfNestedInput
+    ordersManaged?: OrderUncheckedUpdateManyWithoutManagerNestedInput
+    ordersOperated?: OrderUncheckedUpdateManyWithoutOperatorNestedInput
+    ordersHandled?: OrderUncheckedUpdateManyWithoutPenyerahanNestedInput
+    ordersPress?: OrderUncheckedUpdateManyWithoutPressNestedInput
+    ordersPrint?: OrderUncheckedUpdateManyWithoutPrintNestedInput
+    ordersCreated?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    othersItemsTaken?: OthersItemUncheckedUpdateManyWithoutTaken_by_userNestedInput
+    othersItemsAdded?: OthersItemUncheckedUpdateManyWithoutUserNestedInput
+    othersLogs?: OthersLogUncheckedUpdateManyWithoutUserNestedInput
+    othersApprovals?: OthersRequestUncheckedUpdateManyWithoutApproverNestedInput
+    othersRejections?: OthersRequestUncheckedUpdateManyWithoutRejectorNestedInput
+    othersRequests?: OthersRequestUncheckedUpdateManyWithoutUserNestedInput
+    paperLogs?: PaperLogUncheckedUpdateManyWithoutUserNestedInput
+    paperApprovals?: PaperRequestUncheckedUpdateManyWithoutApproverNestedInput
+    paperRejections?: PaperRequestUncheckedUpdateManyWithoutRejecterNestedInput
+    paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
+    paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
   }
 
   export type JournalEntryUpsertWithWhereUniqueWithoutPeriodInput = {
@@ -77976,10 +78538,14 @@ export namespace Prisma {
     name: string
     startDate: Date | string
     endDate: Date | string
-    isClosed?: boolean
-    closedAt?: Date | string | null
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutFinancialPeriodsInput
   }
 
   export type FinancialPeriodUncheckedCreateWithoutJournalEntriesInput = {
@@ -77987,10 +78553,14 @@ export namespace Prisma {
     name: string
     startDate: Date | string
     endDate: Date | string
-    isClosed?: boolean
-    closedAt?: Date | string | null
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    createdBy: string
   }
 
   export type FinancialPeriodCreateOrConnectWithoutJournalEntriesInput = {
@@ -78044,10 +78614,14 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    isClosed?: BoolFieldUpdateOperationsInput | boolean
-    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutFinancialPeriodsNestedInput
   }
 
   export type FinancialPeriodUncheckedUpdateWithoutJournalEntriesInput = {
@@ -78055,10 +78629,14 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     startDate?: DateTimeFieldUpdateOperationsInput | Date | string
     endDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    isClosed?: BoolFieldUpdateOperationsInput | boolean
-    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: StringFieldUpdateOperationsInput | string
   }
 
   export type JournalEntryItemUpsertWithWhereUniqueWithoutJournalEntryInput = {
@@ -78409,6 +78987,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersCuttingInput = {
@@ -78449,6 +79028,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersCuttingInput = {
@@ -78494,6 +79074,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersDesignedInput = {
@@ -78534,6 +79115,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersDesignedInput = {
@@ -78579,6 +79161,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersDTFInput = {
@@ -78619,6 +79202,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersDTFInput = {
@@ -78682,6 +79266,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersManagedInput = {
@@ -78722,6 +79307,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersManagedInput = {
@@ -78767,6 +79353,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersOperatedInput = {
@@ -78807,6 +79394,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersOperatedInput = {
@@ -78852,6 +79440,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersHandledInput = {
@@ -78892,6 +79481,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersHandledInput = {
@@ -78937,6 +79527,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersPressInput = {
@@ -78977,6 +79568,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersPressInput = {
@@ -79022,6 +79614,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersPrintInput = {
@@ -79062,6 +79655,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersPrintInput = {
@@ -79107,6 +79701,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersCreatedInput = {
@@ -79147,6 +79742,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersCreatedInput = {
@@ -79313,6 +79909,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersCuttingInput = {
@@ -79353,6 +79950,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOrdersDesignedInput = {
@@ -79404,6 +80002,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersDesignedInput = {
@@ -79444,6 +80043,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOrdersDTFInput = {
@@ -79495,6 +80095,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersDTFInput = {
@@ -79535,6 +80136,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ProdukUpsertWithoutOrdersInput = {
@@ -79610,6 +80212,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersManagedInput = {
@@ -79650,6 +80253,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOrdersOperatedInput = {
@@ -79701,6 +80305,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersOperatedInput = {
@@ -79741,6 +80346,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOrdersHandledInput = {
@@ -79792,6 +80398,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersHandledInput = {
@@ -79832,6 +80439,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOrdersPressInput = {
@@ -79883,6 +80491,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersPressInput = {
@@ -79923,6 +80532,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOrdersPrintInput = {
@@ -79974,6 +80584,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersPrintInput = {
@@ -80014,6 +80625,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOrdersCreatedInput = {
@@ -80065,6 +80677,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersCreatedInput = {
@@ -80105,6 +80718,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type OrderCreateWithoutLogsInput = {
@@ -80458,6 +81072,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrderLogsInput = {
@@ -80498,6 +81113,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrderLogsInput = {
@@ -80873,6 +81489,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrderLogsInput = {
@@ -80913,6 +81530,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type OrderCreateWithoutProduk_relInput = {
@@ -81315,6 +81933,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaperStocksAddedInput = {
@@ -81355,6 +81974,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaperStocksAddedInput = {
@@ -81439,6 +82059,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaperStocksTakenInput = {
@@ -81479,6 +82100,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaperStocksTakenInput = {
@@ -81524,6 +82146,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaperStocksUpdatedInput = {
@@ -81564,6 +82187,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUncheckedCreateNestedManyWithoutRequesterInput
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaperStocksUpdatedInput = {
@@ -81636,6 +82260,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperStocksAddedInput = {
@@ -81676,6 +82301,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PaperRequestUpsertWithoutPaper_stockInput = {
@@ -81772,6 +82398,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperStocksTakenInput = {
@@ -81812,6 +82439,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutPaperStocksUpdatedInput = {
@@ -81863,6 +82491,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperStocksUpdatedInput = {
@@ -81903,6 +82532,7 @@ export namespace Prisma {
     paperRequests?: PaperRequestUncheckedUpdateManyWithoutRequesterNestedInput
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PaperLogCreateWithoutRequestInput = {
@@ -81971,6 +82601,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaperApprovalsInput = {
@@ -82011,6 +82642,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaperApprovalsInput = {
@@ -82056,6 +82688,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaperRejectionsInput = {
@@ -82096,6 +82729,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaperRejectionsInput = {
@@ -82141,6 +82775,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaperRequestsInput = {
@@ -82181,6 +82816,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaperRequestsInput = {
@@ -82306,6 +82942,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperApprovalsInput = {
@@ -82346,6 +82983,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutPaperRejectionsInput = {
@@ -82397,6 +83035,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperRejectionsInput = {
@@ -82437,6 +83076,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutPaperRequestsInput = {
@@ -82488,6 +83128,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperRequestsInput = {
@@ -82528,6 +83169,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PaperStockUpsertWithoutPaperRequestInput = {
@@ -82680,6 +83322,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaperLogsInput = {
@@ -82720,6 +83363,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaperLogsInput = {
@@ -82874,6 +83518,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaperLogsInput = {
@@ -82914,6 +83559,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PaperRequestUpsertWithoutLogsInput = {
@@ -83027,6 +83673,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInkStocksAddedInput = {
@@ -83067,6 +83714,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInkStocksAddedInput = {
@@ -83151,6 +83799,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInkStocksTakenInput = {
@@ -83191,6 +83840,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInkStocksTakenInput = {
@@ -83236,6 +83886,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInkStocksUpdatedInput = {
@@ -83276,6 +83927,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInkStocksUpdatedInput = {
@@ -83348,6 +84000,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkStocksAddedInput = {
@@ -83388,6 +84041,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type InkRequestUpsertWithoutInk_stockInput = {
@@ -83484,6 +84138,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkStocksTakenInput = {
@@ -83524,6 +84179,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutInkStocksUpdatedInput = {
@@ -83575,6 +84231,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkStocksUpdatedInput = {
@@ -83615,6 +84272,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type InkLogCreateWithoutRequestInput = {
@@ -83683,6 +84341,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInkApprovalsInput = {
@@ -83723,6 +84382,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInkApprovalsInput = {
@@ -83768,6 +84428,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInkRejectionsInput = {
@@ -83808,6 +84469,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInkRejectionsInput = {
@@ -83853,6 +84515,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInkRequestsInput = {
@@ -83893,6 +84556,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInkRequestsInput = {
@@ -84012,6 +84676,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkApprovalsInput = {
@@ -84052,6 +84717,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutInkRejectionsInput = {
@@ -84103,6 +84769,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkRejectionsInput = {
@@ -84143,6 +84810,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutInkRequestsInput = {
@@ -84194,6 +84862,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkRequestsInput = {
@@ -84234,6 +84903,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type InkStockUpsertWithoutInkRequestInput = {
@@ -84374,6 +85044,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInkLogsInput = {
@@ -84414,6 +85085,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInkLogsInput = {
@@ -84562,6 +85234,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInkLogsInput = {
@@ -84602,6 +85275,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type InkRequestUpsertWithoutLogsInput = {
@@ -84687,6 +85361,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOtherConsumablesInput = {
@@ -84727,6 +85402,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOtherConsumablesInput = {
@@ -84783,6 +85459,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOtherConsumablesInput = {
@@ -84823,6 +85500,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutOthersItemsTakenInput = {
@@ -84863,6 +85541,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOthersItemsTakenInput = {
@@ -84903,6 +85582,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOthersItemsTakenInput = {
@@ -84948,6 +85628,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOthersItemsAddedInput = {
@@ -84988,6 +85669,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOthersItemsAddedInput = {
@@ -85072,6 +85754,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersItemsTakenInput = {
@@ -85112,6 +85795,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOthersItemsAddedInput = {
@@ -85163,6 +85847,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersItemsAddedInput = {
@@ -85203,6 +85888,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type OthersLogUpsertWithWhereUniqueWithoutOthers_itemInput = {
@@ -85287,6 +85973,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOthersApprovalsInput = {
@@ -85327,6 +86014,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOthersApprovalsInput = {
@@ -85372,6 +86060,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOthersRejectionsInput = {
@@ -85412,6 +86101,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOthersRejectionsInput = {
@@ -85457,6 +86147,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOthersRequestsInput = {
@@ -85497,6 +86188,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOthersRequestsInput = {
@@ -85569,6 +86261,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersApprovalsInput = {
@@ -85609,6 +86302,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOthersRejectionsInput = {
@@ -85660,6 +86354,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersRejectionsInput = {
@@ -85700,6 +86395,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutOthersRequestsInput = {
@@ -85751,6 +86447,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersRequestsInput = {
@@ -85791,6 +86488,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type OthersItemCreateWithoutLogsInput = {
@@ -85915,6 +86613,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOthersLogsInput = {
@@ -85955,6 +86654,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedCreateNestedManyWithoutAddedByUserInput
     paperStocksTaken?: PaperStockUncheckedCreateNestedManyWithoutTakenByUserInput
     paperStocksUpdated?: PaperStockUncheckedCreateNestedManyWithoutUpdatedByUserInput
+    financialPeriods?: FinancialPeriodUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOthersLogsInput = {
@@ -86107,6 +86807,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOthersLogsInput = {
@@ -86147,6 +86848,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AssetMaintenanceRecordCreateWithoutAssetInput = {
@@ -88040,6 +88742,20 @@ export namespace Prisma {
     qrCode?: string | null
     paperRequestId?: string | null
     availability?: $Enums.InventoryAvailability
+  }
+
+  export type FinancialPeriodCreateManyUserInput = {
+    id?: string
+    name: string
+    startDate: Date | string
+    endDate: Date | string
+    type: string
+    year: number
+    quarter?: number | null
+    month?: number | null
+    status: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type FinancialTransactionUpdateWithoutUserInput = {
@@ -93326,6 +94042,50 @@ export namespace Prisma {
     availability?: EnumInventoryAvailabilityFieldUpdateOperationsInput | $Enums.InventoryAvailability
   }
 
+  export type FinancialPeriodUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    journalEntries?: JournalEntryUpdateManyWithoutPeriodNestedInput
+  }
+
+  export type FinancialPeriodUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    journalEntries?: JournalEntryUncheckedUpdateManyWithoutPeriodNestedInput
+  }
+
+  export type FinancialPeriodUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    type?: StringFieldUpdateOperationsInput | string
+    year?: IntFieldUpdateOperationsInput | number
+    quarter?: NullableIntFieldUpdateOperationsInput | number | null
+    month?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateManyRoleInput = {
     id?: string
     name: string
@@ -93372,6 +94132,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRoleInput = {
@@ -93412,6 +94173,7 @@ export namespace Prisma {
     paperStocksAdded?: PaperStockUncheckedUpdateManyWithoutAddedByUserNestedInput
     paperStocksTaken?: PaperStockUncheckedUpdateManyWithoutTakenByUserNestedInput
     paperStocksUpdated?: PaperStockUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+    financialPeriods?: FinancialPeriodUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutRoleInput = {

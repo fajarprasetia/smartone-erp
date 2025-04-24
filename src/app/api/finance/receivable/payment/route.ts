@@ -240,6 +240,10 @@ export async function POST(req: NextRequest) {
         updateData.tgl_invoice = new Date(paymentDate || new Date());
       }
       
+      // Update status to DELIVERY and approve goods when payment is recorded
+      updateData.statusm = "DELIVERY";
+      updateData.approval_barang = "APPROVED";
+      
       // If order is already paid, we shouldn't allow more payments
       if (isPaid) {
         throw new Error("Order is already fully paid");

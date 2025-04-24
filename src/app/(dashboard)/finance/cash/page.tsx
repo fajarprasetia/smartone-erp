@@ -74,7 +74,7 @@ export default function CashManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('month');
-  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [selectedAccountId, setSelectedAccountId] = useState('ALL');
   const [summary, setSummary] = useState({
     totalCashBalance: 0,
     periodInflows: 0,
@@ -109,7 +109,7 @@ export default function CashManagementPage() {
       
       let queryParams = new URLSearchParams();
       queryParams.append("period", period);
-      if (selectedAccountId) queryParams.append("accountId", selectedAccountId);
+      if (selectedAccountId && selectedAccountId !== 'ALL') queryParams.append("accountId", selectedAccountId);
       
       const response = await fetch(`/api/finance/cash?${queryParams.toString()}`);
       
@@ -120,12 +120,12 @@ export default function CashManagementPage() {
       const data = await response.json();
       
       setSummary({
-        totalCashBalance: data.summary.totalCashBalance,
-        periodInflows: data.summary.periodInflows,
-        periodOutflows: data.summary.periodOutflows,
-        netCashFlow: data.summary.netCashFlow,
-        inflowCount: data.summary.inflowCount,
-        outflowCount: data.summary.outflowCount
+        totalCashBalance: data.summary?.totalCashBalance ?? 0,
+        periodInflows: data.summary?.periodInflows ?? 0,
+        periodOutflows: data.summary?.periodOutflows ?? 0,
+        netCashFlow: data.summary?.netCashFlow ?? 0,
+        inflowCount: data.summary?.inflowCount ?? 0,
+        outflowCount: data.summary?.outflowCount ?? 0
       });
       
       setAccounts(data.cashAccounts || []);
@@ -135,6 +135,18 @@ export default function CashManagementPage() {
     } catch (err) {
       console.error("Failed to fetch cash data:", err);
       setError(err instanceof Error ? err.message : "Unknown error occurred");
+      
+      // Set fallback empty data
+      setSummary({
+        totalCashBalance: 0,
+        periodInflows: 0,
+        periodOutflows: 0,
+        netCashFlow: 0,
+        inflowCount: 0,
+        outflowCount: 0
+      });
+      setTransactions([]);
+      setCashFlowByDay([]);
     } finally {
       setLoading(false);
     }
@@ -226,7 +238,7 @@ export default function CashManagementPage() {
                 <SelectValue placeholder="All Accounts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Accounts</SelectItem>
+                <SelectItem value="ALL">All Accounts</SelectItem>
                 {accounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.name}

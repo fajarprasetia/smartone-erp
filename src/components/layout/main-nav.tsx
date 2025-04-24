@@ -29,6 +29,7 @@ import {
   MessageSquarePlus,
   MessageSquareReply,
   Clipboard,
+  Calendar,
 } from "lucide-react"
 import {
   Tooltip,
@@ -192,6 +193,11 @@ const navItems: NavItem[] = [
         icon: <BookOpen className="h-4 w-4" />,
       },
       {
+        title: "Financial Periods",
+        href: "/finance/periods",
+        icon: <Calendar className="h-4 w-4" />,
+      },
+      {
         title: "Budgets",
         href: "/finance/budgets",
         icon: <FileSpreadsheet className="h-4 w-4" />,
@@ -307,8 +313,11 @@ export function MainNav({ isCollapsed = false }) {
                     />
                   )}
                 </button>
-                {expandedItems.includes(item.title) && !isCollapsed && (
-                  <div className="ml-4 mt-1 space-y-1">
+                {(expandedItems.includes(item.title) || isCollapsed) && (
+                  <div className={cn(
+                    "mt-1 space-y-1",
+                    isCollapsed ? "ml-0" : "ml-4"
+                  )}>
                     {item.items.map((subItem) => (
                       <Link
                         key={subItem.title}
@@ -317,13 +326,29 @@ export function MainNav({ isCollapsed = false }) {
                           "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                           isActive(subItem.href)
                             ? "bg-primary/20 text-black font-bold"
-                            : "hover:bg-white/10 text-black/90"
+                            : "hover:bg-white/10 text-black/90",
+                          isCollapsed && "justify-center"
                         )}
                       >
-                        <div className="flex items-center space-x-3">
-                          {subItem.icon}
-                          <span>{subItem.title}</span>
-                        </div>
+                        {isCollapsed ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center justify-center">
+                                  {subItem.icon}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                {subItem.title}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <div className="flex items-center space-x-3">
+                            {subItem.icon}
+                            <span>{subItem.title}</span>
+                          </div>
+                        )}
                       </Link>
                     ))}
                   </div>

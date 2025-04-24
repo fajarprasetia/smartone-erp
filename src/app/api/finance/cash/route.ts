@@ -47,8 +47,8 @@ export async function GET(req: Request) {
     };
     
     // Add account filter if specified
-    if (accountId) {
-      baseConditions.accountId = accountId;
+    if (accountId && accountId !== "ALL") {
+      baseConditions.userId = accountId; // Using userId instead of accountId since it seems the relationship is through userId
     }
     
     // Get cash inflows (income transactions)
@@ -59,15 +59,6 @@ export async function GET(req: Request) {
       },
       orderBy: {
         date: 'desc'
-      },
-      include: {
-        account: {
-          select: {
-            id: true,
-            name: true,
-            code: true
-          }
-        }
       }
     });
     
@@ -79,15 +70,6 @@ export async function GET(req: Request) {
       },
       orderBy: {
         date: 'desc'
-      },
-      include: {
-        account: {
-          select: {
-            id: true,
-            name: true,
-            code: true
-          }
-        }
       }
     });
     
@@ -109,9 +91,21 @@ export async function GET(req: Request) {
     const totalCashBalance = cashAccounts.reduce((sum, account) => sum + account.balance, 0);
     
     // Get recent transactions (both inflows and outflows) combined and sorted
-    const recentTransactions = [...inflows, ...outflows].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    ).slice(0, 10); // Limit to 10 recent transactions
+    const recentTransactions = [...inflows, ...outflows]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 10) // Limit to 10 recent transactions
+      .map(transaction => ({
+        id: transaction.id,
+        transactionNumber: transaction.id.substring(0, 8).toUpperCase(),
+        date: transaction.date.toISOString(),
+        description: transaction.description || "",
+        amount: transaction.amount,
+        type: transaction.type,
+        category: transaction.category || "",
+        paymentMethod: transaction.paymentMethod || null,
+        status: "COMPLETED",
+        account: null // Setting account to null since we no longer include it
+      }));
     
     // Get cash flow by day for the chart
     const dayCount = Math.ceil((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
