@@ -32,7 +32,7 @@ A comprehensive ERP system built with Next.js 15.2.4, TypeScript, and modern web
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/fajarprasetia/smartone_erp.git
+   git clone https://github.com/fajarprasetia/smartone-erp.git
    cd smartone_erp
    ```
 
