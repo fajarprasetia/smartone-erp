@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/client"
+  provider      = "prisma-client-js"
+  output       = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -49,6 +50,7 @@ model User {
   paperStocksTaken   PaperStock[]           @relation("UserTookPaper")
   paperStocksUpdated PaperStock[]           @relation("UserUpdatedPaper")
   financialPeriods   FinancialPeriod[]      @relation("UserCreatedPeriods")
+  postedJournalEntries JournalEntry[]       @relation("PostedJournalEntries")
 }
 
 model Role {
@@ -301,6 +303,7 @@ model ChartOfAccount {
   type              String
   subtype           String?
   description       String?
+  balance           Float              @default(0)
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -309,19 +312,19 @@ model ChartOfAccount {
 }
 
 model FinancialPeriod {
-  id           String         @id @default(cuid())
-  name         String
-  startDate    DateTime
-  endDate      DateTime
-  type         String   // ANNUAL, QUARTERLY, MONTHLY, CUSTOM
-  year         Int
-  quarter      Int?     // 1-4
-  month        Int?     // 1-12
-  status       String   // OPEN, CLOSED
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  createdBy    String
-  user         User          @relation("UserCreatedPeriods", fields: [createdBy], references: [id], onDelete: Cascade)
+  id             String         @id @default(cuid())
+  name           String
+  startDate      DateTime
+  endDate        DateTime
+  type           String // ANNUAL, QUARTERLY, MONTHLY, CUSTOM
+  year           Int
+  quarter        Int? // 1-4
+  month          Int? // 1-12
+  status         String         @default("OPEN") // OPEN, CLOSED, PENDING
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  createdBy      String
+  user           User           @relation("UserCreatedPeriods", fields: [createdBy], references: [id], onDelete: Cascade)
   journalEntries JournalEntry[]
 
   @@index([year])
@@ -340,6 +343,9 @@ model JournalEntry {
   periodId    String
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  postedAt    DateTime?
+  postedById  String?
+  postedBy    User?              @relation("PostedJournalEntries", fields: [postedById], references: [id])
   period      FinancialPeriod    @relation(fields: [periodId], references: [id])
   items       JournalEntryItem[]
 }
@@ -761,39 +767,43 @@ model OthersLog {
 }
 
 model Asset {
-  id                     String                   @id
-  name                   String
-  type                   String
-  supplier               String?
-  status                 String
-  location               String?
-  notes                  String?
-  createdAt              DateTime                 @default(now())
-  lastMaintenanceDate    DateTime?
-  manufacturer           String?
-  model                  String?
-  nextMaintenanceDate    DateTime?
-  purchaseDate           DateTime?
-  purchasePrice          String?
-  serialNumber           String?
-  updatedAt              DateTime
-  warrantyExpiry         DateTime?
-  AssetMaintenanceRecord AssetMaintenanceRecord[]
+  id                  String                   @id
+  name                String
+  type                String
+  supplier            String?
+  status              String
+  location            String?
+  notes               String?
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  lastMaintenanceDate DateTime?                @map("last_maintenance_date")
+  manufacturer        String?
+  model               String?
+  nextMaintenanceDate DateTime?                @map("next_maintenance_date")
+  purchaseDate        DateTime?                @map("purchase_date")
+  purchasePrice       String?                  @map("purchase_price")
+  serialNumber        String?                  @map("serial_number")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
+  warrantyExpiry      DateTime?                @map("warranty_expiry")
+  maintenanceRecords  AssetMaintenanceRecord[]
+
+  @@map("assets")
 }
 
 model AssetMaintenanceRecord {
   id                  String    @id
-  assetId             String
+  assetId             String    @map("asset_id")
   date                DateTime
-  maintenanceType     String
+  maintenanceType     String    @map("maintenance_type")
   description         String
-  performedBy         String
+  performedBy         String    @map("performed_by")
   cost                Float?
-  nextMaintenanceDate DateTime?
+  nextMaintenanceDate DateTime? @map("next_maintenance_date")
   notes               String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime
-  Asset               Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  asset               Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("asset_maintenance_records")
 }
 
 enum PaperRequestStatus {

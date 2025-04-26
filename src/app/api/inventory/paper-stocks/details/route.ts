@@ -37,35 +37,30 @@ export async function GET(request: Request) {
       select: {
         id: true,
         name: true,
-        width: true,
-        gsm: true,
-        remainingLength: true,
-        thickness: true,
         type: true,
+        gsm: true,
+        width: true,
+        length: true,
+        remainingLength: true,
         manufacturer: true,
-        supplier: true,
+        availability: true,
+        notes: true,
         dateAdded: true,
         dateUpdated: true
       },
-      orderBy: {
-        dateAdded: 'desc'
-      }
+      orderBy: [
+        { gsm: 'asc' },
+        { width: 'asc' }
+      ]
     });
 
-    // Transform to match the expected format
-    const formattedStocks = paperStocks.map(stock => ({
-      id: stock.id,
-      paper_code: stock.name,
-      gsm: `${stock.gsm}`,
-      width: `${stock.width}`,
-      remaining_length: stock.remainingLength || 0,
-      unit_price: 0, // Default price, replace with actual price field if available
-      supplier: stock.supplier || '',
-      created_at: stock.dateAdded.toISOString(),
-      updated_at: stock.dateUpdated ? stock.dateUpdated.toISOString() : stock.dateAdded.toISOString()
+    // Map the response to include calculated fields
+    const mappedStocks = paperStocks.map(stock => ({
+      ...stock,
+      manufacturer: stock.manufacturer || 'Unknown'
     }));
 
-    return NextResponse.json(formattedStocks);
+    return NextResponse.json(mappedStocks);
   } catch (error) {
     console.error("Error in paper-stocks/details endpoint:", error);
     

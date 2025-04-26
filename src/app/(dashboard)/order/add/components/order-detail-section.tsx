@@ -294,13 +294,6 @@ export function OrderDetailSection({
   const kategori = form.watch("kategori")
   const targetSelesai = form.watch("targetSelesai")
   
-  console.log("Order Detail Section - Current values:", { 
-    statusProduksi: isRepeatOrderStatus ? "REPEAT" : "NEW", 
-    repeatOrderSpk, 
-    kategori,
-    targetSelesai
-  });
-  
   const handleFetchRepeatOrder = () => {
     if (!repeatOrderSpk) return
     handleFetchRepeatOrderInfo(repeatOrderSpk)

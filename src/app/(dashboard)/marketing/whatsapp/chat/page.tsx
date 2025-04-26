@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +49,7 @@ interface Template {
   parameterCount: number;
 }
 
-export default function WhatsAppChatPage() {
+function WhatsAppChatContent() {
   const searchParams = useSearchParams();
   const contactId = searchParams.get("contact");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -609,5 +609,17 @@ export default function WhatsAppChatPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function WhatsAppChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    }>
+      <WhatsAppChatContent />
+    </Suspense>
   );
 }

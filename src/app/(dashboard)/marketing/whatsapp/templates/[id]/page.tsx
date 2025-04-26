@@ -176,7 +176,13 @@ export default function TemplateViewPage() {
 
     // Using mock data for now
     const templateId = Array.isArray(params.id) ? params.id[0] : params.id
-    const mockTemplate = mockTemplates[templateId]
+    if (!templateId || typeof templateId !== 'string') {
+      toast.error("Template ID is required")
+      router.push("/marketing/whatsapp/templates")
+      return
+    }
+    
+    const mockTemplate = mockTemplates[templateId as keyof typeof mockTemplates]
     
     if (mockTemplate) {
       setTemplate(mockTemplate)

@@ -87,7 +87,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </div>
 
       {/* Add global print styles */}
-      <style jsx global>{`
+      <style>{`
         @media print {
           .glass-card {
             background: white !important;

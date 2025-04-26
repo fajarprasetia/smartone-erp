@@ -11,7 +11,7 @@ const serializeData = (data: any): any => {
 };
 
 // GET single inventory item
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: any) {
   try {
     const id = params.id;
     
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // PUT update inventory item
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: any) {
   try {
     const id = params.id;
     
@@ -159,7 +159,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE inventory item
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     const id = params.id;
 

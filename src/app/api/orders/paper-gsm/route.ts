@@ -17,26 +17,27 @@ export async function GET(req: NextRequest) {
     
     try {
       // Fetch paper GSM values from the database
-      const papers = await prisma.paper.findMany({
+      const papers = await prisma.paperStock.findMany({
+        where: {
+          availability: "YES",
+        },
         select: {
           id: true,
           gsm: true,
+          width: true,
+          remainingLength: true,
         },
         orderBy: {
           gsm: 'asc',
         },
-        distinct: ['gsm'],
       });
 
       console.log(`[API] Found ${papers.length} paper GSM values`);
       
-      // Extract and format the GSM values
-      const paperGsm = papers.map(paper => ({
-        id: paper.id,
-        gsm: paper.gsm,
-      }));
+      // Extract unique GSM values and sort them
+      const uniqueGsm = [...new Set(papers.map(paper => paper.gsm))].sort((a, b) => a - b);
       
-      return NextResponse.json(serializeData(paperGsm));
+      return NextResponse.json(serializeData(uniqueGsm));
     } catch (dbError) {
       console.log("[API] Database error when fetching paper GSM values");
       console.error(dbError);

@@ -89,7 +89,7 @@ export default function FinanceOverviewPage() {
       case 'pending':
         return <Badge variant="secondary">Pending</Badge>;
       case 'processing':
-        return <Badge variant="primary">Processing</Badge>;
+        return <Badge variant="default">Processing</Badge>;
       case 'draft':
         return <Badge variant="outline">Draft</Badge>;
       case 'cancelled':

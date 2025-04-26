@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // Helper to serialize BigInt values for JSON response
@@ -15,8 +15,8 @@ function serializeData(data: any): any {
 
 // GET a specific draft order by ID
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _req: Request,
+  { params }: any
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -86,8 +86,8 @@ export async function GET(
 
 // PUT to update a draft order
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: any
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -186,8 +186,8 @@ export async function PUT(
 
 // DELETE to remove a draft order
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _req: Request,
+  { params }: any
 ) {
   try {
     const session = await getServerSession(authOptions);

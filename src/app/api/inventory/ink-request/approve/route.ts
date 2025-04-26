@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
@@ -61,14 +61,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (inkRequest.approved) {
+    if (inkRequest.status === "APPROVED") {
       return NextResponse.json(
         { error: "This request has already been approved" },
         { status: 400 }
       );
     }
 
-    if (inkRequest.rejected) {
+    if (inkRequest.status === "REJECTED") {
       return NextResponse.json(
         { error: "Cannot approve a rejected request" },
         { status: 400 }

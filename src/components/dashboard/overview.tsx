@@ -111,8 +111,6 @@ export function Overview({ data: propData }: OverviewProps) {
     }
   })
 
-  console.log('Chart data:', formattedData);
-
   return (
     <div className="h-[300px] w-full">
       {isLoading ? (

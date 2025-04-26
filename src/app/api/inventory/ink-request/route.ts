@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
@@ -115,9 +115,9 @@ export async function GET(req: NextRequest) {
     // Map and transform the response
     const mappedRequests = inkRequests.map(request => ({
       ...request,
-      user_name: request.requester?.name,
-      requester_name: request.requester?.name,
-      // Remove sensitive user information
+      user_name: request.requested_by,
+      requester_name: request.requested_by,
+      // Remove sensitive user information 
       requester: undefined
     }));
     
@@ -153,20 +153,20 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update the ink request
-    const updatedRequest = await db.ink_requests.update({
+    const updatedRequest = await db.inkRequest.update({
       where: { id },
       data: {
         status,
-        admin_notes: admin_notes || '',
-        approvedByUserId: status === "APPROVED" ? userId : null,
-        approvalDate: status === "APPROVED" ? new Date() : null,
+        user_notes: admin_notes || '',
+        approved_by: status === "APPROVED" ? userId : null,
+        updated_at: new Date(),
       },
     });
 
     // If approved, update the ink stock
     if (status === "APPROVED") {
       // Get the ink request with ink stock
-      const inkRequest = await db.ink_requests.findUnique({
+      const inkRequest = await db.inkRequest.findUnique({
         where: { id },
         select: {
           ink_stock_id: true,
@@ -177,28 +177,27 @@ export async function PUT(req: NextRequest) {
 
       if (inkRequest && inkRequest.ink_stock_id) {
         // Update the ink stock availability
-        await db.ink_stocks.update({
+        await db.inkStock.update({
           where: { id: inkRequest.ink_stock_id },
           data: {
             availability: "NO",
-            dateTaken: new Date(),
-            takenByUserId: updatedRequest.requestedByUserId,
+            takenByUserId: userId,
           },
         });
       }
     }
 
     // Log the activity
-    await db.activity_logs.create({
+    await db.inkLog.create({
       data: {
-        activity_type: `INK_REQUEST_${status}`,
-        user_id: userId,
-        details: JSON.stringify({
+        action: `INK_REQUEST_${status}`,
+        performed_by: userId,
+        request_id: id,
+        notes: JSON.stringify({
           ink_request_id: id,
           status,
-          admin_notes,
+          notes: admin_notes,
         }),
-        timestamp: new Date(),
       },
     });
 
@@ -213,4 +212,4 @@ export async function PUT(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

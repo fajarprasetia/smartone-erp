@@ -27,16 +27,6 @@ export function PricingSection({
   const taxPercentage = form.watch("taxPercentage");
   const totalPrice = form.watch("totalPrice");
   
-  console.log("Pricing Section - Current values:", { 
-    harga, 
-    additionalCosts, 
-    discountType,
-    discountValue,
-    tax,
-    taxPercentage,
-    totalPrice
-  });
-
   const addCost = () => {
     if (additionalCosts.length >= 6) return // Limit to 6 items
     

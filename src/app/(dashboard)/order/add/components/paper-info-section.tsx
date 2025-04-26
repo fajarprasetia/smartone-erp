@@ -47,18 +47,6 @@ export function PaperInfoSection({
   // Determine if section should be disabled
   const isSectionDisabled = isPressOnly;
   
-  console.log("Paper Info Section - Current values:", { 
-    gsmKertas, 
-    lebarKertas, 
-    matchingColor,
-    fileWidth,
-    paperGsmOptions,
-    paperWidthOptions,
-    lebarKain,
-    isDtfSelected,
-    isPressOnly
-  });
-
   // Check if quantity exceeds available fabric length
   const isExceedingFabricLength = (quantity: string, unit: string, availableLength?: number | string): boolean => {
     if (!quantity || !availableLength) return false;

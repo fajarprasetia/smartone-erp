@@ -1,51 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // GET: Fetch a specific paper stock by ID
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+    if (!session?.user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized - Please login" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const paperStock = await prisma.paperStock.findUnique({
-      where: {
-        id: params.id,
-      },
+    const { id } = params;
+    const paper = await prisma.paperStock.findUnique({
+      where: { id }
     });
 
-    if (!paperStock) {
-      return NextResponse.json(
-        { error: "Paper stock not found" },
-        { status: 404 }
+    if (!paper) {
+      return new NextResponse(
+        JSON.stringify({ error: "Paper stock not found" }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    return NextResponse.json(paperStock);
+    return NextResponse.json(paper);
   } catch (error) {
     console.error("Error fetching paper stock:", error);
-    return NextResponse.json(
-      { error: "Error fetching paper stock", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to fetch paper stock" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
 
 // PUT: Update a specific paper stock by ID
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -90,16 +82,16 @@ export async function PUT(
         id: params.id,
       },
       data: {
-        barcode_id: data.barcode_id || null,
-        supplier: data.supplier || null,
-        paperType: data.paper_type || "Sublimation Paper",
+        qrCode: data.barcode_id || null,
+        manufacturer: data.supplier || null,
+        type: data.paper_type || "Sublimation Paper",
         gsm: data.gsm,
         width: data.width,
         length: data.length,
-        remaining_length: data.remaining_length,
+        remainingLength: data.remaining_length,
         notes: data.notes || null,
-        updated_by: userId,
-        updated_at: new Date(),
+        updatedByUserId: userId,
+        dateUpdated: new Date(),
       },
     });
 
@@ -124,62 +116,55 @@ export async function PUT(
 }
 
 // DELETE: Delete a specific paper stock by ID
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+    if (!session?.user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized - Please login" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const userId = session.user.id;
-    
-    // Check if paper stock exists
-    const existingStock = await prisma.paperStock.findUnique({
-      where: {
-        id: params.id,
-      },
-    });
-
-    if (!existingStock) {
-      return NextResponse.json(
-        { error: "Paper stock not found" },
-        { status: 404 }
-      );
-    }
-    
-    // Create a log entry before deleting the paper stock
-    await prisma.paperLog.create({
-      data: {
-        action: "DELETED",
-        performed_by: userId,
-        notes: `Deleted paper stock: ${existingStock.gsm} GSM, ${existingStock.width}x${existingStock.length}cm`,
-        // Don't link to paper stock since it's going to be deleted
-      },
-    });
-    
-    // Delete the paper stock
+    const { id } = params;
     await prisma.paperStock.delete({
-      where: {
-        id: params.id,
-      },
+      where: { id }
     });
 
-    return NextResponse.json(
-      { message: "Paper stock deleted successfully" },
-      { status: 200 }
-    );
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("Error deleting paper stock:", error);
-    return NextResponse.json(
-      { error: "Error deleting paper stock", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to delete paper stock" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+export async function PATCH(req: Request, { params }: any) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized - Please login" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { id } = params;
+    const body = await req.json();
+
+    const updatedPaper = await prisma.paperStock.update({
+      where: { id },
+      data: body
+    });
+
+    return NextResponse.json(updatedPaper);
+  } catch (error) {
+    console.error("Error updating paper stock:", error);
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to update paper stock" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 } 

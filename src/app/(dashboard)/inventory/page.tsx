@@ -1,12 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { 
-  PackageOpen, 
-  BoxSeam, 
-  ArrowRightLeft,
-  ChevronRight 
-} from "lucide-react"
+import { PackageOpen, Box, ArrowRightLeft, ChevronRight } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,7 +58,7 @@ export default function InventoryPage() {
         <Card className="overflow-hidden">
           <CardHeader className="bg-green-50 dark:bg-green-950 pb-2">
             <CardTitle className="flex items-center">
-              <BoxSeam className="mr-2 h-5 w-5 text-green-600 dark:text-green-400" />
+              <Box className="mr-2 h-5 w-5 text-green-600 dark:text-green-400" />
               Outbound Inventory
             </CardTitle>
             <CardDescription>

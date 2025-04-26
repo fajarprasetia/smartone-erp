@@ -59,7 +59,7 @@ export async function GET(req: Request) {
       const isSublimation = paperType.includes("sublim");
 
       // Check if there's remaining length
-      const remainingLength = parseFloat(String(paperStock.remainingLength || paperStock.remaining_length || 0));
+      const remainingLength = parseFloat(String(paperStock.remainingLength || 0));
 
       return matchesGsm && isSublimation && remainingLength > 0;
     });
@@ -75,6 +75,26 @@ export async function GET(req: Request) {
 
     console.log(`Available widths for GSM ${gsm}:`, widths);
 
+    // Filter out papers with no remaining length
+    const availablePapers = papersWithGsm.filter(paper => paper.paper_stock?.remainingLength && paper.paper_stock.remainingLength > 0);
+    
+    // Group papers by width and calculate total remaining length
+    const widthGroups = availablePapers.reduce((acc, paper) => {
+      const width = paper.paper_stock?.width;
+      if (!width) return acc;
+      
+      if (!acc[width]) {
+        acc[width] = {
+          width,
+          totalLength: 0,
+          papers: []
+        };
+      }
+      acc[width].totalLength += paper.paper_stock?.remainingLength || 0;
+      acc[width].papers.push(paper);
+      return acc;
+    }, {} as Record<number, { width: number; totalLength: number; papers: typeof papersWithGsm }>);
+
     // Return the data
     return NextResponse.json({
       gsm,
@@ -83,7 +103,7 @@ export async function GET(req: Request) {
         id: paper.id,
         paper_stock_id: paper.paper_stock_id,
         width: paper.paper_stock?.width,
-        remaining_length: paper.paper_stock?.remainingLength || paper.paper_stock?.remaining_length
+        remainingLength: paper.paper_stock?.remainingLength
       }))
     });
   } catch (error) {

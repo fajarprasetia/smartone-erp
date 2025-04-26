@@ -367,7 +367,6 @@ export async function PUT(req: NextRequest) {
           periodId: data.periodId,
           description: data.description,
           reference: data.reference,
-          updatedById: session.userId,
           items: {
             create: data.items.map((item: any) => ({
               accountId: item.accountId,

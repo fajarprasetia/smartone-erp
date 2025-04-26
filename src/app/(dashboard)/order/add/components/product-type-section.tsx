@@ -34,7 +34,6 @@ export function ProductTypeSection({
   
   // Get all product types for proper rendering
   const productTypes = form.watch("jenisProduk");
-  console.log("Current product types:", productTypes);
   
   // Function to reset all product types and clear the DTF pass
   const handleClearAll = () => {

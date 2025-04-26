@@ -47,7 +47,7 @@ interface Template {
   status: string
   createdAt: string
   header?: {
-    format: string
+    format: "TEXT" | "NONE"
     text?: string
     example?: string
   }
@@ -199,26 +199,47 @@ export default function EditTemplatePage() {
   // Fetch template data
   useEffect(() => {
     const templateId = Array.isArray(params.id) ? params.id[0] : params.id
-    const mockTemplate = mockTemplates[templateId]
-    
-    if (mockTemplate) {
-      // Populate form with template data
-      form.reset({
-        name: mockTemplate.name,
-        description: mockTemplate.description,
-        header: mockTemplate.header || { format: "NONE", text: "" },
-        body: {
-          text: mockTemplate.body.text,
-          example: mockTemplate.body.example,
-        },
-        footer: mockTemplate.footer || { text: "" },
-      })
-    } else {
-      toast.error("Template not found")
+    if (!templateId || typeof templateId !== 'string') {
+      toast.error("Template ID is required")
       router.push("/marketing/whatsapp/templates")
+      return
     }
     
-    setLoading(false)
+    const fetchTemplate = async () => {
+      try {
+        const response = await fetch(`/api/marketing/whatsapp/templates/${templateId}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch template')
+        }
+        
+        const data = await response.json()
+        if (!data.template) {
+          throw new Error('Template not found')
+        }
+        
+        const template = data.template
+        
+        // Populate form with template data
+        form.reset({
+          name: template.name,
+          description: template.description || "",
+          header: template.header || { format: "NONE" as const, text: "" },
+          body: {
+            text: template.body?.text || "",
+            example: template.body?.example || "",
+          },
+          footer: template.footer || { text: "" },
+        })
+      } catch (error) {
+        console.error('Error fetching template:', error)
+        toast.error("Failed to load template")
+        router.push("/marketing/whatsapp/templates")
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchTemplate()
   }, [params.id, router, form])
 
   // Handle form submission
@@ -226,21 +247,23 @@ export default function EditTemplatePage() {
     setSaving(true)
     
     try {
-      // In a real application, you would send the data to your API
-      // await fetch(`/api/whatsapp/templates/${params.id}`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(data),
-      // })
+      const templateId = Array.isArray(params.id) ? params.id[0] : params.id
+      const response = await fetch(`/api/marketing/whatsapp/templates/${templateId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
       
-      // Mock success response
-      setTimeout(() => {
-        toast.success("Template updated successfully")
-        setSaving(false)
-        router.push(`/marketing/whatsapp/templates/${params.id}`)
-      }, 1000)
+      if (!response.ok) {
+        throw new Error('Failed to update template')
+      }
+      
+      toast.success("Template updated successfully")
+      router.push(`/marketing/whatsapp/templates/${templateId}`)
     } catch (error) {
+      console.error('Error updating template:', error)
       toast.error("Failed to update template")
+    } finally {
       setSaving(false)
     }
   }
@@ -442,7 +465,7 @@ export default function EditTemplatePage() {
                           />
                         </FormControl>
                         <FormDescription>
-                          The main content of your message. Use {{n}} for variables.
+                          The main content of your message. Use {"{{n}}"} for variables.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

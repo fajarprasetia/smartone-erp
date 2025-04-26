@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { bigIntSerializer } from "@/lib/utils";
@@ -12,24 +12,21 @@ const updateOrderStatusSchema = z.object({
 });
 
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  _req: Request,
+  { params }: any
 ) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized - Please login" }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
+
+    const { id } = params;
     
-    // Get order ID from params
-    const orderId = params.id;
-    
-    if (!orderId) {
+    if (!id) {
       return new NextResponse(
         JSON.stringify({ error: "Order ID is required" }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -38,7 +35,7 @@ export async function PUT(
     
     // Check if the order exists
     const existingOrder = await db.order.findUnique({
-      where: { id: orderId },
+      where: { id: id },
     });
     
     if (!existingOrder) {
@@ -49,7 +46,7 @@ export async function PUT(
     }
     
     // Parse and validate request body
-    const body = await req.json();
+    const body = await _req.json();
     const validation = updateOrderStatusSchema.safeParse(body);
     
     if (!validation.success) {
@@ -75,7 +72,7 @@ export async function PUT(
     
     // Update the order status
     const updatedOrder = await db.order.update({
-      where: { id: orderId },
+      where: { id: id },
       data: updateData,
     });
     

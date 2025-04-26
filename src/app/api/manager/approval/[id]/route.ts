@@ -34,10 +34,7 @@ const bigIntSerializer = (data: any): any => {
   return data;
 };
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

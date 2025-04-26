@@ -112,7 +112,7 @@ export function ProductionInfoSection({
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date) =>
+                    disabled={(date: Date) =>
                       date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 6))
                     }
                     initialFocus
@@ -129,8 +129,8 @@ export function ProductionInfoSection({
       <DialogModal
         title="Select Repeat Order"
         description="Choose a previous order to repeat"
-        isOpen={showRepeatOrders}
-        onClose={() => setShowRepeatOrders(false)}
+        open={showRepeatOrders}
+        onOpenChange={setShowRepeatOrders}
       >
         <div className="space-y-4 max-h-[500px] overflow-y-auto">
           {repeatOrders.map((order) => (

@@ -1,16 +1,37 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    // Aggregate tax-related data from orders and payments
-    // Example: total taxable sales, total tax collected (assuming tax fields exist)
-    const totalTaxableSales = await db.order.aggregate({ _sum: { nominal_total: true } });
-    const totalTaxCollected = await db.financialTransaction.aggregate({ _sum: { tax: true } });
+    // Count total orders and transactions
     const totalOrders = await db.order.count();
     const totalTransactions = await db.financialTransaction.count();
+    
+    // For string field nominal, fetch and calculate manually
+    const orders = await db.order.findMany({
+      select: {
+        nominal: true
+      }
+    });
+    
+    // Calculate taxable sales (we'll use the nominal field as an approximation)
+    let totalTaxableSales = 0;
+    orders.forEach(order => {
+      if (order.nominal) {
+        const nominalValue = parseFloat(order.nominal);
+        if (!isNaN(nominalValue)) {
+          totalTaxableSales += nominalValue;
+        }
+      }
+    });
+    
+    // For the tax collection, we'd need a specific tax field which may not exist
+    // This is a placeholder - you would replace with actual tax data if available
+    const totalTaxCollected = totalTaxableSales * 0.11; // Assuming 11% VAT
+    
     return NextResponse.json({
-      totalTaxableSales: totalTaxableSales._sum.nominal_total || 0,
-      totalTaxCollected: totalTaxCollected._sum.tax || 0,
+      totalTaxableSales,
+      totalTaxCollected,
       totalOrders,
       totalTransactions
     });

@@ -13,8 +13,8 @@ const serializeData = (data: any) => {
 };
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { spk: string } }
+  request: Request,
+  { params }: any
 ) {
   try {
     const spk = params.spk;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 // Get specific bill
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: any) {
   try {
     const { id } = params;
     
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // Update bill
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: any) {
   try {
     const { id } = params;
     const body = await req.json();
@@ -142,7 +142,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // Delete bill
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     const { id } = params;
     

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -20,8 +20,8 @@ const pressUpdateSchema = z.object({
 });
 
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  params: any
 ) {
   try {
     // Get the authenticated session
@@ -31,7 +31,7 @@ export async function PATCH(
     }
 
     // Get the order ID from params
-    const { id } = params;
+    const { id } = params.params;
     if (!id) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
@@ -85,7 +85,27 @@ export async function PATCH(
     // Update the order
     const updatedOrder = await prisma.order.update({
       where: { id },
-      data: updateData,
+      data: {
+        status: updateData.status,
+        statusm: updateData.statusm,
+        press_mesin: updateData.press_mesin,
+        press_presure: updateData.press_presure,
+        press_suhu: updateData.press_suhu,
+        press_speed: updateData.press_speed ? parseFloat(updateData.press_speed.toString()) : null,
+        press_protect: updateData.press_protect,
+        total_kain: updateData.total_kain,
+        prints_qty: updateData.prints_qty,
+        press_id: updateData.press_id,
+        tgl_press: updateData.tgl_press,
+      },
+      include: {
+        press: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
     
     // Use the bigIntSerializer from utils

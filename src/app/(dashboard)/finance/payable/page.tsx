@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { 
   PlusCircle, RefreshCw, Search, FileText, Calculator, 
@@ -90,7 +90,7 @@ export interface PayableData {
   }[];
 }
 
-export default function AccountsPayablePage() {
+function AccountsPayableContent() {
   // Router and navigation
   const router = useRouter();
   const pathname = usePathname();
@@ -691,5 +691,25 @@ export default function AccountsPayablePage() {
         onSuccess={fetchData}
       />
     </PageContainer>
+  );
+}
+
+export default function AccountsPayablePage() {
+  return (
+    <Suspense fallback={
+      <PageContainer>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Accounts Payable</h1>
+          </div>
+          <div className="grid gap-4">
+            <Skeleton className="h-[200px]" />
+            <Skeleton className="h-[400px]" />
+          </div>
+        </div>
+      </PageContainer>
+    }>
+      <AccountsPayableContent />
+    </Suspense>
   );
 } 

@@ -449,80 +449,79 @@ export default function ViewOrderPage() {
 
 
       {/* Add styles for printing */}
-      <style jsx global>{`
+      <style>{`
         @media print {
-  @page {
-    size: A4 portrait;
-    margin: 10mm;
-  }
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
 
-  html, body {
-    width: 210mm;
-    height: 297mm;
-    margin: 0 auto !important;
-    padding: 0;
-    overflow: hidden !important;
-    background: white !important;
-    font-size: 10pt;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+          html, body {
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto !important;
+            padding: 0;
+            overflow: hidden !important;
+            background: white !important;
+            font-size: 10pt;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
 
-  .print\\:a4 {
-    width: 100% !important;
-    height: auto;
-    padding: 0;
-    margin: 0;
-    background: white !important;
-    scale: 0.98; /* Scale to prevent overflow */
-    transform-origin: top left;
-  }
+          .print\\:a4 {
+            width: 100% !important;
+            height: auto;
+            padding: 0;
+            margin: 0;
+            background: white !important;
+            scale: 0.98; /* Scale to prevent overflow */
+            transform-origin: top left;
+          }
 
-  /* Ensure all tables fit and don't break */
-  table {
-    width: 100% !important;
-    page-break-inside: auto;
-    font-size: 10pt;
-    table-layout: fixed;
-  }
+          /* Ensure all tables fit and don't break */
+          table {
+            width: 100% !important;
+            page-break-inside: auto;
+            font-size: 10pt;
+            table-layout: fixed;
+          }
 
-  thead {
-    display: table-header-group;
-  }
+          thead {
+            display: table-header-group;
+          }
 
-  tfoot {
-    display: table-footer-group;
-  }
+          tfoot {
+            display: table-footer-group;
+          }
 
-  tr, td, th {
-    page-break-inside: avoid;
-  }
+          tr, td, th {
+            page-break-inside: avoid;
+          }
 
-  input {
-    font-size: 9pt !important;
-  }
+          input {
+            font-size: 9pt !important;
+          }
 
-  h1, h2 {
-    font-size: 11pt !important;
-  }
+          h1, h2 {
+            font-size: 11pt !important;
+          }
 
-  /* Approval Table Full Width Fix */
-  .approval-table {
-    width: 100% !important;
-    table-layout: fixed !important;
-  }
+          /* Approval Table Full Width Fix */
+          .approval-table {
+            width: 100% !important;
+            table-layout: fixed !important;
+          }
 
-  .approval-table th,
-  .approval-table td {
-    width: 25% !important;
-  }
+          .approval-table th,
+          .approval-table td {
+            width: 25% !important;
+          }
 
-  /* Hide UI-only elements */
-  header, footer, nav, aside, .print\\:hidden {
-    display: none !important;
-  }
-}
-
+          /* Hide UI-only elements */
+          header, footer, nav, aside, .print\\:hidden {
+            display: none !important;
+          }
+        }
       `}</style>
     </div>
   );

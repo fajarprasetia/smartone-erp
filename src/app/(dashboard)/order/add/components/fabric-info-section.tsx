@@ -44,15 +44,6 @@ export function FabricInfoSection({
   // Determine if section should be disabled
   const isSectionDisabled = isDtfSelected || isPrintOnly;
   
-  console.log("Fabric Info Section - Current values:", { 
-    asalBahan, 
-    namaBahan, 
-    aplikasiProduk, 
-    selectedFabric,
-    isDtfSelected,
-    isPrintOnly
-  });
-
   // Check if quantity exceeds available fabric length
   const isExceedingFabricLength = (quantity: string, unit: string, availableLength?: number | string): boolean => {
     if (!quantity || !availableLength) return false;

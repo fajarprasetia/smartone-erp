@@ -6,11 +6,14 @@ export const metadata: Metadata = {
   description: "Edit an existing financial period",
 }
 
-export default function EditFinancialPeriodPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+type PageProps = {
+  params: Promise<{
+    id: string
+  }>
+}
+
+export default async function EditFinancialPeriodPage({ params }: PageProps) {
+  const resolvedParams = await params
   return (
     <div className="flex flex-col gap-8 p-8">
       <div>
@@ -19,7 +22,7 @@ export default function EditFinancialPeriodPage({
           Update the details of an existing financial period
         </p>
       </div>
-      <FinancialPeriodForm periodId={params.id} />
+      <FinancialPeriodForm periodId={resolvedParams.id} />
     </div>
   )
 } 

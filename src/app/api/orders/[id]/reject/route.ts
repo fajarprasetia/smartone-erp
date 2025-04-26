@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -15,8 +15,8 @@ const serializeData = (data: any) => {
 };
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  req: Request,
+  params: any
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -25,7 +25,7 @@ export async function POST(
 
   try {
     // Get the ID from params
-    const id = await params.id;
+    const id = await params.params.id;
     const { rejection_reason, role } = await req.json();
 
     if (!role) {

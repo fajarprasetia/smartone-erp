@@ -19,52 +19,7 @@ import { ChartOfAccounts } from "@/components/finance/chart-of-accounts";
 import { JournalEntryForm } from "@/components/finance/journal-entry-form";
 import { JournalEntriesList } from "@/components/finance/journal-entries-list";
 import { TrialBalance } from "@/components/finance/trial-balance";
-
-// Interfaces
-interface ChartOfAccount {
-  id: string;
-  code: string;
-  name: string;
-  type: string;
-  subtype?: string;
-  description?: string;
-  isActive: boolean;
-  balance: number;
-}
-
-interface FinancialPeriod {
-  id: string;
-  name: string;
-  startDate: Date;
-  endDate: Date;
-  isClosed: boolean;
-  closedAt?: Date;
-}
-
-interface JournalEntry {
-  id: string;
-  entryNumber: string;
-  date: string;
-  periodId: string;
-  periodName: string;
-  description?: string;
-  reference?: string;
-  status: "DRAFT" | "POSTED" | "VOIDED";
-  createdAt: string;
-  updatedAt: string;
-  items: JournalEntryItem[];
-}
-
-interface JournalEntryItem {
-  id: string;
-  journalEntryId: string;
-  accountId: string;
-  accountCode: string;
-  accountName: string;
-  description?: string;
-  debit: number;
-  credit: number;
-}
+import type { ChartOfAccount, FinancialPeriod, JournalEntry } from "@/types/prisma";
 
 export default function GeneralLedgerPage() {
   const [activeTab, setActiveTab] = useState<string>("chart-of-accounts");
