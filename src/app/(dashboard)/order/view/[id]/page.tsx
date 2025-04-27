@@ -287,7 +287,13 @@ export default function ViewOrderPage() {
       <tr>
         <td rowSpan={3} className="text-center border p-1.5">
           <div className="relative h-[70px] w-[70px] mx-auto">
-            <Image src="/logo.png" alt="SmartOne Logo" width={70} height={70} style={{ objectFit: "contain" }} />
+            <Image 
+              src="/logosmartone.png" 
+              alt="SmartOne Logo" 
+              width={70} 
+              height={70}
+              style={{ objectFit: "contain" }}
+            />
           </div>
         </td>
         <td className="border p-1.5 text-sm font-medium">No Invoice</td>
@@ -335,10 +341,10 @@ export default function ViewOrderPage() {
         )}
       </td></tr>
       <tr><td className="border p-1.5">2. Nama Kain</td><td className="border p-1.5">{order?.nama_kain || "-"}</td></tr>
-      <tr><td className="border p-1.5">3. Jumlah Kain</td><td className="border p-1.5">{order?.jumlah_kain || "-"}</td></tr>
+      <tr><td className="border p-1.5">3. Jumlah Kain</td><td className="border p-1.5">{order?.jumlah_kain || "-"}</td><td>m</td></tr>
       <tr><td className="border p-1.5">4. Lebar Kertas</td><td className="border p-1.5">{order?.lebar_kertas || "-"}</td></tr>
       <tr><td className="border p-1.5">5. Aplikasi Produk</td><td className="border p-1.5">{order?.nama_produk || order?.produk || "-"}</td></tr>
-      <tr><td className="border p-1.5">6. Quantity Produksi</td><td className="border p-1.5">{order?.qty || "-"}</td></tr>
+      <tr><td className="border p-1.5">6. Quantity Produksi</td><td className="border p-1.5">{order?.qty || "-"}</td><td>m</td></tr>
       <tr><td className="border p-1.5">7. Panjang Layout</td><td className="border p-1.5">
         {order?.lebar_file && order?.qty ? `${order?.lebar_file} X ${order?.qty}` : "-"}
       </td></tr>
@@ -347,80 +353,81 @@ export default function ViewOrderPage() {
   </table>
 
   {/* 3. Preview Project Table */}
-<h1 className="text-base font-bold mb-1.5">2. Preview Project</h1>
-<table className="w-full border-collapse border mb-4 preview-project-table">
-  <colgroup>
-    <col className="w-[70%]" />
-    <col className="w-[30%]" />
-  </colgroup>
-  <tbody className="text-sm">
-    <tr>
-      <td rowSpan={2} className="border p-1.5 text-center">
-        <p className="text-base font-medium">{order?.customer?.nama || "-"}</p>
-        <p className="text-base font-bold text-red-600">
-          {order?.prioritas === "YES" ? "PRIORITAS" : ""}
-        </p>
-      </td>
-      <td className="border p-1.5 font-medium">Marketing</td>
-    </tr>
-    <tr>
-      <td className="border p-1.5">{order?.marketingInfo?.name || order?.marketing || "-"}</td>
-    </tr>
-    <tr>
-      <td className="border p-1.5 text-center align-middle">
-        <div className="min-h-[220px] flex flex-col justify-center items-center">
-          <p className="text-base font-bold text-red-600">{order?.produk || "-"}</p>
-          <p className="text-sm font-bold text-red-600 mt-0.5">{order?.kategori || "-"}</p>
-          <div className="flex justify-center gap-3 mt-3 flex-wrap">
-            {order?.capture && (
-              <div className="relative h-[150px] w-[200px] flex-shrink-0">
-                <Image
-                  src={`/uploads/${order?.capture}`}
-                  alt="Design preview"
-                  width={200}
-                  height={150}
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
-            )}
-            {order?.capture_name && (
-              <div className="relative h-[100px] w-[240px] flex-shrink-0">
-                <Image
-                  src={`/uploads/${order?.capture_name}`}
-                  alt="Name preview"
-                  width={240}
-                  height={100}
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
-            )}
+  <h1 className="text-base font-bold mb-1.5">2. Preview Project</h1>
+  <table className="w-full border-collapse border mb-4 preview-project-table">
+    <colgroup>
+      <col className="w-[70%]" />
+      <col className="w-[30%]" />
+    </colgroup>
+    <tbody className="text-sm">
+      <tr>
+        <td rowSpan={2} className="border p-1.5 text-center">
+          <p className="text-base font-medium">{order?.customer?.nama || "-"}</p>
+          <p className="text-base font-bold text-red-600">
+            {order?.prioritas === "YES" ? "PRIORITAS" : ""}
+          </p>
+        </td>
+        <td className="border p-1.5 font-medium">Marketing</td>
+      </tr>
+      <tr>
+        <td className="border p-1.5">{order?.marketingInfo?.name || order?.marketing || "-"}</td>
+      </tr>
+      <tr>
+        <td className="border p-1.5 text-center align-middle">
+          <div className="min-h-[300px] flex flex-col justify-center items-center">
+            <p className="text-base font-bold text-red-600">{order?.produk || "-"}</p>
+            <p className="text-sm font-bold text-red-600 mt-0.5">{order?.kategori || "-"}</p>
+            <div className="flex justify-center gap-3 mt-3 flex-wrap">
+              {order?.capture && (
+                <div className="relative h-[180px] w-[240px] flex-shrink-0">
+                  <Image
+                    src={`/uploads/${order?.capture}`}
+                    alt="Design preview"
+                    width={240}
+                    height={180}
+                    style={{ objectFit: "contain" }}
+                    className="max-w-full max-h-full"
+                  />
+                </div>
+              )}
+              {order?.capture_name && (
+                <div className="relative h-[120px] w-[240px] flex-shrink-0">
+                  <Image
+                    src={`/uploads/${order?.capture_name}`}
+                    alt="Name preview"
+                    width={240}
+                    height={120}
+                    style={{ objectFit: "contain" }}
+                    className="max-w-full max-h-full"
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </td>
-      <td className="border p-1.5 align-top">
-        <table className="w-full border-collapse text-xs min-w-0">
-          <colgroup>
-            <col className="w-[50%]" />
-            <col className="w-[50%]" />
-          </colgroup>
-          <tbody>
-            <tr><td className="pr-1 py-0.5">Lebar Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_kertas || ""} disabled /></td></tr>
-            <tr><td className="pr-1 py-0.5">Gramasi Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.gramasi || ""} disabled /></td></tr>
-            <tr><td className="pr-1 py-0.5">Lebar Kain</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_kain || ""} disabled /></td></tr>
-            <tr><td className="pr-1 py-0.5">Lebar File</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_file || ""} disabled /></td></tr>
-            <tr><td className="pr-1 py-0.5">Warna Acuan</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.warna_acuan === "YES" ? "ADA" : "TIDAK ADA"} disabled /></td></tr>
-            <tr><td className="pr-1 py-0.5">Status Produksi</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.statusprod || order?.status || ""} disabled /></td></tr>
-          </tbody>
-        </table>
-        <div className="mt-2">
-          <p className="text-xs font-medium">Catatan:</p>
-          <p className="text-sm font-medium text-red-600 break-words mt-0.5">{order?.catatan || ""}</p>
-        </div>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
+        </td>
+        <td className="border p-1.5 align-top">
+          <table className="w-full border-collapse text-xs min-w-0">
+            <colgroup>
+              <col className="w-[50%]" />
+              <col className="w-[50%]" />
+            </colgroup>
+            <tbody>
+              <tr><td className="pr-1 py-0.5">Lebar Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_kertas || ""} disabled /></td></tr>
+              <tr><td className="pr-1 py-0.5">Gramasi Kertas</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.gramasi || ""} disabled /></td></tr>
+              <tr><td className="pr-1 py-0.5">Lebar Kain</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_kain || ""} disabled /></td></tr>
+              <tr><td className="pr-1 py-0.5">Lebar File</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.lebar_file || ""} disabled /></td></tr>
+              <tr><td className="pr-1 py-0.5">Warna Acuan</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.warna_acuan === "YES" ? "ADA" : "TIDAK ADA"} disabled /></td></tr>
+              <tr><td className="pr-1 py-0.5">Status Produksi</td><td><input className="border border-green-500 p-0.5 w-full text-xs truncate" value={order?.statusprod || order?.status || ""} disabled /></td></tr>
+            </tbody>
+          </table>
+          <div className="mt-2">
+            <p className="text-xs font-medium">Catatan:</p>
+            <p className="text-sm font-medium text-red-600 break-words mt-0.5">{order?.catatan || ""}</p>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
   {/* 3. Approvals */}
   <h1 className="text-base font-bold mb-1.5 mt-4">3. Approval</h1>
@@ -474,16 +481,29 @@ export default function ViewOrderPage() {
             padding: 0;
             margin: 0;
             background: white !important;
-            scale: 0.98; /* Scale to prevent overflow */
+            scale: 0.98;
             transform-origin: top left;
           }
 
-          /* Ensure all tables fit and don't break */
           table {
             width: 100% !important;
             page-break-inside: auto;
             font-size: 10pt;
             table-layout: fixed;
+          }
+
+          .preview-project-table {
+            min-height: 400px;
+          }
+
+          .preview-project-table td {
+            vertical-align: top;
+          }
+
+          .preview-project-table img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
           }
 
           thead {
@@ -506,7 +526,6 @@ export default function ViewOrderPage() {
             font-size: 11pt !important;
           }
 
-          /* Approval Table Full Width Fix */
           .approval-table {
             width: 100% !important;
             table-layout: fixed !important;
@@ -517,7 +536,6 @@ export default function ViewOrderPage() {
             width: 25% !important;
           }
 
-          /* Hide UI-only elements */
           header, footer, nav, aside, .print\\:hidden {
             display: none !important;
           }

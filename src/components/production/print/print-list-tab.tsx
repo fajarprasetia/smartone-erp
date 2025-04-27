@@ -21,6 +21,7 @@ import Image from "next/image"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -165,7 +166,7 @@ export function PrintListTab() {
   
   // Print done form state
   const [selectedOrder, setSelectedOrder] = useState<ProductionOrderItem | null>(null)
-  const [isPrintDonePopoverOpen, setIsPrintDonePopoverOpen] = useState(false)
+  const [isPrintDoneDialogOpen, setIsPrintDoneDialogOpen] = useState(false)
   const [isSubmittingPrintDone, setIsSubmittingPrintDone] = useState(false)
 
   // Initialize form with explicit type
@@ -340,7 +341,7 @@ export function PrintListTab() {
     }))
   }
 
-  // Handle opening the print done form popover
+  // Handle opening the print done form dialog
   const handlePrintDoneAction = (order: ProductionOrderItem) => {
     setSelectedOrder(order);
     
@@ -352,7 +353,7 @@ export function PrintListTab() {
       catatan_print: ""
     });
     
-    setIsPrintDonePopoverOpen(true);
+    setIsPrintDoneDialogOpen(true);
   }
   
   // Handle form submission
@@ -413,7 +414,7 @@ export function PrintListTab() {
       }
       
       toast.success(successMessage);
-      setIsPrintDonePopoverOpen(false);
+      setIsPrintDoneDialogOpen(false);
       
       // Refresh the order list after a short delay
       setTimeout(() => {
@@ -615,140 +616,14 @@ export function PrintListTab() {
                         {order.catatan || "N/A"}
                       </TableCell>
                       <TableCell className="sticky right-0 bg-muted/90 whitespace-nowrap">
-                        <Popover open={isPrintDonePopoverOpen && selectedOrder?.id === order.id} onOpenChange={(open) => !open && setIsPrintDonePopoverOpen(false)}>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="default"
-                              onClick={() => handlePrintDoneAction(order)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              PRINT DONE
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[400px] p-0" align="end">
-                            <Card className="border-0 shadow-none">
-                              <CardHeader className="pb-2">
-                                <CardTitle className="text-lg">Complete Print Job</CardTitle>
-                                <CardDescription>
-                                  Mark print job as completed for order {order.spk}
-                                </CardDescription>
-                              </CardHeader>
-                              <CardContent>
-                                <ScrollArea className="h-[400px] pr-4">
-                                  {/* Order Info Card - Uneditable */}
-                                  <div className="mb-4">
-                                    <h3 className="font-medium text-sm mb-2">Order Information</h3>
-                                    <div className="bg-muted/40 p-3 rounded-md space-y-2 text-sm">
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">SPK</Label>
-                                          <p>{selectedOrder?.spk || "N/A"}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Customer</Label>
-                                          <p>{selectedOrder?.customer?.nama || "N/A"}</p>
-                                        </div>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Print Started</Label>
-                                          <p>{formatDate(selectedOrder?.tgl_print)}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-xs text-muted-foreground">Print Operator</Label>
-                                          <p>{selectedOrder?.print_id?.name || "N/A"}</p>
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs text-muted-foreground">Print Target</Label>
-                                        <p>{selectedOrder?.prints_target || "N/A"}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Print Done Form */}
-                                  <Form {...printDoneForm}>
-                                    <form onSubmit={printDoneForm.handleSubmit(onPrintDoneFormSubmit as any)}>
-                                      <h3 className="font-medium text-sm mb-2">Print Results</h3>
-                                      
-                                      <div className="space-y-3">
-                                        <FormField
-                                          control={printDoneForm.control as any}
-                                          name="prints_bagus"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Total Good Prints (m)</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter total good prints" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printDoneForm.control as any}
-                                          name="prints_reject"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Rejected Prints (m)</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter rejected prints" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printDoneForm.control as any}
-                                          name="prints_waste"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Waste (m)</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Enter waste prints" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                        
-                                        <FormField
-                                          control={printDoneForm.control as any}
-                                          name="catatan_print"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Notes</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Add any additional notes (optional)" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                      </div>
-                                      
-                                      <div className="mt-4 flex justify-end">
-                                        <Button type="submit" disabled={isSubmittingPrintDone}>
-                                          {isSubmittingPrintDone ? (
-                                            <>Processing...</>
-                                          ) : (
-                                            <>
-                                              <Check className="h-4 w-4 mr-1" />
-                                              Complete Print Job
-                                            </>
-                                          )}
-                                        </Button>
-                                      </div>
-                                    </form>
-                                  </Form>
-                                </ScrollArea>
-                              </CardContent>
-                            </Card>
-                          </PopoverContent>
-                        </Popover>
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={() => handlePrintDoneAction(order)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          PRINT DONE
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -789,6 +664,127 @@ export function PrintListTab() {
           )}
         </CardContent>
       </Card>
+      <Dialog open={isPrintDoneDialogOpen} onOpenChange={setIsPrintDoneDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Complete Print Job</DialogTitle>
+            <DialogDescription>
+              Mark print job as completed for order {selectedOrder?.spk}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[400px] pr-4">
+            {/* Order Info Card - Uneditable */}
+            <div className="mb-4">
+              <h3 className="font-medium text-sm mb-2">Order Information</h3>
+              <div className="bg-muted/40 p-3 rounded-md space-y-2 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">SPK</Label>
+                    <p>{selectedOrder?.spk || "N/A"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Customer</Label>
+                    <p>{selectedOrder?.customer?.nama || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Print Started</Label>
+                    <p>{formatDate(selectedOrder?.tgl_print)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Print Operator</Label>
+                    <p>{selectedOrder?.print_id?.name || "N/A"}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Print Target</Label>
+                  <p>{selectedOrder?.prints_target || "N/A"}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Print Done Form */}
+            <Form {...printDoneForm}>
+              <form onSubmit={printDoneForm.handleSubmit(onPrintDoneFormSubmit as any)}>
+                <h3 className="font-medium text-sm mb-2">Print Results</h3>
+                
+                <div className="space-y-3">
+                  <FormField
+                    control={printDoneForm.control as any}
+                    name="prints_bagus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Good Prints (m)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter total good prints" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printDoneForm.control as any}
+                    name="prints_reject"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rejected Prints (m)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter rejected prints" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printDoneForm.control as any}
+                    name="prints_waste"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Waste (m)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter waste prints" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={printDoneForm.control as any}
+                    name="catatan_print"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Add any additional notes (optional)" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="mt-4 flex justify-end">
+                  <Button type="submit" disabled={isSubmittingPrintDone}>
+                    {isSubmittingPrintDone ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 mr-1" />
+                        Complete Print Job
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

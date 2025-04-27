@@ -1,41 +1,71 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
+import { formatCurrency } from "@/lib/utils";
 
+interface TaxFiling {
+  id: string;
+  type: {
+    name: string;
+  };
+  period: string;
+  amount: number;
+  dueDate: Date;
+  status: string;
+  description: string | null;
+  filingDate: Date | null;
+  paymentDate: Date | null;
+  referenceNumber: string | null;
+}
+
+// GET /api/finance/tax
 export async function GET() {
   try {
-    // Count total orders and transactions
-    const totalOrders = await db.order.count();
-    const totalTransactions = await db.financialTransaction.count();
-    
-    // For string field nominal, fetch and calculate manually
-    const orders = await db.order.findMany({
-      select: {
-        nominal: true
-      }
+    const taxFilings = await prisma.taxFiling.findMany({
+      orderBy: {
+        dueDate: "desc",
+      },
     });
-    
-    // Calculate taxable sales (we'll use the nominal field as an approximation)
-    let totalTaxableSales = 0;
-    orders.forEach(order => {
-      if (order.nominal) {
-        const nominalValue = parseFloat(order.nominal);
-        if (!isNaN(nominalValue)) {
-          totalTaxableSales += nominalValue;
-        }
-      }
-    });
-    
-    // For the tax collection, we'd need a specific tax field which may not exist
-    // This is a placeholder - you would replace with actual tax data if available
-    const totalTaxCollected = totalTaxableSales * 0.11; // Assuming 11% VAT
-    
-    return NextResponse.json({
-      totalTaxableSales,
-      totalTaxCollected,
-      totalOrders,
-      totalTransactions
-    });
+
+    return NextResponse.json(taxFilings);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to aggregate tax management data", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+    console.error("Error fetching tax filings:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch tax filings" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/finance/tax
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { type, period, amount, dueDate, notes } = body;
+
+    if (!type || !period || !amount || !dueDate) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const taxFiling = await prisma.taxFiling.create({
+      data: {
+        type,
+        period,
+        amount: parseFloat(amount),
+        dueDate: new Date(dueDate),
+        status: "pending",
+        notes,
+      },
+    });
+
+    return NextResponse.json(taxFiling);
+  } catch (error) {
+    console.error("Error creating tax filing:", error);
+    return NextResponse.json(
+      { error: "Failed to create tax filing" },
+      { status: 500 }
+    );
   }
 }

@@ -18,6 +18,14 @@ import { RoleFormDialog } from "./role-form-dialog"
 import { RoleDeleteDialog } from "./role-delete-dialog"
 import { toast } from "@/components/ui/use-toast"
 
+interface MenuPermission {
+  category: string
+  permissions: Array<
+    | { name: string; description: string }
+    | { subcategory: string; permissions: Array<{ name: string; description: string }> }
+  >
+}
+
 interface RoleTableProps {
   roles: (Role & {
     permissions: Permission[]
@@ -26,13 +34,57 @@ interface RoleTableProps {
     }
   })[]
   permissions: Permission[]
+  menuPermissions: MenuPermission[]
 }
 
-export function RoleTable({ roles, permissions }: RoleTableProps) {
+export function RoleTable({ roles, permissions, menuPermissions }: RoleTableProps) {
   const router = useRouter()
   const [selectedRole, setSelectedRole] = useState<(Role & { permissions: Permission[] }) | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  const getPermissionCount = (role: Role & { permissions: Permission[] }) => {
+    return role.permissions.length
+  }
+
+  const handleEdit = (role: Role & { permissions: Permission[] }) => {
+    setSelectedRole(role)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleDelete = async (role: Role) => {
+    if (role.isSystem) {
+      toast({
+        title: "Error",
+        description: "System roles cannot be deleted",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/settings/roles/${role.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error)
+      }
+
+      toast({
+        title: "Success",
+        description: "Role deleted successfully",
+      })
+      window.location.reload()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete role",
+        variant: "destructive",
+      })
+    }
+  }
 
   if (roles.length === 0) {
     return (
@@ -92,22 +144,18 @@ export function RoleTable({ roles, permissions }: RoleTableProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        setSelectedRole(role)
-                        setIsEditDialogOpen(true)
-                      }}
+                      onClick={() => handleEdit(role)}
                       disabled={role.isSystem}
+                      className="hover:bg-primary/10 hover:text-primary"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        setSelectedRole(role)
-                        setIsDeleteDialogOpen(true)
-                      }}
-                      disabled={role.isSystem || role._count.users > 0}
+                      onClick={() => handleDelete(role)}
+                      disabled={role.isSystem}
+                      className="hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -124,6 +172,8 @@ export function RoleTable({ roles, permissions }: RoleTableProps) {
         onOpenChange={setIsEditDialogOpen}
         role={selectedRole}
         permissions={permissions}
+        menuPermissions={menuPermissions}
+        onSuccess={() => window.location.reload()}
       />
 
       <RoleDeleteDialog

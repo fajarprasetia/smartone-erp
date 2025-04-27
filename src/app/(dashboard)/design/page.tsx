@@ -72,6 +72,9 @@ interface DesignOrderItem {
   capture?: string | null
   capture_name?: string | null
   marketing?: string | null
+  marketingInfo?: {
+    name: string
+  } | null
   targetSelesai?: Date | null
   tipe_produk?: string | null
   kategori?: string | null
@@ -460,46 +463,46 @@ export default function DesignPage() {
   // Handle process order (assign to self)
   const handleProcessOrder = async (orderId: string) => {
     if (!currentUser) {
-      toast.error("You must be logged in to process orders")
-      return
+      toast.error("You must be logged in to process orders");
+      return;
     }
-    
+
     try {
-      const response = await fetch(`/api/design/process`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId,
-          designerId: currentUser.id
-        }),
-      })
-      
-      if (!response.ok) {
-        throw new Error("Failed to process design order")
+      // Get the current order details
+      const currentOrder = orders.find(order => order.id === orderId);
+      if (!currentOrder) {
+        throw new Error('Order not found');
       }
-      
-      // Update order status to "DESIGN PROCESS"
-      await fetch(`/api/orders/${orderId}/status`, {
-        method: "PUT",
+
+      // Update order status to "DESIGN PROCESS" and set designer_id
+      // while preserving capture and capture_name fields
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          statusm: "DESIGN PROCESS"
+          statusm: "DESIGN PROCESS",
+          designer_id: currentUser.id,
+          capture: currentOrder.capture,
+          capture_name: currentOrder.capture_name,
         }),
-      })
-      
-      toast.success("Order assigned to you for processing")
-      fetchDesignOrders(pagination.currentPage, searchQuery)
-      fetchProcessOrders(processPagination.currentPage, processSearchQuery)
-      
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update order status');
+      }
+
+      // Refresh both order lists
+      await fetchDesignOrders(pagination.currentPage);
+      await fetchProcessOrders(processPagination.currentPage);
+
+      toast.success('Order moved to In Process');
     } catch (error) {
-      console.error("Error processing order:", error)
-      toast.error("Failed to process order")
+      console.error('Error processing order:', error);
+      toast.error('Failed to process order');
     }
-  }
+  };
   
   // Handle produce dialog open (for confirmation)
   const handleProduceDialogOpen = (order: DesignOrderItem) => {
@@ -709,14 +712,15 @@ export default function DesignPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch(`/api/orders/${orderIdToCancel}/status`, {
-        method: 'PUT',
+      const response = await fetch(`/api/orders/${orderIdToCancel}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           status: 'DESIGN',
-          userId: currentUser.id,
+          statusm: 'DESIGN',
+          designer_id: null, // Remove the designer assignment
         }),
       });
       

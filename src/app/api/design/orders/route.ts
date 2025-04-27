@@ -124,7 +124,32 @@ export async function GET(req: Request) {
         orderBy: {
           [sortField]: sortDirection
         },
-        include: {
+        select: {
+          id: true,
+          spk: true,
+          no_project: true,
+          tanggal: true,
+          created_at: true,
+          produk: true,
+          nama_produk: true,
+          asal_bahan_id: true,
+          customerId: true,
+          status: true,
+          statusm: true,
+          qty: true,
+          catatan: true,
+          lebar_kain: true,
+          lebar_kertas: true,
+          warna_acuan: true,
+          path: true,
+          capture: true,
+          capture_name: true,
+          marketing: true,
+          est_order: true,
+          tipe_produk: true,
+          kategori: true,
+          jns_produk_id: true,
+          designer_id: true,
           customer: {
             select: {
               id: true,
@@ -202,12 +227,46 @@ export async function GET(req: Request) {
       
       console.log(`Fetched designer data for ${Object.keys(designers).length} orders`);
       
+      // Get marketing user data for each order
+      const marketingIds = orders
+        .map(order => order.marketing)
+        .filter((id): id is string => id !== null && id !== undefined);
+
+      let marketingUsers: Record<string, { name: string }> = {};
+
+      if (marketingIds.length > 0) {
+        try {
+          const users = await db.user.findMany({
+            where: {
+              id: {
+                in: marketingIds
+              }
+            },
+            select: {
+              id: true,
+              name: true
+            }
+          });
+
+          users.forEach(user => {
+            marketingUsers[user.id] = {
+              name: user.name
+            };
+          });
+        } catch (error) {
+          console.error("Error fetching marketing user data:", error);
+        }
+      }
+      
       // Transform the data to match the expected format
       const transformedOrders = orders.map(order => {
         const designer = designers[order.id] || null;
+        const marketingInfo = order.marketing ? marketingUsers[order.marketing] || null : null;
+        
         return {
           ...order,
-          designer_id: designer
+          designer_id: designer,
+          marketingInfo
         };
       });
       

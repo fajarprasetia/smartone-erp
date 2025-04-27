@@ -25,6 +25,8 @@ interface MainOrderPageProps {
   initialData?: any;
 }
 
+const yardToMeter = (yards: number) => yards * 0.9144;
+
 export function MainOrderPage({ mode = 'create', initialData }: MainOrderPageProps) {
   const router = useRouter()
   const {
@@ -104,6 +106,16 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
       // Set produk field directly for API consumption
       // @ts-ignore - Adding property for API that's not in the type
       modifiedData.produk = specialProductType;
+
+      // Special handling for PRESS only orders
+      if (specialProductType === "PRESS ONLY") {
+        // @ts-ignore - Adding properties for API that's not in the type
+        modifiedData.statusm = "PRODUCTION";
+        // @ts-ignore - Adding properties for API that's not in the type
+        modifiedData.status = "READYFORPROD";
+        // @ts-ignore - Adding properties for API that's not in the type
+        modifiedData.statusprod = "NEW";
+      }
       
       // Submit with the special product type information
       await onSubmit(modifiedData);
@@ -111,6 +123,45 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
       // Normal submission for multiple product types or other scenarios
       await onSubmit(data);
     }
+  };
+
+  // Add quantity warning check
+  const checkQuantityWarning = () => {
+    const quantity = form.watch("jumlah");
+    const unit = form.watch("unit");
+    const fabricLength = form.watch("fabricLength");
+    
+    if (!quantity || !fabricLength) return false;
+    
+    const qty = Number(quantity);
+    const length = Number(fabricLength);
+    
+    if (isNaN(qty) || isNaN(length)) return false;
+    
+    // Convert yards to meters if needed
+    const qtyInMeters = unit === 'yard' ? yardToMeter(qty) : qty;
+    
+    return qtyInMeters > length;
+  };
+
+  // Add warning message to form description
+  const getFormDescription = () => {
+    const baseDescription = mode === 'create' 
+      ? "Create a new order by filling in the details below" 
+      : "Update the order information and click save when done";
+
+    if (checkQuantityWarning()) {
+      return (
+        <div className="space-y-2">
+          <p>{baseDescription}</p>
+          <p className="text-yellow-500 text-sm">
+            Warning: Quantity exceeds fabric length. This may cause production issues.
+          </p>
+        </div>
+      );
+    }
+
+    return baseDescription;
   };
 
   // Initialize with data if in edit mode
@@ -149,9 +200,7 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
           <div>
             <CardTitle className="text-2xl font-bold">{mode === 'create' ? "Add New Order" : "Edit Order"}</CardTitle>
             <CardDescription>
-              {mode === 'create' 
-                ? "Create a new order by filling in the details below" 
-                : "Update the order information and click save when done"}
+              {getFormDescription()}
             </CardDescription>
           </div>
           <div className="flex items-center space-x-2">

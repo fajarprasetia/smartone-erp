@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    if (period.status === "CLOSED") {
+    if (period.isClosed) {
       return NextResponse.json(
         { error: "Cannot create entries in a closed period" },
         { status: 400 }

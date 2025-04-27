@@ -52,10 +52,10 @@ export function CaptureThumbnails({
   }, [activeImage])
 
   // Create image URLs with proper path
-  const captureUrl = capture ? (capture.startsWith('/') ? capture : `/uploads/${capture}`) : null
-  const captureNameUrl = captureName ? (captureName.startsWith('/') ? captureName : `/uploads/${captureName}`) : null
-  const dpReceiptUrl = tf_dp ? (tf_dp.startsWith('/') ? tf_dp : `/tfuploads/${tf_dp}`) : null
-  const settlementReceiptUrl = tf_pelunasan ? (tf_pelunasan.startsWith('/') ? tf_pelunasan : `/tfuploads/${tf_pelunasan}`) : null
+  const captureUrl = capture ? (capture.startsWith('/uploads/') ? capture : `/uploads/${capture}`) : null
+  const captureNameUrl = captureName ? (captureName.startsWith('/uploads/') ? captureName : `/uploads/${captureName}`) : null
+  const dpReceiptUrl = tf_dp ? (tf_dp.startsWith('/tfuploads/') ? tf_dp : `/tfuploads/${tf_dp}`) : null
+  const settlementReceiptUrl = tf_pelunasan ? (tf_pelunasan.startsWith('/tfuploads/') ? tf_pelunasan : `/tfuploads/${tf_pelunasan}`) : null
   
   // Check if any thumbnails should be displayed
   const hasThumbnails = captureUrl || captureNameUrl || dpReceiptUrl || settlementReceiptUrl
@@ -80,6 +80,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           ) : (
             <Image
@@ -88,6 +89,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
@@ -110,6 +112,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           ) : (
             <Image
@@ -118,6 +121,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
@@ -140,6 +144,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           ) : (
             <Image
@@ -148,6 +153,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
@@ -170,6 +176,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           ) : (
             <Image
@@ -178,6 +185,7 @@ export function CaptureThumbnails({
               width={32}
               height={32}
               className="object-contain"
+              unoptimized
             />
           )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
@@ -217,6 +225,7 @@ export function CaptureThumbnails({
                   width={800}
                   height={600}
                   className="max-w-full max-h-[80vh] object-contain rounded-md"
+                  unoptimized
                 />
               ) : (
                 <Image
@@ -225,6 +234,7 @@ export function CaptureThumbnails({
                   width={800}
                   height={600}
                   className="max-w-full max-h-[80vh] object-contain rounded-md"
+                  unoptimized
                 />
               )}
             </div>

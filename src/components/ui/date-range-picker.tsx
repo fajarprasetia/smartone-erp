@@ -21,29 +21,38 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface DatePickerWithRangeProps {
+interface Props {
   className?: string
-  date: DateRange | undefined
-  setDate: (date: DateRange | undefined) => void
+  date: {
+    from: Date
+    to: Date
+  }
+  setDate: (date: { from: Date; to: Date }) => void
 }
 
 export function DatePickerWithRange({
   className,
   date,
   setDate,
-}: DatePickerWithRangeProps) {
+}: Props) {
   const [isOpen, setIsOpen] = React.useState(false)
 
   const handleSelect = (range: DateRange | undefined) => {
-    setDate(range)
     if (range?.from && range?.to) {
+      setDate({
+        from: range.from,
+        to: range.to,
+      })
       setIsOpen(false)
     }
   }
 
   const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
-    setDate(undefined)
+    setDate({
+      from: new Date(),
+      to: new Date(),
+    })
   }
 
   return (
@@ -54,7 +63,7 @@ export function DatePickerWithRange({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-full justify-start text-left font-normal",
+              "w-[300px] justify-start text-left font-normal",
               !date && "text-muted-foreground"
             )}
           >
@@ -69,17 +78,15 @@ export function DatePickerWithRange({
                 format(date.from, "LLL dd, y")
               )
             ) : (
-              <span>Select date range</span>
+              <span>Pick a date</span>
             )}
             {date && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-5 w-5 p-0 ml-auto" 
+              <span 
+                className="h-5 w-5 p-0 ml-auto flex items-center justify-center cursor-pointer hover:bg-accent rounded-sm"
                 onClick={handleClear}
               >
                 ×
-              </Button>
+              </span>
             )}
           </Button>
         </PopoverTrigger>
@@ -125,7 +132,7 @@ export function DatePickerWithRange({
             initialFocus
             mode="range"
             defaultMonth={date?.from}
-            selected={date}
+            selected={{ from: date?.from, to: date?.to }}
             onSelect={handleSelect}
             numberOfMonths={2}
           />

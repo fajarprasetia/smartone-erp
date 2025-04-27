@@ -1,12 +1,24 @@
-import { requireRole } from "@/lib/auth";
+import { getCurrentUser, hasRole } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Ensure only System Administrator and Administrator can access settings
-  await requireRole(["System Administrator", "Administrator"]);
+  const user = await getCurrentUser();
+  
+  if (!user) {
+    redirect("/auth/signin");
+  }
+  
+  // Allow System Administrator and Administrator roles to access settings
+  const isSystemAdmin = hasRole(user, "System Administrator");
+  const isAdmin = hasRole(user, "Administrator");
+  
+  if (!isSystemAdmin && !isAdmin) {
+    redirect("/unauthorized");
+  }
 
   return (
     <div className="container mx-auto py-6">

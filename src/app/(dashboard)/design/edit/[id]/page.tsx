@@ -157,11 +157,11 @@ export default function EditDesignPage() {
           
           // Set capture previews if available
           if (data.capture) {
-            setCapturePreview(`/uploads/${data.capture}`)
+            setCapturePreview(`/capture/file/${data.capture}`)
           }
           
           if (data.capture_name) {
-            setCaptureNamePreview(`/uploads/${data.capture_name}`)
+            setCaptureNamePreview(`/capture/name/${data.capture_name}`)
           }
         } else {
           console.error("Failed to fetch order info")
@@ -230,7 +230,8 @@ export default function EditDesignPage() {
             try {
               const captureUrl = await uploadFile(captureFile, 'capture');
               if (captureUrl) {
-                uploadResults.captureUrl = captureUrl;
+                // Extract just the filename from the URL
+                uploadResults.captureUrl = captureUrl.split('/').pop() || captureUrl;
               }
             } catch (captureError) {
               console.error("Error uploading design capture:", captureError);
@@ -242,45 +243,30 @@ export default function EditDesignPage() {
             try {
               const captureNameUrl = await uploadFile(captureNameFile, 'captureName');
               if (captureNameUrl) {
-                uploadResults.captureNameUrl = captureNameUrl;
+                // Extract just the filename from the URL
+                uploadResults.captureNameUrl = captureNameUrl.split('/').pop() || captureNameUrl;
               }
             } catch (captureNameError) {
               console.error("Error uploading design name file:", captureNameError);
               // Continue with form submission
             }
           }
-          
-          // If both uploads failed but files were provided
-          if (!uploadResults.captureUrl && !uploadResults.captureNameUrl && (captureFile || captureNameFile)) {
-            toast.warning("Failed to upload images. Design details will be saved without new images.");
-          }
-        } catch (error) {
-          console.error("Error during file uploads:", error);
-          toast.warning("Error uploading files. Design details will be saved without new images.");
+        } catch (uploadError) {
+          console.error("Error during file upload:", uploadError);
+          toast.error("Some files failed to upload, but design details will be saved");
         }
       }
       
-      // 2. Prepare data for the update
-      const updateData: Record<string, any> = {
-        lebar_file: values.fileWidth,
-        warna_acuan: values.matchingColor,
-        qty: values.qty?.toString(),
-        catatan: values.notes,
-        statusm: "DESIGNED", // Mark as designed (ready for production)
-      }
-      
-      // Add capture file paths if they exist
-      if (uploadResults.captureUrl) {
-        // Extract just the filename from the URL path
-        // Handle both formats: "/uploads/filename.jpg" or "/filename.jpg"
-        updateData.capture = uploadResults.captureUrl.replace(/^\/uploads\/|^\//, '');
-      }
-      
-      if (uploadResults.captureNameUrl) {
-        // Extract just the filename from the URL path
-        // Handle both formats: "/uploads/filename.jpg" or "/filename.jpg"
-        updateData.capture_name = uploadResults.captureNameUrl.replace(/^\/uploads\/|^\//, '');
-      }
+      // 2. Prepare update data
+      const updateData = {
+        lebar_file: values.fileWidth || null,
+        warna_acuan: values.matchingColor === "YES" ? "ADA" : "TIDAK ADA",
+        qty: values.qty?.toString() || null,
+        catatan: values.notes || null,
+        statusm: "DESIGNED", // Update status to DESIGNED
+        capture: uploadResults.captureUrl || order.capture, // Keep existing capture if no new upload
+        capture_name: uploadResults.captureNameUrl || order.capture_name // Keep existing capture_name if no new upload
+      };
       
       // 3. Update order data
       const response = await fetch(`/api/orders/${order.id}`, {
@@ -356,8 +342,9 @@ export default function EditDesignPage() {
       
       setUploadProgress(30); // Preparing upload
       
-      // Upload to server using the existing upload API
-      const response = await fetch('/api/upload', {
+      // Upload to server using the existing upload API with specific folder based on type
+      const folder = type === 'capture' ? 'capture/file' : 'capture/name';
+      const response = await fetch(`/api/upload?folder=${folder}`, {
         method: 'POST',
         body: formData,
       });
@@ -621,7 +608,7 @@ export default function EditDesignPage() {
                                 setCapturePreview(null);
                               }
                             }}
-                            preview={capturePreview || (order?.capture ? `/uploads/${order.capture}` : null)}
+                            preview={capturePreview || (order?.capture ? `/capture/file/${order.capture}` : null)}
                             accept="image/*"
                             icon={<Upload className="h-4 w-4 mr-1" />}
                           />
@@ -647,7 +634,7 @@ export default function EditDesignPage() {
                                 setCaptureNamePreview(null);
                               }
                             }}
-                            preview={captureNamePreview || (order?.capture_name ? `/uploads/${order.capture_name}` : null)}
+                            preview={captureNamePreview || (order?.capture_name ? `/capture/name/${order.capture_name}` : null)}
                             accept="image/*"
                             icon={<Upload className="h-4 w-4 mr-1" />}
                           />

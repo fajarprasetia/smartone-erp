@@ -2,7 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    domains: ['smartone.id', 'erp.smartone.id'],
+    domains: ['smartone.id', 'erp.smartone.id', 'localhost'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -21,6 +21,7 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+    unoptimized: true, // Allow serving unoptimized images from local directory
   },
   // Disable file watching
   onDemandEntries: {
@@ -51,7 +52,19 @@ const nextConfig = {
     config.externals = [...(config.externals || []), 'canvas', 'jsdom'];
     return config;
   },
-  webSocketTimeout: 30000,
+  // Add static file serving configuration
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/uploads/:path*',
+      },
+      {
+        source: '/tfuploads/:path*',
+        destination: '/tfuploads/:path*',
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

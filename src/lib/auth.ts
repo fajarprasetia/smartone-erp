@@ -1,16 +1,14 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
-import { compare } from "bcryptjs";
 import bcrypt from "bcryptjs";
+import { db } from "@/lib/db";
 
 const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
@@ -24,10 +22,10 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error("Email and password are required");
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await db.user.findUnique({
           where: {
             email: credentials.email,
           },
@@ -41,16 +39,13 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          return null;
+          throw new Error("User not found");
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isPasswordValid) {
-          return null;
+          throw new Error("Invalid password");
         }
 
         return {
@@ -63,24 +58,47 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
+    async session({ token, session }) {
       if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as any;
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.role = token.role;
       }
+
       return session;
+    },
+    async jwt({ token, user }) {
+      const dbUser = await db.user.findFirst({
+        where: {
+          email: token.email,
+        },
+        include: {
+          role: {
+            include: {
+              permissions: true,
+            },
+          },
+        },
+      });
+
+      if (!dbUser) {
+        if (user) {
+          token.id = user?.id;
+        }
+        return token;
+      }
+
+      return {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        role: dbUser.role,
+      };
     },
   },
   pages: {
     signIn: "/auth/signin",
-    error: "/auth/error",
   },
   debug: process.env.NODE_ENV === "development",
 };
@@ -115,31 +133,62 @@ declare module "next-auth/jwt" {
 }
 
 export async function getSession() {
-  return await getServerSession(authOptions);
+  try {
+    return await getServerSession(authOptions);
+  } catch (error) {
+    console.error("Error getting session:", error);
+    return null;
+  }
 }
 
 export async function getCurrentUser() {
-  const session = await getSession();
-  return session?.user;
+  try {
+    const session = await getSession();
+    if (!session?.user?.email) return null;
+
+    const user = await db.user.findUnique({
+      where: {
+        email: session.user.email,
+      },
+      include: {
+        role: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
+    });
+
+    return user;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
 }
 
 export async function requireAuth() {
   const user = await getCurrentUser();
-  
   if (!user) {
     redirect("/auth/signin");
   }
-  
   return user;
 }
 
-export async function requireRole(roles: string[]) {
-  const user = await requireAuth();
-  
-  if (!user.role || !roles.includes(user.role.name)) {
-    redirect("/dashboard");
+export async function requireRole(requiredPermissions: string[]) {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/auth/signin");
   }
-  
+
+  const userPermissions = user.role.permissions.map((p) => p.name);
+  const hasPermission = requiredPermissions.some((permission) =>
+    userPermissions.includes(permission)
+  );
+
+  if (!hasPermission) {
+    redirect("/unauthorized");
+  }
+
   return user;
 }
 

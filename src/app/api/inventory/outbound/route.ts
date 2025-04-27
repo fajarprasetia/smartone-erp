@@ -95,14 +95,11 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    // Fetch orders with DTF done (not null), and approved
+    // Fetch orders that are completed and approved
     const orders = await db.order.findMany({
       where: {
-        dtf_done: { not: null },
-        OR: [
-          { statusm: 'DELIVERY' },
-          { status: 'COMPLETED' }
-        ]
+        status: 'COMPLETED',
+        approval_barang: 'APPROVED'
       },
       include: {
         customer: {
@@ -148,9 +145,9 @@ export async function PATCH(req: NextRequest) {
       );
     }
     
-    if (!action || !['handover', 'reject_qc'].includes(action)) {
+    if (!action || !['deliver', 'reject_qc'].includes(action)) {
       return NextResponse.json(
-        { error: 'Valid action is required: handover or reject_qc' },
+        { error: 'Valid action is required: deliver or reject_qc' },
         { status: 400 }
       );
     }
@@ -158,12 +155,12 @@ export async function PATCH(req: NextRequest) {
     const now = new Date();
     let updatedOrder;
     
-    if (action === 'handover') {
+    if (action === 'deliver') {
       updatedOrder = await db.order.update({
         where: { id },
         data: {
-          statusm: 'DISERAHKAN',
-          status: 'DISERAHKAN',
+          status: 'DELIVERED',
+          statusm: 'DELIVERED',
           penyerahan_id: session.user.id,
           updated_at: now
         },
@@ -177,17 +174,17 @@ export async function PATCH(req: NextRequest) {
         }
       });
       
-      // Log the handover action
+      // Log the delivery action
       await db.orderLog.create({
         data: {
           orderId: id,
           userId: session.user.id,
-          action: 'HANDOVER',
-          notes: 'Order handed over to customer',
+          action: 'DELIVER',
+          notes: 'Order marked as delivered',
           timestamp: now
         }
       });
-    } else if (action === 'reject_qc') {
+    } else {
       updatedOrder = await db.order.update({
         where: { id },
         data: {

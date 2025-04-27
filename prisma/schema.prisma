@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
-  output       = "../node_modules/.prisma/client"
+  output        = "../node_modules/.prisma/client"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -16,8 +16,11 @@ model User {
   password           String
   roleId             String
   isActive           Boolean                @default(true)
+  cashTransactions   CashTransaction[]
+  financialPeriods   FinancialPeriod[]
   transactions       FinancialTransaction[]
   otherConsumables   OtherConsumable[]      @relation("UserAddedConsumable")
+  pettyCash          PettyCash[]
   role               Role                   @relation(fields: [roleId], references: [id])
   inkLogs            InkLog[]               @relation("UserInkLogs")
   inkApprovals       InkRequest[]           @relation("UserApprovedInk")
@@ -49,8 +52,6 @@ model User {
   paperStocksAdded   PaperStock[]           @relation("UserAddedPaper")
   paperStocksTaken   PaperStock[]           @relation("UserTookPaper")
   paperStocksUpdated PaperStock[]           @relation("UserUpdatedPaper")
-  financialPeriods   FinancialPeriod[]      @relation("UserCreatedPeriods")
-  postedJournalEntries JournalEntry[]       @relation("PostedJournalEntries")
 }
 
 model Role {
@@ -199,7 +200,7 @@ model FinancialTransaction {
 }
 
 model Vendor {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   contactName String?
   email       String?
@@ -207,10 +208,11 @@ model Vendor {
   address     String?
   taxId       String?
   notes       String?
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      String    @default("ACTIVE")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   bills       Bill[]
+  payables    Payable[]
 }
 
 model Bill {
@@ -303,10 +305,10 @@ model ChartOfAccount {
   type              String
   subtype           String?
   description       String?
-  balance           Float              @default(0)
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  balance           Float              @default(0)
   billItems         BillItem[]
   journalEntryItems JournalEntryItem[]
 }
@@ -316,21 +318,18 @@ model FinancialPeriod {
   name           String
   startDate      DateTime
   endDate        DateTime
-  type           String // ANNUAL, QUARTERLY, MONTHLY, CUSTOM
-  year           Int
-  quarter        Int? // 1-4
-  month          Int? // 1-12
-  status         String         @default("OPEN") // OPEN, CLOSED, PENDING
+  isClosed       Boolean        @default(false)
+  closedAt       DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  month          Int?
+  quarter        Int?
+  status         String         @default("OPEN")
+  type           String         @default("FISCAL")
+  year           Int
   createdBy      String
-  user           User           @relation("UserCreatedPeriods", fields: [createdBy], references: [id], onDelete: Cascade)
+  creator        User           @relation(fields: [createdBy], references: [id])
   journalEntries JournalEntry[]
-
-  @@index([year])
-  @@index([type])
-  @@index([status])
-  @@index([createdBy])
 }
 
 model JournalEntry {
@@ -343,9 +342,6 @@ model JournalEntry {
   periodId    String
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
-  postedAt    DateTime?
-  postedById  String?
-  postedBy    User?              @relation("PostedJournalEntries", fields: [postedById], references: [id])
   period      FinancialPeriod    @relation(fields: [periodId], references: [id])
   items       JournalEntryItem[]
 }
@@ -769,20 +765,20 @@ model OthersLog {
 model Asset {
   id                  String                   @id
   name                String
-  type                String
+  type                String?
+  serialNumber        String?                  @map("serial_number")
+  purchaseDate        DateTime?                @map("purchase_date")
   supplier            String?
-  status              String
+  status              String?
   location            String?
   notes               String?
   createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @map("updated_at")
   lastMaintenanceDate DateTime?                @map("last_maintenance_date")
   manufacturer        String?
   model               String?
   nextMaintenanceDate DateTime?                @map("next_maintenance_date")
-  purchaseDate        DateTime?                @map("purchase_date")
   purchasePrice       String?                  @map("purchase_price")
-  serialNumber        String?                  @map("serial_number")
-  updatedAt           DateTime                 @updatedAt @map("updated_at")
   warrantyExpiry      DateTime?                @map("warranty_expiry")
   maintenanceRecords  AssetMaintenanceRecord[]
 
@@ -790,20 +786,114 @@ model Asset {
 }
 
 model AssetMaintenanceRecord {
-  id                  String    @id
-  assetId             String    @map("asset_id")
-  date                DateTime
-  maintenanceType     String    @map("maintenance_type")
-  description         String
-  performedBy         String    @map("performed_by")
-  cost                Float?
-  nextMaintenanceDate DateTime? @map("next_maintenance_date")
-  notes               String?
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
-  asset               Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  assetId     String
+  date        DateTime
+  modeltype   String   @map("type")
+  description String
+  cost        Float
+  technician  String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@map("asset_maintenance_records")
+}
+
+model Payable {
+  id          String      @id @default(cuid())
+  vendorId    String
+  issueDate   DateTime
+  dueDate     DateTime
+  amount      Float
+  description String
+  reference   String?
+  status      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  vendor      Vendor      @relation(fields: [vendorId], references: [id])
+  pettyCash   PettyCash[]
+}
+
+model PettyCash {
+  id          String      @id @default(cuid())
+  date        DateTime
+  type        String
+  amount      Float
+  description String
+  accountId   String
+  payableId   String?
+  userId      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  account     CashAccount @relation(fields: [accountId], references: [id])
+  payable     Payable?    @relation(fields: [payableId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+}
+
+model CashAccount {
+  id           String            @id @default(cuid())
+  name         String
+  code         String            @unique
+  type         String
+  balance      Float             @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  transactions CashTransaction[]
+  pettyCash    PettyCash[]
+}
+
+model CashTransaction {
+  id          String      @id @default(cuid())
+  date        DateTime
+  type        String
+  amount      Float
+  description String
+  accountId   String
+  userId      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  account     CashAccount @relation(fields: [accountId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+}
+
+model VendorAccount {
+  id          String          @id @default(cuid())
+  name        String
+  code        String          @unique
+  type        String
+  description String?
+  parentId    String?
+  status      String          @default("ACTIVE")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  parent      VendorAccount?  @relation("VendorAccountToVendorAccount", fields: [parentId], references: [id])
+  children    VendorAccount[] @relation("VendorAccountToVendorAccount")
+
+  @@map("VendorAccount")
+}
+
+model TaxType {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  filings     TaxFiling[]
+}
+
+model TaxFiling {
+  id        String   @id @default(cuid())
+  typeId    String
+  period    String
+  amount    Float
+  dueDate   DateTime
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  notes     String?
+  type      TaxType  @relation(fields: [typeId], references: [id])
 }
 
 enum PaperRequestStatus {

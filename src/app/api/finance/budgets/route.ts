@@ -92,7 +92,14 @@ export async function GET(request: NextRequest) {
     const totalCount = filteredBudgets.length;
     const paginatedBudgets = filteredBudgets.slice((page - 1) * pageSize, page * pageSize);
     
-    // Return with pagination info
+    // Extract unique years and departments from budgets
+    const years = [...new Set(mockBudgets.map(b => b.year))].sort((a, b) => b - a);
+    const departments = [...new Set(mockBudgets
+      .filter(b => b.department)
+      .map(b => ({ id: b.department!.id, name: b.department!.name }))
+    )];
+    
+    // Return with pagination info and filters
     return NextResponse.json({
       budgets: paginatedBudgets,
       pagination: {
@@ -101,7 +108,11 @@ export async function GET(request: NextRequest) {
         pageSize,
         pageCount: Math.ceil(totalCount / pageSize)
       },
-      performance: mockBudgetPerformance
+      performance: mockBudgetPerformance,
+      filters: {
+        years,
+        departments
+      }
     });
     
   } catch (error) {

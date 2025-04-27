@@ -39,13 +39,15 @@ import {
 } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 
 interface NavItem {
   title: string
   href: string
   icon: React.ReactNode
   items?: NavItem[]
+  requiredRole?: string[]
 }
 
 const navItems: NavItem[] = [
@@ -218,17 +220,13 @@ const navItems: NavItem[] = [
     title: "Settings",
     href: "/settings",
     icon: <Settings className="h-4 w-4" />,
+    requiredRole: ["System Administrator", "Administrator"], 
     items: [
       {
         title: "Dashboard",
         href: "/settings/dashboard",
         icon: <LayoutDashboard className="h-4 w-4" />,
-      },
-      {
-        title: "Products",
-        href: "/settings/products",
-        icon: <Package className="h-4 w-4" />,
-      },
+      },      
       {
         title: "Users",
         href: "/settings/users",
@@ -251,6 +249,7 @@ const navItems: NavItem[] = [
 export function MainNav({ isCollapsed = false }) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = React.useState<string[]>([])
+  const { data: session } = useSession()
 
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(`${path}/`)
@@ -269,10 +268,27 @@ export function MainNav({ isCollapsed = false }) {
     )
   }
 
+  const hasAccess = (item: NavItem) => {
+    // System Administrator can access everything
+    if (session?.user?.role?.name === "System Administrator") return true
+    
+    // If no specific role is required, allow access
+    if (!item.requiredRole) return true
+    
+    // If user is not logged in, deny access
+    if (!session?.user?.role) return false
+    
+    // Check if user's role is in the required roles
+    return item.requiredRole.includes(session.user.role.name)
+  }
+
+  // Filter items based on user's role permissions
+  const filteredNavItems = navItems.filter(item => hasAccess(item))
+
   return (
     <ScrollArea className="h-[calc(100vh-4rem)]">
       <nav className="space-y-1 p-2">
-        {navItems.map((item) => (
+        {filteredNavItems.map((item) => (
           <div key={item.title}>
             {item.items ? (
               <div>
@@ -319,37 +335,39 @@ export function MainNav({ isCollapsed = false }) {
                     isCollapsed ? "ml-0" : "ml-4"
                   )}>
                     {item.items.map((subItem) => (
-                      <Link
-                        key={subItem.title}
-                        href={subItem.href}
-                        className={cn(
-                          "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                          isActive(subItem.href)
-                            ? "bg-primary/20 text-black font-bold"
-                            : "hover:bg-white/10 text-black/90",
-                          isCollapsed && "justify-center"
-                        )}
-                      >
-                        {isCollapsed ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="flex items-center justify-center">
-                                  {subItem.icon}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side="right">
-                                {subItem.title}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <div className="flex items-center space-x-3">
-                            {subItem.icon}
-                            <span>{subItem.title}</span>
-                          </div>
-                        )}
-                      </Link>
+                      hasAccess(subItem) && (
+                        <Link
+                          key={subItem.title}
+                          href={subItem.href}
+                          className={cn(
+                            "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                            isActive(subItem.href)
+                              ? "bg-primary/20 text-black font-bold"
+                              : "hover:bg-white/10 text-black/90",
+                            isCollapsed && "justify-center"
+                          )}
+                        >
+                          {isCollapsed ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex items-center justify-center">
+                                    {subItem.icon}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">
+                                  {subItem.title}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <div className="flex items-center space-x-3">
+                              {subItem.icon}
+                              <span>{subItem.title}</span>
+                            </div>
+                          )}
+                        </Link>
+                      )
                     ))}
                   </div>
                 )}

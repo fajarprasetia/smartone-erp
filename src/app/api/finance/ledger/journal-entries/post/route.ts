@@ -50,7 +50,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Check if period is closed
-    if (existingEntry.period.status === "CLOSED") {
+    if (existingEntry.period.isClosed) {
       return NextResponse.json(
         { error: "Cannot post to a closed period" },
         { status: 400 }
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Verify the entry's period is not closed
-    if (journalEntry.period.status === "CLOSED") {
+    if (journalEntry.period.isClosed) {
       return NextResponse.json(
         { error: "Cannot post entries in a closed period" },
         { status: 400 }

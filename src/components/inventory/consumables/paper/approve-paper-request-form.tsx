@@ -46,6 +46,36 @@ interface PaperRequest {
   rejecter_name?: string
 }
 
+interface PaperStock {
+  id: string
+  barcode_id: string | null
+  qrCode: string | null
+  supplier: string | null
+  manufacturer: string | null
+  gsm: string | number
+  width: string | number
+  height: string | number
+  length: string | number | null
+  used: string | null
+  waste: string | null
+  remaining_length: string
+  remainingLength: string | number | null
+  addedByUserId: string
+  added_by: string
+  taken_by: string | null
+  notes: string | null
+  availability: "YES" | "NO"
+  created_at: string
+  dateAdded: string
+  updated_by: string
+  user_name?: string
+  paper_type?: string
+  type?: string
+  paperType?: string
+  approved: boolean
+  name: string
+}
+
 interface ApprovePaperRequestFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -68,6 +98,9 @@ export function ApprovePaperRequestForm({
   const [scannerError, setScannerError] = useState<string | null>(null)
   const [scanProgress, setScanProgress] = useState(0)
   const scanProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [selectedVideoInput, setSelectedVideoInput] = useState<MediaDeviceInfo | null>(null)
+  const [isValidBarcode, setIsValidBarcode] = useState(false)
+  const [isValidating, setIsValidating] = useState(false)
 
   // Initialize form
   const form = useForm<BarcodeInputFormValues>({
@@ -107,23 +140,12 @@ export function ApprovePaperRequestForm({
     }
   }, [open, form.formState.isDirty]);
 
-  // Mock barcode generator for testing during development
-  const generateMockBarcode = () => {
-    const prefix = "PAPER";
-    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const barcode = `${prefix}${randomNum}`;
-    form.setValue("barcode_id", barcode, { shouldValidate: true });
-    form.trigger("barcode_id");
-    toast.success(`Test barcode generated: ${barcode}`);
-    stopBarcodeScanner();
-  }
-
   // Handle barcode scan
   const startBarcodeScanner = async () => {
     try {
       setShowBarcodeScanner(true)
-      setScannerError(null)
       setScanActive(true)
+      setScannerError(null)
       setScanProgress(0)
       
       // Clear any existing interval
@@ -141,88 +163,59 @@ export function ApprovePaperRequestForm({
         })
       }, 100)
       
-      // Check if we have camera access at all - necessary for local development
-      if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-        console.log("Camera API not available - likely due to non-HTTPS connection in local development");
-        setScannerError(
-          "Camera access is not available in this environment. " +
-          "This feature requires HTTPS for security reasons. " +
-          "It will work when deployed to production with HTTPS."
-        );
-        return;
-      }
-      
-      // Wait a bit for the video element to be rendered in the DOM
+      // Wait for the video element to be in the DOM
       setTimeout(async () => {
         try {
           if (!videoRef.current) {
             throw new Error("Video element not available");
           }
           
-          // Clean up any existing scanner to prevent conflicts
-          if (scannerRef.current) {
-            try {
-              scannerRef.current.reset();
-            } catch (e) {
-              console.error("Error resetting scanner:", e);
-            }
+          // Create a new scanner
+          if (!scannerRef.current) {
+            scannerRef.current = new BrowserMultiFormatReader();
+          } else {
+            scannerRef.current.reset();
           }
           
-          try {
-            // Create a new scanner without any special configurations
-            scannerRef.current = new BrowserMultiFormatReader();
-            
-            console.log("Starting scanner with default camera");
-            
-            // Start continuous scanning
-            await scannerRef.current.decodeFromVideoDevice(
-              null, 
-              videoRef.current,
-              (result, error) => {
-                if (result) {
-                  // Clear interval and set progress to 100% on success
-                  if (scanProgressIntervalRef.current) {
-                    clearInterval(scanProgressIntervalRef.current)
-                    scanProgressIntervalRef.current = null
-                  }
-                  setScanProgress(100)
-                  
-                  const barcode = result.getText();
-                  form.setValue("barcode_id", barcode, { shouldValidate: true });
-                  form.trigger("barcode_id");
-                  toast.success(`Barcode scanned: ${barcode}`);
-                  stopBarcodeScanner();
+          // Start scanner with selected device
+          await scannerRef.current.decodeFromVideoDevice(
+            selectedVideoInput?.deviceId || null,
+            videoRef.current,
+            async (result, error) => {
+              if (result) {
+                // Clear interval and set progress to 100% on success
+                if (scanProgressIntervalRef.current) {
+                  clearInterval(scanProgressIntervalRef.current)
+                  scanProgressIntervalRef.current = null
                 }
+                setScanProgress(100)
                 
-                // Only log important errors
-                if (error && 
-                    error.name !== "NotFoundException" && 
-                    !(error instanceof TypeError)) {
-                  console.error("Scanner error:", error);
+                // Process scan result
+                const barcode = result.getText();
+                form.setValue("barcode_id", barcode);
+                await validateBarcode(barcode);
+                toast.success(`Barcode scanned: ${barcode}`);
+                stopBarcodeScanner();
+              }
+              
+              if (error && !(error instanceof NotFoundException)) {
+                console.error("Scanner error:", error);
+                if (error.message !== "Stream ended." && !error.message.includes("timeout")) {
                   setScannerError(`Scanner error: ${error.message}`);
                 }
               }
-            );
-            
-            console.log("Scanner started successfully");
-          } catch (deviceError) {
-            console.error("Error accessing camera:", deviceError);
-            setScannerError(
-              "Could not access camera. Please check your camera permissions " +
-              "or try entering the barcode manually."
-            );
-          }
-        } catch (error) {
-          console.error("Error setting up barcode scanner:", error);
-          setScannerError(
-            "Could not initialize barcode scanner. " + 
-            "This may be because you're using an insecure connection (non-HTTPS)."
+            }
           );
+        } catch (e) {
+          console.error("Error in scanner setup:", e);
+          setScannerError(`Failed to initialize scanner: ${(e as Error).message}`);
+          stopBarcodeScanner();
         }
-      }, 500); // Wait 500ms for the DOM to update
+      }, 500); // Wait for DOM to update
     } catch (error) {
-      setScannerError(`Failed to start scanner: ${(error as Error).message}`)
-      stopBarcodeScanner()
+      console.error("Error starting scanner:", error);
+      setScannerError(`Failed to start scanner: ${(error as Error).message}`);
+      stopBarcodeScanner();
     }
   }
 
@@ -254,6 +247,32 @@ export function ApprovePaperRequestForm({
     // Reset UI state
     setScanProgress(0)
     setShowBarcodeScanner(false)
+    
+    // Reset the selected video input
+    setSelectedVideoInput(null);
+  }
+
+  // Add this function to validate barcode against available paper stocks
+  const validateBarcode = async (barcode: string) => {
+    try {
+      setIsValidating(true)
+      const response = await fetch('/api/inventory/paper?availability=YES')
+      if (!response.ok) {
+        throw new Error('Failed to fetch available paper stocks')
+      }
+      const availablePapers = await response.json()
+      const isValid = availablePapers.some((paper: PaperStock) => 
+        paper.barcode_id === barcode || paper.qrCode === barcode
+      )
+      setIsValidBarcode(isValid)
+      return isValid
+    } catch (error) {
+      console.error('Error validating barcode:', error)
+      setIsValidBarcode(false)
+      return false
+    } finally {
+      setIsValidating(false)
+    }
   }
 
   // Handle form submission
@@ -389,7 +408,7 @@ export function ApprovePaperRequestForm({
                       className="bg-background"
                       value={form.getValues("barcode_id") || ""}
                       onChange={(e) => {
-                        form.setValue("barcode_id", e.target.value, { shouldValidate: true });
+                        form.setValue("barcode_id", e.target.value);
                         form.trigger("barcode_id");
                       }}
                     />
@@ -397,7 +416,7 @@ export function ApprovePaperRequestForm({
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="flex justify-center pt-2">
                   <Button 
                     variant="outline" 
                     onClick={() => {
@@ -407,16 +426,7 @@ export function ApprovePaperRequestForm({
                   >
                     Try Again
                   </Button>
-                  <Button 
-                    variant="secondary"
-                    onClick={generateMockBarcode}
-                  >
-                    Generate Test Barcode
-                  </Button>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Note: The test barcode option is available for development purposes
-                </p>
               </div>
             ) : (
               <>
@@ -503,9 +513,14 @@ export function ApprovePaperRequestForm({
                                 {...field}
                                 placeholder="Enter or scan barcode"
                                 className="bg-background/50"
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  form.trigger("barcode_id");
+                                onChange={async (e) => {
+                                  field.onChange(e)
+                                  form.trigger("barcode_id")
+                                  if (e.target.value) {
+                                    await validateBarcode(e.target.value)
+                                  } else {
+                                    setIsValidBarcode(false)
+                                  }
                                 }}
                               />
                             </FormControl>
@@ -531,6 +546,12 @@ export function ApprovePaperRequestForm({
                     </div>
                   )}
                   
+                  {isValidating ? (
+                    <div className="text-sm text-muted-foreground">Validating barcode...</div>
+                  ) : form.getValues("barcode_id") && !isValidBarcode ? (
+                    <div className="text-sm text-destructive">Barcode not found in available paper stocks</div>
+                  ) : null}
+                  
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button 
                       type="button" 
@@ -540,7 +561,10 @@ export function ApprovePaperRequestForm({
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isLoading || !form.formState.isValid}>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading || !form.formState.isValid || !isValidBarcode || isValidating}
+                    >
                       {isLoading ? "Approving..." : "Approve Request"}
                     </Button>
                   </div>

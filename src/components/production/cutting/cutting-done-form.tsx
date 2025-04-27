@@ -48,9 +48,13 @@ interface CuttingDoneFormProps {
 
 // Define the form schema
 const formSchema = z.object({
-  cutting_bagus: z.string().min(1, "Good quantity is required"),
-  cutting_reject: z.string().min(1, "Reject quantity is required"),
-  cutting_notes: z.string().optional(),
+  cutting_bagus: z.string().min(1, "Good cuts is required"),
+  cutting_reject: z.string().min(1, "Rejected cuts is required"),
+  catatan_cutting: z.string().optional(),
+  cutting_mesin: z.string().min(1, "Machine is required"),
+  cutting_speed: z.string().min(1, "Speed is required"),
+  acc: z.string().min(1, "Acceleration is required"),
+  power: z.string().min(1, "Power is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -59,49 +63,39 @@ export function CuttingDoneForm({ order, isOpen, onClose, onSuccess }: CuttingDo
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Initialize form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       cutting_bagus: "",
       cutting_reject: "",
-      cutting_notes: "",
+      catatan_cutting: "",
+      cutting_mesin: "",
+      cutting_speed: "",
+      acc: "",
+      power: "",
     },
   });
 
-  // Handle form submission
   async function onSubmit(data: FormValues) {
     setIsSubmitting(true);
     
-    console.log("Completing cutting for order:", order);
-    console.log("Form data:", data);
-    
     try {
-      // Prepare data for the API call
-      const cuttingDoneData = {
-        ...data,
-        status: "CUTTING DONE", // Update the status to CUTTING DONE
-        tgl_cutting_selesai: new Date().toISOString(),
-      };
-      
-      console.log("Submitting cutting completion data:", cuttingDoneData);
-      
-      // Call API to update the order
-      const response = await fetch(`/api/orders/${order.id}`, {
-        method: "PUT",
+      const response = await fetch(`/api/production/orders/${order.id}/complete-cutting`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(cuttingDoneData),
+        body: JSON.stringify({
+          ...data,
+          cutting_done: new Date().toISOString(),
+        }),
       });
       
       if (!response.ok) {
         throw new Error(`Error updating order: ${response.status}`);
       }
       
-      // Handle successful response
       const result = await response.json();
-      console.log("API Response:", result);
       
       toast({
         title: "Success",
@@ -190,7 +184,7 @@ export function CuttingDoneForm({ order, isOpen, onClose, onSuccess }: CuttingDo
               
               <FormField
                 control={form.control}
-                name="cutting_notes"
+                name="catatan_cutting"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Notes</FormLabel>

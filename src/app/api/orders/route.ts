@@ -278,61 +278,75 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     console.log("[API] Creating order with data:", data);
 
-    // Improve the project number generation with better querying and error handling
-    // Generate project number (SO-XXXXXXXX format)
-    let nextProjectNumber = 1;
+    // Determine product type and handle PRESS ONLY case
+    let productType = "SUBLIM"; // Default value
+    let isPressOnly = false;
+    
+    if (data.tipe_produk) {
+      productType = data.tipe_produk;
+    } else if (data.jenisProduk) {
+      // Check if this is a PRESS ONLY order
+      isPressOnly = data.jenisProduk.PRESS && 
+        !data.jenisProduk.PRINT && 
+        !data.jenisProduk.CUTTING && 
+        !data.jenisProduk.DTF && 
+        !data.jenisProduk.SEWING;
+        
+      if (data.jenisProduk.DTF) {
+        productType = "DTF";
+      } else if (data.jenisProduk.SUBLIM) {
+        productType = "SUBLIM";
+      } else if (data.jenisProduk.PRINT) {
+        productType = "PRINT";
+      } else if (data.jenisProduk.CUTTING) {
+        productType = "CUTTING";
+      } else if (data.jenisProduk.PRESS) {
+        productType = "PRESS";
+      } else {
+        const firstSelectedType = Object.entries(data.jenisProduk)
+          .find(([_, selected]) => selected);
+        if (firstSelectedType) {
+          productType = firstSelectedType[0];
+        }
+      }
+    }
+
+    // Generate SPK number in MMYYNNN format
+    let nextSpkNumber = 1;
+    const now = new Date();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const year = now.getFullYear().toString().slice(-2);
+    const prefix = `${month}${year}`;
+
     try {
-      // Find the most recent order by project number
-      const latestOrders = await db.order.findMany({
+      // Find the latest SPK number for the current month and year
+      const latestOrder = await db.order.findFirst({
         where: {
-          no_project: {
-            startsWith: 'SO-',
-            not: null
+          spk: {
+            startsWith: prefix
           }
         },
         orderBy: {
-          no_project: 'desc'
+          spk: 'desc'
         },
-        take: 10,
         select: {
-          no_project: true
+          spk: true
         }
       });
-      
-      console.log(`[API] Found ${latestOrders.length} latest orders with project numbers`);
-      
-      // Analyze each of the latest orders to find the highest number
-      if (latestOrders.length > 0) {
-        let highestNumber = 0;
-        
-        for (const order of latestOrders) {
-          if (!order.no_project) continue;
-          
-          const match = order.no_project.match(/SO-(\d+)/);
-          if (match && match[1]) {
-            const num = parseInt(match[1], 10);
-            if (!isNaN(num) && num > highestNumber) {
-              highestNumber = num;
-            }
-          }
+
+      if (latestOrder?.spk) {
+        // Extract the sequence number and increment
+        const sequence = parseInt(latestOrder.spk.slice(-3), 10);
+        if (!isNaN(sequence)) {
+          nextSpkNumber = sequence + 1;
         }
-        
-        if (highestNumber > 0) {
-          nextProjectNumber = highestNumber + 1;
-          console.log(`[API] Found highest project number: ${highestNumber}, incrementing to ${nextProjectNumber}`);
-        } else {
-          console.log(`[API] Could not find valid project numbers among the latest orders`);
-        }
-      } else {
-        console.log(`[API] No existing project numbers found, starting at 1`);
       }
     } catch (error) {
-      console.error(`[API] Error finding latest project number:`, error);
+      console.error("Error finding next SPK number:", error);
     }
-    
-    // Format with 8 digits, padded with zeros
-    const projectNumber = `SO-${nextProjectNumber.toString().padStart(8, '0')}`;
-    console.log(`[API] Generated project number: ${projectNumber}`);
+
+    // Format SPK number with MMYYNNN format
+    const spkNumber = `${prefix}${nextSpkNumber.toString().padStart(3, '0')}`;
 
     // Convert quantity from yards to meters if needed
     const quantity = data.unit === "yard" 
@@ -361,35 +375,6 @@ export async function POST(req: NextRequest) {
 
     // Map matching color value
     const matchingColorValue = data.matchingColor === "YES" ? "ADA" : "TIDAK ADA";
-
-    // Determine product type
-    let productType = "SUBLIM"; // Default value
-    if (data.tipe_produk) {
-      // Use directly provided tipe_produk value if available
-      console.log("[API] Using explicit tipe_produk:", data.tipe_produk);
-      productType = data.tipe_produk;
-    } else if (data.jenisProduk?.DTF) {
-      productType = "DTF";
-    } else if (data.jenisProduk) {
-      // Check other product types in order of priority
-      if (data.jenisProduk.SUBLIM) {
-        productType = "SUBLIM";
-      } else if (data.jenisProduk.PRINT) {
-        productType = "PRINT";
-      } else if (data.jenisProduk.CUTTING) {
-        productType = "CUTTING";
-      } else if (data.jenisProduk.PRESS) {
-        productType = "PRESS";
-      } else {
-        // If none of the specific types match, use the first true value
-        const firstSelectedType = Object.entries(data.jenisProduk)
-          .find(([_, selected]) => selected);
-        if (firstSelectedType) {
-          productType = firstSelectedType[0];
-        }
-      }
-    }
-    console.log("[API] Product type determined as:", productType, "from jenisProduk:", JSON.stringify(data.jenisProduk));
 
     // Map discount value
     let discount = "0";
@@ -420,11 +405,11 @@ export async function POST(req: NextRequest) {
     const isDtfOrder = data.jenisProduk?.DTF === true || productType === "DTF";
     console.log("[API] Is DTF order:", isDtfOrder);
 
-    // Prepare order data
-    let orderData: any = {
+    // Create order in database with correct status for PRESS ONLY orders
+    const baseOrderData = {
       // Use the processed customerIdValue
       customerId: customerIdValue,
-      spk: data.spk,
+      spk: spkNumber,
       marketing: data.marketing,
       statusprod: data.statusProduksi, // NEW or REPEAT
       kategori: data.kategori,
@@ -432,166 +417,89 @@ export async function POST(req: NextRequest) {
       designer_id: data.designer_id,
       // For DTF orders, clear all fabric-related fields
       nama_kain: isDtfOrder ? "" : (data.namaBahan || ""),
-      jumlah_kain: isDtfOrder ? "" : (data.selectedFabric?.length || data.fabricLength || ""), // Use fabric length from the form
-      lebar_kain: isDtfOrder ? "" : (data.lebarKain || ""), // Fabric width
-      nama_produk: data.aplikasiProduk || "", // Product application
-      gramasi: data.gsmKertas || "", // Paper GSM
-      lebar_kertas: data.lebarKertas || "", // Paper width
-      lebar_file: data.fileWidth || "", // File width
-      warna_acuan: matchingColorValue, // YES -> ADA, NO -> TIDAK ADA
-      
-      // Process the product types correctly - for historical reasons, this needs to be the string of keys
+      jumlah_kain: isDtfOrder ? "" : (data.selectedFabric?.length || data.fabricLength || ""),
+      lebar_kain: isDtfOrder ? "" : (data.lebarKain || ""),
+      nama_produk: data.aplikasiProduk || "",
+      gramasi: data.gsmKertas || "",
+      lebar_kertas: data.lebarKertas || "",
+      lebar_file: data.fileWidth || "",
+      warna_acuan: matchingColorValue,
       produk: typeof data.jenisProduk === 'string' 
-        ? data.jenisProduk // Use directly if it's already a string (old format)
+        ? data.jenisProduk
         : Object.entries(data.jenisProduk || {})
             .filter(([_, selected]) => selected)
             .map(([type]) => type)
-            .join(", "), // Selected product types as comma-separated string
-            
-      tipe_produk: productType, // Store the determined product type
-      path: data.fileDesain || "", // Design file URL
-      qty: quantity, // Quantity in meters
-      panjang_order: quantity, // Same as qty
-      harga_satuan: data.harga || "", // Unit price
-      // Additional costs
-      ...additionalCostFields,
-      // Store tax percentage in tambah_bahan field if tax is applied
+            .join(", "),
+      tipe_produk: productType,
+      path: data.fileDesain || "",
+      qty: quantity,
+      panjang_order: quantity,
+      harga_satuan: data.harga || "",
+      tambah_cutting: data.tambah_cutting || "",
+      satuan_cutting: data.satuan_cutting || "",
+      qty_cutting: data.qty_cutting || "",
+      total_cutting: data.total_cutting || "",
       tambah_bahan: data.tax ? `Tax: ${data.taxPercentage}%` : null,
-      // Discount
       diskon: discount,
-      nominal: data.totalPrice || "", // Total price
-      catatan: data.notes || "", // Notes
-      statusm: "DESIGN", // Default status for marketing
-      status: "PENDING", // Default status for production
-      userId: session.user.id, // User who created the order
-      keterangan: "BELUM DIINVOICEKAN", // Default invoice status
-      created_at: new Date(), // Current timestamp
-      prioritas: data.priority ? "YES" : "NO", // Priority status
-      no_project: projectNumber, // Generated project number
-      // For DTF orders, add DTF pass information to notes if not already there
-      ...(isDtfOrder && data.dtfPass && !data.notes?.includes(data.dtfPass) ? {
-        catatan: `${data.notes ? data.notes + ", " : ""}${data.dtfPass}`
-      } : {})
+      nominal: data.totalPrice || "",
+      catatan: data.notes || "",
+      statusm: isPressOnly ? "PRODUCTION" : "DESIGN",
+      status: isPressOnly ? "READYFORPROD" : "PENDING",
+      userId: session.user.id,
+      keterangan: "BELUM DIINVOICEKAN",
+      created_at: new Date(),
+      prioritas: data.priority ? "YES" : "NO",
+      no_project: data.projectNumber || "",
+      // Include additional costs fields 1-5
+      tambah_cutting1: data.tambah_cutting1 || null,
+      satuan_cutting1: data.satuan_cutting1 || null,
+      qty_cutting1: data.qty_cutting1 || null,
+      total_cutting1: data.total_cutting1 || null,
+      tambah_cutting2: data.tambah_cutting2 || null,
+      satuan_cutting2: data.satuan_cutting2 || null,
+      qty_cutting2: data.qty_cutting2 || null,
+      total_cutting2: data.total_cutting2 || null,
+      tambah_cutting3: data.tambah_cutting3 || null,
+      satuan_cutting3: data.satuan_cutting3 || null,
+      qty_cutting3: data.qty_cutting3 || null,
+      total_cutting3: data.total_cutting3 || null,
+      tambah_cutting4: data.tambah_cutting4 || null,
+      satuan_cutting4: data.satuan_cutting4 || null,
+      qty_cutting4: data.qty_cutting4 || null,
+      total_cutting4: data.total_cutting4 || null,
+      tambah_cutting5: data.tambah_cutting5 || null,
+      satuan_cutting5: data.satuan_cutting5 || null,
+      qty_cutting5: data.qty_cutting5 || null,
+      total_cutting5: data.total_cutting5 || null,
+      // Add the unit field as satuan_bahan
+      satuan_bahan: data.unit,
+      // Add asal_bahan_id if it exists
+      ...(data.asalBahanId ? { asal_bahan_id: BigInt(data.asalBahanId) } : {})
     };
 
-    // Handle fabric origin (asal_bahan) based on the selection
-    console.log("[API] Processing fabric origin - asalBahan:", data.asalBahan, "customerId:", data.customerId);
-
-    // If asalBahan is SMARTONE, set asal_bahan_rel as relation
-    if (data.asalBahan === "SMARTONE") {
-      orderData.asalBahanRelId = "22";
-      console.log("[API] Set asal_bahan_rel to 22 for SMARTONE fabric origin");
-    }
-    // If asalBahan is CUSTOMER, use the customer's ID
-    else if (data.asalBahan === "CUSTOMER" && data.customerId) {
-      orderData.asalBahanRelId = data.customerId.toString();
-      console.log("[API] Set asal_bahan_rel to customer ID:", data.customerId);
-    }
-    // Handle legacy or alternative field names
-    else if (data.asalBahanId) {
-      orderData.asalBahanRelId = data.asalBahanId.toString();
-      console.log("[API] Set asal_bahan_rel using asalBahanId:", data.asalBahanId);
-    }
-
-    if (isDtfOrder) {
-      console.log("[API] DTF order detected: fabric origin will still be saved");
-    }
-
-    console.log("[API] Final order data for creation:", JSON.stringify(orderData, (key, value) => 
-      typeof value === "bigint" ? value.toString() : value
-    ));
-
     // Use a transaction to ensure SPK uniqueness during order creation
-    const result = await db.$transaction(async (tx) => {
+    const order = await db.$transaction(async (tx) => {
       // First, check if an order with this SPK already exists
       const existingOrder = await tx.order.findFirst({
         where: {
-          spk: orderData.spk
+          spk: baseOrderData.spk
         }
       });
 
       if (existingOrder) {
-        throw new Error(`An order with SPK ${orderData.spk} already exists. Please generate a new SPK.`);
+        throw new Error(`An order with SPK ${baseOrderData.spk} already exists. Please generate a new SPK.`);
       }
 
-      // Create order in database
-      const order = await tx.order.create({
+      // Create the order with the correct relation syntax
+      const createdOrder = await tx.order.create({
         data: {
-          // Use 'customer' with connect rather than 'customerId'
-          customer: customerIdValue ? {
-            connect: { id: customerIdValue }
-          } : undefined,
-          
-          // Other fields
-          spk: orderData.spk,
-          marketing: orderData.marketing,
-          designer_id: orderData.designer_id,
-          statusprod: orderData.statusprod,
-          kategori: orderData.kategori,
-          est_order: orderData.est_order,
-          nama_kain: orderData.nama_kain,
-          jumlah_kain: orderData.jumlah_kain,
-          lebar_kain: orderData.lebar_kain,
-          nama_produk: orderData.nama_produk,
-          gramasi: orderData.gramasi,
-          lebar_kertas: orderData.lebar_kertas,
-          lebar_file: orderData.lebar_file,
-          warna_acuan: orderData.warna_acuan,
-          produk: orderData.produk,
-          tipe_produk: orderData.tipe_produk,
-          path: orderData.path,
-          qty: orderData.qty,
-          panjang_order: orderData.panjang_order,
-          harga_satuan: orderData.harga_satuan,
-          tambah_cutting: orderData.tambah_cutting,
-          satuan_cutting: orderData.satuan_cutting,
-          qty_cutting: orderData.qty_cutting,
-          total_cutting: orderData.total_cutting,
-          tambah_bahan: orderData.tambah_bahan,
-          diskon: orderData.diskon,
-          nominal: orderData.nominal,
-          catatan: orderData.catatan,
-          statusm: orderData.statusm,
-          status: orderData.status,
-          
-          // Use direct connection for user
-          user: {
-            connect: { id: session.user.id }
-          },
-          
-          keterangan: orderData.keterangan,
-          created_at: orderData.created_at,
-          prioritas: orderData.prioritas,
-          no_project: orderData.no_project,
-          
-          // Handle asal_bahan_rel correctly using relation syntax
-          asal_bahan_rel: orderData.asalBahanRelId ? {
-            connect: { id: BigInt(orderData.asalBahanRelId) }
-          } : undefined,
-          
-          // Include additional costs fields 1-5
-          tambah_cutting1: orderData.tambah_cutting1 || null,
-          satuan_cutting1: orderData.satuan_cutting1 || null,
-          qty_cutting1: orderData.qty_cutting1 || null,
-          total_cutting1: orderData.total_cutting1 || null,
-          tambah_cutting2: orderData.tambah_cutting2 || null,
-          satuan_cutting2: orderData.satuan_cutting2 || null,
-          qty_cutting2: orderData.qty_cutting2 || null,
-          total_cutting2: orderData.total_cutting2 || null,
-          tambah_cutting3: orderData.tambah_cutting3 || null,
-          satuan_cutting3: orderData.satuan_cutting3 || null,
-          qty_cutting3: orderData.qty_cutting3 || null,
-          total_cutting3: orderData.total_cutting3 || null,
-          tambah_cutting4: orderData.tambah_cutting4 || null,
-          satuan_cutting4: orderData.satuan_cutting4 || null,
-          qty_cutting4: orderData.qty_cutting4 || null,
-          total_cutting4: orderData.total_cutting4 || null,
-          tambah_cutting5: orderData.tambah_cutting5 || null,
-          satuan_cutting5: orderData.satuan_cutting5 || null,
-          qty_cutting5: orderData.qty_cutting5 || null,
-          total_cutting5: orderData.total_cutting5 || null,
-          // Add the unit field as satuan_bahan
-          satuan_bahan: data.unit
+          ...baseOrderData,
+          asal_bahan_id: data.asalBahanId ? BigInt(data.asalBahanId) : undefined
+        },
+        include: {
+          customer: true,
+          user: true,
+          asal_bahan_rel: true
         }
       });
 
@@ -599,27 +507,34 @@ export async function POST(req: NextRequest) {
       try {
         await tx.tempSpkReservation.deleteMany({
           where: {
-            spk: orderData.spk
+            spk: baseOrderData.spk
           }
         });
-        console.log(`[API] Removed temporary reservation for SPK: ${orderData.spk}`);
+        console.log(`[API] Removed temporary reservation for SPK: ${baseOrderData.spk}`);
       } catch (error) {
         console.error(`[API] Error removing temporary SPK reservation: ${error}`);
         // Non-critical, continue with the transaction
       }
 
-      console.log(`[API] Created order with ID: ${order.id}`);
-      return order;
+      return createdOrder;
     }, {
       // Longer timeout for complex transactions
       timeout: 15000
     });
 
+    // Log the created order for debugging
+    console.log("[API] Created order with status:", {
+      statusm: order.statusm,
+      status: order.status,
+      isPressOnly,
+      productType
+    });
+
     return NextResponse.json({
         success: true,
         message: "Order created successfully",
-        order: serializeOrderData(result),
-        projectNumber: projectNumber
+        order: serializeOrderData(order),
+        projectNumber: data.projectNumber || ""
       },
       { status: 200 }
     );

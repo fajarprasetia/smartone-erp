@@ -31,6 +31,7 @@ const orderUpdateSchema = z.object({
   statusProduksi: z.enum(["NEW", "REPEAT"]).optional(), // Production status
   catatan: z.string().optional(),
   notes: z.string().optional(), // Alternative field name from form
+  designer_id: z.string().nullable().optional(), // Add designer_id field
   // Store tax info in tambah_bahan field instead
   tambah_bahan: z.string().optional(), // Field for storing tax info and other data
   priority: z.boolean().optional(),
@@ -65,8 +66,8 @@ const orderUpdateSchema = z.object({
   gramasi: z.string().optional(), // DB field name
   lebarKertas: z.string().optional(), // Paper width from form
   lebar_kertas: z.string().optional(), // DB field name
-  fileWidth: z.string().optional(), // File width from form
-  lebar_file: z.string().optional(), // DB field name
+  fileWidth: z.string().nullable().optional(), // File width from form
+  lebar_file: z.string().nullable().optional(), // DB field name
   matchingColor: z.enum(["YES", "NO"]).optional(), // Color matching option
   warna_acuan: z.string().optional(), // DB field name
   fileDesain: z.string().optional(), // Design file path
@@ -83,6 +84,8 @@ const orderUpdateSchema = z.object({
   discountValue: z.string().optional(),
   tax: z.boolean().optional(),
   taxPercentage: z.string().optional(),
+  capture: z.string().nullable().optional(),
+  capture_name: z.string().nullable().optional()
 });
 
 // Helper function to handle BigInt serialization in JSON responses
@@ -364,6 +367,8 @@ export async function PUT(_req: Request, { params }: any) {
       tambah_bahan: validatedData.tambah_bahan,
       priority: validatedData.priority,
       kategori: validatedData.kategori,
+      // Handle designer_id
+      designer_id: validatedData.designer_id,
       // Update timestamp
       updated_at: new Date(),
     };
@@ -554,6 +559,11 @@ export async function PATCH(_req: Request, { params }: any) {
       ...(validatedData.tambah_bahan && { tambah_bahan: validatedData.tambah_bahan }),
       ...(validatedData.priority && { priority: validatedData.priority }),
       ...(validatedData.kategori && { kategori: validatedData.kategori }),
+      // Handle designer_id if provided
+      ...(validatedData.designer_id !== undefined && { designer_id: validatedData.designer_id }),
+      // Handle capture fields if provided
+      ...(validatedData.capture && { capture: validatedData.capture }),
+      ...(validatedData.capture_name && { capture_name: validatedData.capture_name }),
       // Update timestamp
       updated_at: new Date(),
     };

@@ -73,7 +73,7 @@ function ConfirmActionDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  actionType: "handover" | "reject_qc" | null
+  actionType: "deliver" | "reject_qc" | null
   onConfirm: () => void
   isLoading: boolean
 }) {
@@ -104,11 +104,11 @@ function ConfirmActionDialog({
         <div className="flex justify-between items-center p-6 border-b border-border/40">
           <div>
             <h2 className="text-lg font-semibold">
-              {actionType === "handover" ? "Confirm Hand Over" : "Confirm Rejection"}
+              {actionType === "deliver" ? "Confirm Delivery" : "Confirm Rejection"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {actionType === "handover"
-                ? "Are you sure you want to mark this order as handed over?"
+              {actionType === "deliver"
+                ? "Are you sure you want to mark this order as delivered?"
                 : "Are you sure you want to reject this order?"}
             </p>
           </div>
@@ -123,8 +123,8 @@ function ConfirmActionDialog({
 
         <div className="p-6">
           <p className="text-muted-foreground mb-6">
-            {actionType === "handover"
-              ? "This action will mark the order as handed over to the customer. This action cannot be undone."
+            {actionType === "deliver"
+              ? "This action will mark the order as delivered. This action cannot be undone."
               : "This will mark the QC as rejected. Are you sure you want to proceed?"}
           </p>
 
@@ -142,14 +142,14 @@ function ConfirmActionDialog({
               type="button" 
               onClick={onConfirm}
               disabled={isLoading}
-              className={actionType === "handover" 
+              className={actionType === "deliver" 
                 ? "bg-green-600/90 hover:bg-green-700 text-white backdrop-blur-sm" 
                 : "bg-red-600/90 hover:bg-red-700 text-white backdrop-blur-sm"}
             >
               {isLoading 
                 ? "Processing..." 
-                : actionType === "handover" 
-                  ? "Confirm Hand Over" 
+                : actionType === "deliver" 
+                  ? "Confirm Delivery" 
                   : "Confirm Rejection"}
             </Button>
           </div>
@@ -166,7 +166,7 @@ export default function InventoryOutboundPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const [processingOrder, setProcessingOrder] = useState<string | null>(null)
-  const [actionType, setActionType] = useState<"handover" | "reject_qc" | null>(null)
+  const [actionType, setActionType] = useState<"deliver" | "reject_qc" | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -248,7 +248,7 @@ export default function InventoryOutboundPage() {
     }
   }, [searchQuery, orders]);
   
-  // Handle order action (handover or reject)
+  // Handle order action (deliver or reject)
   const handleOrderAction = async () => {
     if (!processingOrder || !actionType) return
     
@@ -267,20 +267,20 @@ export default function InventoryOutboundPage() {
       })
       
       if (!response.ok) {
-        throw new Error(`Failed to ${actionType === "handover" ? "hand over" : "reject"} order`)
+        throw new Error(`Failed to ${actionType === "deliver" ? "deliver" : "reject"} order`)
       }
       
       toast.success(
-        actionType === "handover" 
-          ? "Order marked as handed over successfully" 
+        actionType === "deliver" 
+          ? "Order marked as delivered successfully" 
           : "Order rejected successfully"
       )
       
       // Refresh the orders list
       fetchOrders()
     } catch (error) {
-      console.error(`Error ${actionType === "handover" ? "handing over" : "rejecting"} order:`, error)
-      toast.error(`Failed to ${actionType === "handover" ? "hand over" : "reject"} order`)
+      console.error(`Error ${actionType === "deliver" ? "delivering" : "rejecting"} order:`, error)
+      toast.error(`Failed to ${actionType === "deliver" ? "deliver" : "reject"} order`)
     } finally {
       setIsLoading(false)
       setProcessingOrder(null)
@@ -300,7 +300,7 @@ export default function InventoryOutboundPage() {
   }
   
   // Open confirmation dialog
-  const confirmAction = (orderId: string, action: "handover" | "reject_qc") => {
+  const confirmAction = (orderId: string, action: "deliver" | "reject_qc") => {
     setProcessingOrder(orderId)
     setActionType(action)
     setIsDialogOpen(true)
@@ -409,7 +409,7 @@ export default function InventoryOutboundPage() {
         <CardHeader className="pb-2 bg-transparent">
           <CardTitle>Completed Orders</CardTitle>
           <CardDescription>
-            Manage completed orders are ready for handover.
+            Manage completed and approved orders ready for delivery.
           </CardDescription>
         </CardHeader>
         <CardContent className="bg-transparent">
@@ -432,7 +432,6 @@ export default function InventoryOutboundPage() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>QC Approval</TableHead>
-                    <TableHead>DTF Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -451,7 +450,6 @@ export default function InventoryOutboundPage() {
                     filteredOrders.map((order) => {
                       const statusBadge = getStatusBadge(order);
                       const approvalBadge = getApprovalBadge(order);
-                      const dtfBadge = getDtfStatus(order);
                       
                       return (
                         <TableRow 
@@ -474,17 +472,12 @@ export default function InventoryOutboundPage() {
                               {approvalBadge.approval}
                             </Badge>
                           </TableCell>
-                          <TableCell className="bg-transparent">
-                            <Badge className={dtfBadge.badgeClass}>
-                              {dtfBadge.status}
-                            </Badge>
-                          </TableCell>
                           <TableCell className="text-right space-x-2 bg-transparent">
                             <Button
                               size="sm"
                               variant="outline"
                               className="bg-green-100/80 text-green-800 hover:bg-green-200 hover:text-green-900 dark:bg-green-800/30 dark:text-green-500 dark:hover:bg-green-800/40"
-                              onClick={() => confirmAction(order.id, "handover")}
+                              onClick={() => confirmAction(order.id, "deliver")}
                               disabled={isLoading || processingOrder === order.id}
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />

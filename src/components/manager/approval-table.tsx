@@ -263,45 +263,52 @@ const handleApproveOrder = async (order: ApprovalOrderItem) => {
       newStatus = "DTF READY";
     }
 
-    if (session.user?.role?.name === "Manager") {
-      const approvalResponse = await fetch(`/api/manager/approval/${order.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          approval_mng: "APPROVED",
-          manager_id: session.user.id,
-          tgl_app_manager: currentTime,
-          status: newStatus // Set the new status based on produk
-        })
-      });
+    let updateData = {};
 
-      if (!approvalResponse.ok) {
-        throw new Error('Failed to update manager approval');
+    if (session.user?.role?.name === "Manager") {
+      updateData = {
+        approval_mng: "APPROVED",
+        manager_id: session.user.id,
+        tgl_app_manager: currentTime
+      };
+
+      // Only update status if Operation Manager has already approved
+      if (order.approval_opr === "APPROVED") {
+        updateData = { ...updateData, status: newStatus };
+        toast.success(`Order fully approved. Status updated to ${newStatus}`);
+      } else {
+        toast.success("Manager approval recorded. Waiting for Operation Manager approval.");
       }
     } else if (session.user?.role?.name === "Operation Manager") {
-      const approvalResponse = await fetch(`/api/manager/approval/${order.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          approval_opr: "APPROVED",
-          opr_id: session.user.id,
-          tgl_app_prod: currentTime,
-          status: newStatus // Set the new status based on produk
-        })
-      });
+      updateData = {
+        approval_opr: "APPROVED",
+        opr_id: session.user.id,
+        tgl_app_prod: currentTime
+      };
 
-      if (!approvalResponse.ok) {
-        throw new Error('Failed to update operation manager approval');
+      // Only update status if Manager has already approved
+      if (order.approve_mng === "APPROVED") {
+        updateData = { ...updateData, status: newStatus };
+        toast.success(`Order fully approved. Status updated to ${newStatus}`);
+      } else {
+        toast.success("Operation Manager approval recorded. Waiting for Manager approval.");
       }
     } else {
       throw new Error('Unauthorized user role');
     }
 
-    toast.success(`Order approved successfully. Status set to ${newStatus}`);
+    const approvalResponse = await fetch(`/api/manager/approval/${order.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(updateData)
+    });
+
+    if (!approvalResponse.ok) {
+      throw new Error('Failed to update approval');
+    }
+
     fetchApprovalOrders(pagination.currentPage, searchQuery);
   } catch (error) {
     console.error("Error approving order:", error);

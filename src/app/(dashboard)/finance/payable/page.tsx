@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { 
   PlusCircle, RefreshCw, Search, FileText, Calculator, 
-  Calendar, Check, Clock, AlertTriangle, X, ArrowUp, ArrowDown, Download, Filter
+  Calendar, Check, Clock, AlertTriangle, X, ArrowUp, ArrowDown, Download, Filter, Plus
 } from "lucide-react";
 import { format, isAfter, isBefore, isToday, addDays, parseISO } from "date-fns";
 import { PageContainer } from "@/components/layout/page-container";
@@ -50,6 +50,10 @@ import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { PaginationWithPages } from "@/components/ui/pagination";
 import { PaymentForm } from "./components/PaymentForm";
+import { CreateBillForm } from "./components/CreateBillForm";
+import { FormVendorDialog } from "@/components/finance/FormVendorDialog"
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 // Types
 export interface Bill {
@@ -87,6 +91,13 @@ export interface PayableData {
   vendors?: {
     id: string;
     name: string;
+    contactName: string;
+    email: string;
+    phone: string;
+    address: string;
+    taxId?: string;
+    notes?: string;
+    createdAt: string;
   }[];
 }
 
@@ -108,6 +119,8 @@ function AccountsPayableContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<PayableData | null>(null);
+  const [vendors, setVendors] = useState<Array<{ id: string; name: string }>>([]);
+  const [accounts, setAccounts] = useState<Array<{ id: string; name: string; code: string }>>([]);
   
   // Pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
@@ -116,10 +129,17 @@ function AccountsPayableContent() {
     vendorId: "",
     status: "",
     dateRange: {
-      from: undefined as Date | undefined,
-      to: undefined as Date | undefined,
+      from: new Date(),
+      to: new Date(),
     },
   });
+
+  // Add new state for vendor list
+  const [vendorList, setVendorList] = useState<PayableData['vendors']>([]);
+  const [isLoadingVendors, setIsLoadingVendors] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<NonNullable<PayableData['vendors']>[0] | null>(null);
+  const [showVendorDetail, setShowVendorDetail] = useState(false);
+  const [isEditingVendor, setIsEditingVendor] = useState(false);
 
   // Initialize state from URL params
   useEffect(() => {
@@ -131,7 +151,7 @@ function AccountsPayableContent() {
     const toDate = searchParams.get("toDate");
     const tab = searchParams.get("tab");
 
-    if (tab && ['overview', 'all', 'unpaid', 'overdue'].includes(tab)) {
+    if (tab && ['overview', 'all', 'unpaid', 'overdue', 'vendors'].includes(tab)) {
       setActiveTab(tab);
     }
     
@@ -141,8 +161,8 @@ function AccountsPayableContent() {
       vendorId: vendorId || "",
       status: status || "",
       dateRange: {
-        from: fromDate ? parseISO(fromDate) : undefined,
-        to: toDate ? parseISO(toDate) : undefined,
+        from: fromDate ? new Date(fromDate) : new Date(),
+        to: toDate ? new Date(toDate) : new Date(),
       },
     });
   }, [searchParams]);
@@ -178,9 +198,39 @@ function AccountsPayableContent() {
     }
   };
 
+  // Fetch vendors and accounts
+  const fetchVendorsAndAccounts = async () => {
+    try {
+      const [vendorsResponse, accountsResponse] = await Promise.all([
+        fetch("/api/finance/vendors"),
+        fetch("/api/finance/accounts"),
+      ]);
+
+      if (!vendorsResponse.ok || !accountsResponse.ok) {
+        throw new Error("Failed to fetch vendors or accounts");
+      }
+
+      const [vendorsData, accountsData] = await Promise.all([
+        vendorsResponse.json(),
+        accountsResponse.json(),
+      ]);
+
+      setVendors(vendorsData);
+      setAccounts(accountsData);
+    } catch (error) {
+      console.error("Error fetching vendors or accounts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load vendors or accounts. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Fetch initial data
   useEffect(() => {
     fetchData();
+    fetchVendorsAndAccounts();
   }, [currentPage, activeTab]);
 
   // Update URL when filters change
@@ -196,6 +246,35 @@ function AccountsPayableContent() {
 
     router.push(`${pathname}?${params.toString()}`);
   }, [currentPage, searchQuery, filters, activeTab, pathname, router, searchParams]);
+
+  // Add function to fetch vendors
+  const fetchVendors = async () => {
+    setIsLoadingVendors(true);
+    try {
+      const response = await fetch('/api/finance/vendors');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vendors');
+      }
+      const data = await response.json();
+      setVendorList(data);
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load vendors. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingVendors(false);
+    }
+  };
+
+  // Add useEffect to fetch vendors when tab changes to vendors
+  useEffect(() => {
+    if (activeTab === 'vendors') {
+      fetchVendors();
+    }
+  }, [activeTab]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -217,8 +296,8 @@ function AccountsPayableContent() {
       vendorId: "",
       status: "",
       dateRange: {
-        from: undefined,
-        to: undefined,
+        from: new Date(),
+        to: new Date(),
       },
     });
     setCurrentPage(1);
@@ -231,10 +310,6 @@ function AccountsPayableContent() {
       title: "Data refreshed",
       description: "The latest accounts payable data has been loaded.",
     });
-  };
-
-  const handleCreateBill = () => {
-    router.push("/finance/payable/create");
   };
 
   const handleViewBill = (bill: Bill) => {
@@ -616,6 +691,302 @@ function AccountsPayableContent() {
     </Dialog>
   );
 
+  // Add VendorList component
+  const VendorList = () => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Vendor Name</TableHead>
+            <TableHead>Contact</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead>Address</TableHead>
+            <TableHead>Tax ID</TableHead>
+            <TableHead>Created At</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoadingVendors ? (
+            Array(5).fill(0).map((_, index) => (
+              <TableRow key={`skeleton-${index}`}>
+                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+              </TableRow>
+            ))
+          ) : vendorList && vendorList.length > 0 ? (
+            vendorList.map((vendor) => (
+              <TableRow key={vendor.id}>
+                <TableCell className="font-medium">{vendor.name}</TableCell>
+                <TableCell>{vendor.contactName}</TableCell>
+                <TableCell>{vendor.email}</TableCell>
+                <TableCell>{vendor.phone}</TableCell>
+                <TableCell>{vendor.address}</TableCell>
+                <TableCell>{vendor.taxId || '-'}</TableCell>
+                <TableCell>{format(new Date(vendor.createdAt), 'dd MMM yyyy')}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleViewVendor(vendor)}>
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditVendor(vendor)}>
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteVendor(vendor.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                No vendors found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  // Update vendor action handlers
+  const handleViewVendor = (vendor: NonNullable<PayableData['vendors']>[0]) => {
+    setSelectedVendor(vendor);
+    setShowVendorDetail(true);
+    setIsEditingVendor(false);
+  };
+
+  const handleEditVendor = (vendor: NonNullable<PayableData['vendors']>[0]) => {
+    setSelectedVendor(vendor);
+    setShowVendorDetail(true);
+    setIsEditingVendor(true);
+  };
+
+  const handleDeleteVendor = async (id: string) => {
+    try {
+      const response = await fetch(`/api/finance/vendors/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete vendor');
+      }
+
+      toast({
+        title: 'Vendor deleted',
+        description: 'The vendor has been successfully deleted.',
+      });
+      fetchVendors(); // Refresh vendor list
+    } catch (error) {
+      console.error('Error deleting vendor:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete vendor. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Add VendorDetailDialog component
+  const VendorDetailDialog = () => (
+    <Dialog open={showVendorDetail} onOpenChange={setShowVendorDetail}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditingVendor ? 'Edit Vendor' : 'Vendor Details'}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditingVendor 
+              ? 'Update the vendor information below.'
+              : 'View the vendor details below.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        {selectedVendor && (
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Vendor Name</Label>
+                {isEditingVendor ? (
+                  <Input
+                    value={selectedVendor.name}
+                    onChange={(e) => setSelectedVendor({...selectedVendor, name: e.target.value})}
+                  />
+                ) : (
+                  <p className="text-sm">{selectedVendor.name}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Contact Person</Label>
+                {isEditingVendor ? (
+                  <Input
+                    value={selectedVendor.contactName}
+                    onChange={(e) => setSelectedVendor({...selectedVendor, contactName: e.target.value})}
+                  />
+                ) : (
+                  <p className="text-sm">{selectedVendor.contactName}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                {isEditingVendor ? (
+                  <Input
+                    type="email"
+                    value={selectedVendor.email}
+                    onChange={(e) => setSelectedVendor({...selectedVendor, email: e.target.value})}
+                  />
+                ) : (
+                  <p className="text-sm">{selectedVendor.email}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                {isEditingVendor ? (
+                  <Input
+                    value={selectedVendor.phone}
+                    onChange={(e) => setSelectedVendor({...selectedVendor, phone: e.target.value})}
+                  />
+                ) : (
+                  <p className="text-sm">{selectedVendor.phone}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Address</Label>
+              {isEditingVendor ? (
+                <Textarea
+                  value={selectedVendor.address}
+                  onChange={(e) => setSelectedVendor({...selectedVendor, address: e.target.value})}
+                />
+              ) : (
+                <p className="text-sm">{selectedVendor.address}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tax ID</Label>
+                {isEditingVendor ? (
+                  <Input
+                    value={selectedVendor.taxId || ''}
+                    onChange={(e) => setSelectedVendor({...selectedVendor, taxId: e.target.value})}
+                  />
+                ) : (
+                  <p className="text-sm">{selectedVendor.taxId || '-'}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Created At</Label>
+                <p className="text-sm">
+                  {format(new Date(selectedVendor.createdAt), 'dd MMM yyyy')}
+                </p>
+              </div>
+            </div>
+
+            {isEditingVendor && (
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
+                  value={selectedVendor.notes || ''}
+                  onChange={(e) => setSelectedVendor({...selectedVendor, notes: e.target.value})}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter>
+          {isEditingVendor ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditingVendor(false);
+                  setSelectedVendor(null);
+                  setShowVendorDetail(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/finance/vendors/${selectedVendor?.id}`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(selectedVendor),
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Failed to update vendor');
+                    }
+
+                    toast({
+                      title: 'Vendor updated',
+                      description: 'The vendor has been successfully updated.',
+                    });
+                    fetchVendors();
+                    setIsEditingVendor(false);
+                    setShowVendorDetail(false);
+                  } catch (error) {
+                    console.error('Error updating vendor:', error);
+                    toast({
+                      title: 'Error',
+                      description: 'Failed to update vendor. Please try again.',
+                      variant: 'destructive',
+                    });
+                  }
+                }}
+              >
+                Save Changes
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setShowVendorDetail(false)}
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => setIsEditingVendor(true)}
+              >
+                Edit Vendor
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <PageContainer>
       <div className="flex items-center justify-between mb-6">
@@ -629,10 +1000,21 @@ function AccountsPayableContent() {
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
-          <Button onClick={handleCreateBill}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Bill
-          </Button>
+          <CreateBillForm accounts={accounts} />
+          <FormVendorDialog 
+            trigger={
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                New Vendor
+              </Button>
+            }
+            onVendorCreated={(newVendor) => {
+              setVendors((prev) => [...prev, newVendor]);
+              if (activeTab === 'vendors') {
+                fetchVendors();
+              }
+            }}
+          />
         </div>
       </div>
       
@@ -643,6 +1025,7 @@ function AccountsPayableContent() {
             <TabsTrigger value="all">All Bills</TabsTrigger>
             <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
             <TabsTrigger value="overdue">Overdue</TabsTrigger>
+            <TabsTrigger value="vendors">Vendors</TabsTrigger>
           </TabsList>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
@@ -678,6 +1061,10 @@ function AccountsPayableContent() {
         <TabsContent value="overdue" className="space-y-6">
           <BillsTable />
         </TabsContent>
+        
+        <TabsContent value="vendors" className="space-y-6">
+          <VendorList />
+        </TabsContent>
       </Tabs>
 
       {/* Bill Detail Dialog */}
@@ -690,6 +1077,9 @@ function AccountsPayableContent() {
         bill={selectedBill}
         onSuccess={fetchData}
       />
+      
+      {/* Add VendorDetailDialog */}
+      <VendorDetailDialog />
     </PageContainer>
   );
 }

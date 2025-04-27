@@ -1,97 +1,86 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { db } from "@/lib/db"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
-const roleSchema = z.object({
+const createRoleSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
   permissionIds: z.array(z.string()).min(1),
-  isAdmin: z.boolean().optional().default(false),
 })
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    console.log("Session:", JSON.stringify(session, null, 2))
-
-    if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 })
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
     }
 
-    // Check if user has admin privileges
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    })
-    console.log("Current user:", JSON.stringify(currentUser, null, 2))
+    const body = await request.json()
+    const validatedData = createRoleSchema.parse(body)
+    const { name, description, permissionIds } = validatedData
 
-    if (!currentUser?.role?.isAdmin && !currentUser?.role?.isSystem) {
-      console.log("User role is not admin or system. Role:", currentUser?.role)
-      return new NextResponse("Forbidden", { status: 403 })
-    }
-
-    const body = await req.json()
-    console.log("Request body:", body)
-    
-    const validatedData = roleSchema.parse(body)
-    console.log("Validated data:", validatedData)
-
-    // Check if role name already exists
-    const existingRole = await prisma.role.findUnique({
-      where: {
-        name: validatedData.name,
-      },
+    // Check if role with same name exists
+    const existingRole = await db.role.findFirst({
+      where: { name },
     })
 
     if (existingRole) {
-      return new NextResponse("Role name already exists", { status: 400 })
+      return NextResponse.json(
+        { error: "Role with this name already exists" },
+        { status: 400 }
+      )
     }
 
-    const role = await prisma.role.create({
+    const newRole = await db.role.create({
       data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        isAdmin: validatedData.isAdmin,
+        name,
+        description,
         permissions: {
-          connect: validatedData.permissionIds.map((id) => ({ id })),
+          connect: permissionIds.map(id => ({ id })),
         },
       },
       include: {
         permissions: true,
+        _count: {
+          select: {
+            users: true,
+          },
+        },
       },
     })
 
-    return NextResponse.json(role)
+    return NextResponse.json(newRole, { status: 201 })
   } catch (error) {
-    console.error("[ROLES_POST] Detailed error:", error)
+    console.error("Error creating role:", error)
     if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify(error.issues), { status: 400 })
+      return NextResponse.json(
+        { error: "Validation error", details: error.errors },
+        { status: 400 }
+      )
     }
-    return new NextResponse("Internal error", { status: 500 })
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-
-    if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 })
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
     }
 
-    // Check if user has admin privileges
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    })
-
-    if (!currentUser?.role?.isAdmin && !currentUser?.role?.isSystem) {
-      return new NextResponse("Forbidden", { status: 403 })
-    }
-
-    const roles = await prisma.role.findMany({
+    const roles = await db.role.findMany({
       include: {
         permissions: true,
         _count: {
@@ -101,13 +90,16 @@ export async function GET(req: Request) {
         },
       },
       orderBy: {
-        name: "asc",
+        name: 'asc',
       },
     })
 
     return NextResponse.json(roles)
   } catch (error) {
-    console.error("[ROLES_GET]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    console.error("Error fetching roles:", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
   }
 } 

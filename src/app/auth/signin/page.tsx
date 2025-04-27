@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,18 +45,34 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+      
+      {/* Glass effect card */}
+      <Card className="relative w-full max-w-md overflow-hidden rounded-lg border border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10" />
+        
+        <CardHeader className="relative space-y-4">
+          <div className="flex justify-center">
+            <Image 
+              src="/logosmartone.png" 
+              alt="SmartOne Logo" 
+              width={120} 
+              height={120}
+              className="mb-2"
+            />
+          </div>
+          <CardTitle className="text-lg font-bold text-center">SMARTONE INTEGRATED SYSTEM</CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
+
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="relative space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="relative">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -69,9 +86,10 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-background/50 backdrop-blur-sm"
               />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -80,11 +98,16 @@ export default function SignInPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-background/50 backdrop-blur-sm"
               />
             </div>
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full space-y-4" disabled={isLoading}>
+          <CardFooter className="mt-6">
+            <Button 
+              type="submit" 
+              className="w-full bg-primary/90 hover:bg-primary transition-colors" 
+              disabled={isLoading}
+            >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </CardFooter>

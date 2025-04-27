@@ -1083,15 +1083,36 @@ const ImageThumbnail = ({
   if (alt.includes("DP")) {
     return (
       <div className="flex items-center gap-1">
-        <CaptureThumbnails tf_dp={formattedSrc} altText={alt} useFallback={useFallback} />
+        <CaptureThumbnails 
+          tf_dp={formattedSrc} 
+          altText={alt} 
+          useFallback={useFallback}
+          className="h-8 w-8"
+        />
         {order && onSuccess && <EditDpReceiptForm order={order} onSuccess={onSuccess} />}
       </div>
     );
   } else if (alt.includes("Settlement") || alt.includes("Pelunasan")) {
     return (
       <div className="flex items-center gap-1">
-        <CaptureThumbnails tf_pelunasan={formattedSrc} altText={alt} useFallback={useFallback} />
+        <CaptureThumbnails 
+          tf_pelunasan={formattedSrc} 
+          altText={alt} 
+          useFallback={useFallback}
+          className="h-8 w-8"
+        />
         {order && onSuccess && <EditSettlementReceiptForm order={order} onSuccess={onSuccess} />}
+      </div>
+    );
+  } else if (alt.includes("Design") || alt.includes("Capture")) {
+    return (
+      <div className="flex items-center gap-1">
+        <CaptureThumbnails 
+          capture={formattedSrc} 
+          altText={alt} 
+          useFallback={useFallback}
+          className="h-8 w-8"
+        />
       </div>
     );
   }
@@ -1099,15 +1120,28 @@ const ImageThumbnail = ({
   // Fallback to old implementation for other cases
   return (
     <div 
-      className="relative w-12 h-12 overflow-hidden rounded border cursor-pointer hover:opacity-80"
+      className="relative w-8 h-8 overflow-hidden rounded border cursor-pointer hover:opacity-80"
       onClick={onClick}
     >
-      <Image 
-        src={formattedSrc}
-        alt={alt}
-        fill
-        className="object-cover"
-      />
+      {useFallback ? (
+        <FallbackImage
+          src={formattedSrc}
+          alt={alt}
+          width={32}
+          height={32}
+          className="object-cover"
+          unoptimized
+        />
+      ) : (
+        <Image 
+          src={formattedSrc}
+          alt={alt}
+          width={32}
+          height={32}
+          className="object-cover"
+          unoptimized
+        />
+      )}
     </div>
   )
 }

@@ -36,6 +36,19 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 
 interface BudgetItem {
   id: string;
@@ -80,6 +93,14 @@ interface BudgetPerformance {
   }[];
 }
 
+interface Account {
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  description?: string;
+}
+
 export default function BudgetsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +110,7 @@ export default function BudgetsPage() {
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newBudgetItems, setNewBudgetItems] = useState<{accountId: string; description: string; amount: string}[]>([
     { accountId: "", description: "", amount: "" },
@@ -115,6 +136,7 @@ export default function BudgetsPage() {
   const fetchBudgets = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       let queryParams = new URLSearchParams();
       if (selectedYear) queryParams.append("year", selectedYear);
@@ -127,22 +149,30 @@ export default function BudgetsPage() {
       }
       
       const data = await response.json();
-      setBudgets(data.budgets);
-      setBudgetPerformance(data.budgetVsActual);
-      setDepartments(data.filters.departments || []);
-      setYears(data.filters.years || []);
       
-      // Calculate summary
-      const totalBudgeted = data.budgets.reduce((sum: number, budget: Budget) => 
-        sum + budget.totalAmount, 0);
+      // Initialize arrays with empty defaults if undefined
+      const budgetsData = Array.isArray(data.budgets) ? data.budgets : [];
+      const performanceData = Array.isArray(data.performance) ? data.performance : [];
+      const departmentsData = Array.isArray(data.filters?.departments) ? data.filters.departments : [];
+      const yearsData = Array.isArray(data.filters?.years) ? data.filters.years : [];
       
-      const totalSpent = data.budgetVsActual.reduce((sum: number, yearData: BudgetPerformance) => 
-        sum + yearData.accounts.reduce((accSum: number, account) => 
-          accSum + account.actualAmount, 0), 0);
+      // Set state with safe values
+      setBudgets(budgetsData);
+      setBudgetPerformance(performanceData);
+      setDepartments(departmentsData);
+      setYears(yearsData);
       
-      const overBudgetCount = data.budgetVsActual.reduce((count: number, yearData: BudgetPerformance) => 
-        count + yearData.accounts.filter((account: any) => 
-          account.actualAmount > account.budgetAmount).length, 0);
+      // Calculate summary with null checks
+      const totalBudgeted = budgetsData.reduce((sum: number, budget: Budget) => 
+        sum + (budget.totalAmount || 0), 0);
+      
+      const totalSpent = performanceData.reduce((sum: number, yearData: BudgetPerformance) => 
+        sum + (yearData.accounts || []).reduce((accSum: number, account) => 
+          accSum + (account.actualAmount || 0), 0), 0);
+      
+      const overBudgetCount = performanceData.reduce((count: number, yearData: BudgetPerformance) => 
+        count + (yearData.accounts || []).filter((account: any) => 
+          (account.actualAmount || 0) > (account.budgetAmount || 0)).length, 0);
       
       setSummary({
         totalBudgeted,
@@ -154,6 +184,11 @@ export default function BudgetsPage() {
     } catch (err) {
       console.error("Failed to fetch budgets:", err);
       setError(err instanceof Error ? err.message : "Unknown error occurred");
+      // Set empty arrays for all state in case of error
+      setBudgets([]);
+      setBudgetPerformance([]);
+      setDepartments([]);
+      setYears([]);
     } finally {
       setLoading(false);
     }
@@ -164,33 +199,15 @@ export default function BudgetsPage() {
       const response = await fetch('/api/finance/accounts');
       if (response.ok) {
         const data = await response.json();
-        setAccounts(data.accounts);
+        setAccounts(Array.isArray(data.accounts) ? data.accounts : []);
+      } else {
+        console.error('Failed to fetch accounts:', response.status);
+        setAccounts([]);
       }
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
+      setAccounts([]);
     }
-  };
-
-  const addBudgetItem = () => {
-    setNewBudgetItems([...newBudgetItems, { accountId: "", description: "", amount: "" }]);
-  };
-
-  const removeBudgetItem = (index: number) => {
-    if (newBudgetItems.length > 1) {
-      const updatedItems = [...newBudgetItems];
-      updatedItems.splice(index, 1);
-      setNewBudgetItems(updatedItems);
-    }
-  };
-
-  const handleBudgetItemChange = (index: number, field: string, value: string) => {
-    const updatedItems = [...newBudgetItems];
-    updatedItems[index] = { ...updatedItems[index], [field]: value };
-    setNewBudgetItems(updatedItems);
-  };
-
-  const handleFormChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
   };
 
   const handleCreateBudget = async () => {
@@ -253,11 +270,32 @@ export default function BudgetsPage() {
     }
   };
 
+  const addBudgetItem = () => {
+    setNewBudgetItems([...newBudgetItems, { accountId: "", description: "", amount: "" }]);
+  };
+
+  const removeBudgetItem = (index: number) => {
+    if (newBudgetItems.length > 1) {
+      const updatedItems = [...newBudgetItems];
+      updatedItems.splice(index, 1);
+      setNewBudgetItems(updatedItems);
+    }
+  };
+
+  const handleBudgetItemChange = (index: number, field: string, value: string) => {
+    const updatedItems = [...newBudgetItems];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    setNewBudgetItems(updatedItems);
+  };
+
+  const handleFormChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
   const calculateTotalBudgetAmount = () => {
     return newBudgetItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
   };
 
-  // Custom handlers for filter changes
   const handleYearChange = (value: string) => {
     setSelectedYear(value === "ALL" ? "" : value);
   };
@@ -279,7 +317,7 @@ export default function BudgetsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Years</SelectItem>
-                {years.map((year) => (
+                {Array.isArray(years) && years.map((year) => (
                   <SelectItem key={year} value={year.toString()}>
                     {year}
                   </SelectItem>
@@ -295,7 +333,7 @@ export default function BudgetsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Departments</SelectItem>
-                {departments.map((dept) => (
+                {Array.isArray(departments) && departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
                   </SelectItem>
@@ -360,7 +398,7 @@ export default function BudgetsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="NONE">None</SelectItem>
-                      {departments.map((dept) => (
+                      {Array.isArray(departments) && departments.map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           {dept.name}
                         </SelectItem>
@@ -389,11 +427,15 @@ export default function BudgetsPage() {
                             <SelectValue placeholder="Select account" />
                           </SelectTrigger>
                           <SelectContent>
-                            {accounts.map((account) => (
-                              <SelectItem key={account.id} value={account.id}>
-                                {account.code} - {account.name}
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(accounts) && accounts.length > 0 ? (
+                              accounts.map((account) => (
+                                <SelectItem key={account.id} value={account.id}>
+                                  {account.code} - {account.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-accounts" disabled>No accounts available</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -549,12 +591,32 @@ export default function BudgetsPage() {
                   <div className="flex items-center justify-center h-full">
                     <Skeleton className="h-full w-full" />
                   </div>
-                ) : budgetPerformance.length > 0 ? (
+                ) : Array.isArray(budgetPerformance) && budgetPerformance.length > 0 ? (
                   <div className="h-full">
-                    {/* Chart would go here */}
-                    <div className="flex items-center justify-center h-full">
-                      <BarChart className="h-24 w-24 text-muted-foreground" />
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsBarChart
+                        data={budgetPerformance.flatMap(yearData => 
+                          yearData.accounts.map(account => ({
+                            name: account.accountName,
+                            budget: account.budgetAmount,
+                            actual: account.actualAmount,
+                            year: yearData.year
+                          }))
+                        )}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value: number) => formatCurrency(value)}
+                          labelFormatter={(label) => `Account: ${label}`}
+                        />
+                        <Legend />
+                        <Bar dataKey="budget" name="Budget" fill="#8884d8" />
+                        <Bar dataKey="actual" name="Actual" fill="#82ca9d" />
+                      </RechartsBarChart>
+                    </ResponsiveContainer>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full">
@@ -574,12 +636,32 @@ export default function BudgetsPage() {
                   <div className="flex items-center justify-center h-full">
                     <Skeleton className="h-full w-full" />
                   </div>
-                ) : budgets.length > 0 ? (
+                ) : Array.isArray(budgets) && budgets.length > 0 ? (
                   <div className="h-full">
-                    {/* Chart would go here */}
-                    <div className="flex items-center justify-center h-full">
-                      <PieChart className="h-24 w-24 text-muted-foreground" />
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Pie
+                          data={budgets.map(budget => ({
+                            name: budget.name,
+                            value: budget.totalAmount
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {budgets.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={`#${Math.floor(Math.random()*16777215).toString(16)}`} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => formatCurrency(value)}
+                        />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full">
@@ -604,7 +686,7 @@ export default function BudgetsPage() {
                     <Skeleton key={i} className="h-12 w-full" />
                   ))}
                 </div>
-              ) : budgets.length > 0 ? (
+              ) : Array.isArray(budgets) && budgets.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -664,7 +746,7 @@ export default function BudgetsPage() {
                     <Skeleton key={i} className="h-12 w-full" />
                   ))}
                 </div>
-              ) : budgetPerformance.length > 0 ? (
+              ) : Array.isArray(budgetPerformance) && budgetPerformance.length > 0 ? (
                 <ScrollArea className="h-[400px]">
                   {budgetPerformance.map((yearData) => (
                     <div key={yearData.year} className="mb-6">
@@ -680,7 +762,7 @@ export default function BudgetsPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {yearData.accounts.map((account) => (
+                          {Array.isArray(yearData.accounts) && yearData.accounts.map((account) => (
                             <TableRow key={account.accountId}>
                               <TableCell>
                                 <div className="font-medium">{account.accountName}</div>

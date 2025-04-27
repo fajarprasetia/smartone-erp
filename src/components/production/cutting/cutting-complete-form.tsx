@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 
 // Add safeStringify helper function
 // Safely stringify values including BigInt
@@ -37,13 +38,13 @@ function safeStringify(obj: any): string {
 
 // Define the schema
 const formSchema = z.object({
-  notes: z.string().optional(),
-  cutting_bagus: z.string().optional(),
-  cutting_reject: z.string().optional(),
-  cutting_mesin: z.string().optional(),
-  cutting_speed: z.string().optional(),
-  acc: z.string().optional(),
-  power: z.string().optional(),
+  cutting_bagus: z.string().min(1, "Good cuts is required"),
+  cutting_reject: z.string().min(1, "Rejected cuts is required"),
+  catatan_cutting: z.string().optional(),
+  cutting_mesin: z.string().min(1, "Machine is required"),
+  cutting_speed: z.string().min(1, "Speed is required"),
+  acc: z.string().min(1, "Acceleration is required"),
+  power: z.string().min(1, "Power is required"),
 });
 
 // Infer the type
@@ -62,15 +63,16 @@ export function CuttingCompleteForm({
   onOpenChange,
   onSuccess,
 }: CuttingCompleteFormProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Helper function to get initial data from order
   const getInitialData = () => {
     if (!order) {
       return {
-        notes: "",
-        cutting_bagus: "0",
-        cutting_reject: "0",
+        cutting_bagus: "",
+        cutting_reject: "",
+        catatan_cutting: "",
         cutting_mesin: "",
         cutting_speed: "",
         acc: "",
@@ -80,9 +82,9 @@ export function CuttingCompleteForm({
     
     // Get data from order with fallbacks for each field
     const initialData = {
-      notes: order.catatan_cutting || "",
-      cutting_bagus: order.cutting_bagus || "0",
-      cutting_reject: (order as any).cutting_reject || "0",
+      cutting_bagus: order.cutting_bagus || "",
+      cutting_reject: (order as any).cutting_reject || "",
+      catatan_cutting: order.catatan_cutting || "",
       cutting_mesin: order.cutting_mesin || "",
       cutting_speed: order.cutting_speed || "",
       acc: order.acc || "",
@@ -131,7 +133,7 @@ export function CuttingCompleteForm({
             form.reset({
               ...getInitialData(),
               ...detailedData,
-              notes: detailedData.catatan_cutting || order.catatan_cutting || "",
+              catatan_cutting: detailedData.catatan_cutting || order.catatan_cutting || "",
             });
           } else {
             // Don't log errors for expected 404s
@@ -160,14 +162,12 @@ export function CuttingCompleteForm({
       
       const submissionData = {
         ...values,
-        completedAt: new Date().toISOString(),
-        status: "COMPLETED"
+        cutting_done: new Date().toISOString(),
       };
       
       console.log("API request data:", safeStringify(submissionData));
       
-      // Try the specialized endpoint first
-      let response = await fetch(`/api/production/orders/${order.id}/complete-cutting`, {
+      const response = await fetch(`/api/production/orders/${order.id}/complete-cutting`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,27 +175,15 @@ export function CuttingCompleteForm({
         body: safeStringify(submissionData),
       });
       
-      // If specialized endpoint fails, try the general update endpoint
-      if (!response.ok) {
-        console.log("Specialized endpoint failed, trying general update endpoint");
-        
-        response = await fetch(`/api/orders/${order.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: safeStringify(submissionData),
-        });
-      }
-      
       if (response.ok) {
         const responseData = await response.json();
         console.log("Success response:", safeStringify(responseData));
         
-        toast.success("Order cutting completed successfully");
+        toast.success("Cutting completed successfully");
         
         onSuccess && onSuccess();
         onOpenChange && onOpenChange(false);
+        router.refresh();
       } else {
         // Handle error response
         let errorMessage: string;
@@ -390,7 +378,7 @@ export function CuttingCompleteForm({
 
                 <FormField
                   control={form.control}
-                  name="notes"
+                  name="catatan_cutting"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Notes</FormLabel>

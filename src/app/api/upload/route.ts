@@ -28,7 +28,8 @@ export async function POST(req: Request) {
     // Check for folder parameter in URL
     const url = new URL(req.url);
     const folderParam = url.searchParams.get('folder');
-    const useFolder = folderParam === 'tfuploads' ? 'tfuploads' : 'uploads';
+    const useFolder = folderParam === 'tfuploads' ? 'tfuploads' : 
+                     folderParam === 'capture' ? 'capture' : 'uploads';
     
     // Define upload path and URL prefix
     let uploadDir = join(process.cwd(), "public", useFolder);

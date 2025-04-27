@@ -113,25 +113,48 @@ export function PaperInfoSection({
         <FormField
           control={form.control}
           name="jumlah"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="font-semibold">Quantity*</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter quantity"
-                  {...field}
-                  onChange={(e) => {
-                    // Only allow numbers and decimal point
-                    const value = e.target.value;
-                    if (value === "" || /^(\d+)?\.?\d*$/.test(value)) {
-                      field.onChange(value);
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const quantity = field.value;
+            const unit = form.watch("unit");
+            const fabricLength = form.watch("fabricLength");
+            
+            // Check if quantity exceeds fabric length
+            const isExceeding = (qty: string | undefined, unit: string | undefined, length: string | undefined) => {
+              if (!qty || !length || !unit) return false;
+              const qtyNum = parseFloat(qty);
+              const lengthNum = parseFloat(length);
+              if (isNaN(qtyNum) || isNaN(lengthNum)) return false;
+              const qtyInMeters = unit === 'yard' ? yardToMeter(qtyNum) : qtyNum;
+              return qtyInMeters > lengthNum;
+            };
+
+            const showWarning = isExceeding(quantity, unit, fabricLength);
+
+            return (
+              <FormItem>
+                <FormLabel className="font-semibold">Quantity*</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter quantity"
+                    {...field}
+                    onChange={(e) => {
+                      // Only allow numbers and decimal point
+                      const value = e.target.value;
+                      if (value === "" || /^(\d+)?\.?\d*$/.test(value)) {
+                        field.onChange(value);
+                      }
+                    }}
+                  />
+                </FormControl>
+                {showWarning && (
+                  <p className="text-sm text-yellow-500">
+                    Warning: Quantity exceeds available fabric length
+                  </p>
+                )}
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
         
         {/* Unit Field - Always Active */}

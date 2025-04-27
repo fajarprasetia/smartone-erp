@@ -566,10 +566,10 @@ export function PendingPrintTab() {
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="cursor-pointer" 
+                      className="cursor-pointer sticky left-0 bg-muted/90 whitespace-nowrap"
                       onClick={() => handleSort("spk")}
                     >
-                      <div className="flex items-center sticky left-0 bg-muted/90 whitespace-nowrap">
+                      <div className="flex items-center">
                         SPK
                         {getSortIcon("spk")}
                       </div>

@@ -3,6 +3,35 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+async function seedTaxTypes() {
+  const taxTypes = [
+    {
+      name: "VAT",
+      description: "Value Added Tax",
+    },
+    {
+      name: "INCOME",
+      description: "Income Tax",
+    },
+    {
+      name: "CORPORATE",
+      description: "Corporate Tax",
+    },
+    {
+      name: "OTHER",
+      description: "Other Tax Types",
+    },
+  ];
+
+  for (const taxType of taxTypes) {
+    await prisma.taxType.upsert({
+      where: { id: taxType.name },
+      update: {},
+      create: { ...taxType, id: taxType.name },
+    });
+  }
+}
+
 async function main() {
   try {
     // Create default permissions
@@ -137,6 +166,8 @@ async function main() {
         isActive: true,
       },
     });
+
+    await seedTaxTypes();
 
     console.log('Seed data created:');
     console.log(`- System Administrator Role: ${systemAdminRole.id}`);

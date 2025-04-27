@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 
 // Schema for validating the cutting completion data
 const cuttingCompleteSchema = z.object({
@@ -15,6 +16,7 @@ const cuttingCompleteSchema = z.object({
   power: z.string().optional(),
   cutting_done: z.string().optional(),
   status: z.string().optional(),
+  statusm: z.string().optional(),
 });
 
 // Helper function to serialize data, handling BigInt values
@@ -28,6 +30,23 @@ function serializeData(data: any): any {
       return value;
     })
   );
+}
+
+const completeCuttingSchema = z.object({
+  cutting_bagus: z.string().min(1, "Good cuts is required"),
+  cutting_reject: z.string().min(1, "Rejected cuts is required"),
+  catatan_cutting: z.string().optional(),
+  cutting_mesin: z.string().min(1, "Machine is required"),
+  cutting_speed: z.string().min(1, "Speed is required"),
+  acc: z.string().min(1, "Acceleration is required"),
+  power: z.string().min(1, "Power is required"),
+  cutting_done: z.string().datetime(),
+});
+
+interface RouteContext {
+  params: {
+    id: string
+  }
 }
 
 export async function PATCH(
@@ -84,7 +103,8 @@ export async function PATCH(
       where: { id: orderId },
       data: {
         cutting_done: new Date(),
-        statusprod: 'CUTTING_COMPLETED',
+        status: 'COMPLETED',
+        statusm: 'COMPLETED',
         catatan_cutting: data.catatan_cutting || null,
         cutting_bagus: data.cutting_bagus || null,
         cutting_reject: data.cutting_reject || null,
@@ -122,4 +142,57 @@ export async function PATCH(
       { status: 500 }
     );
   }
-} 
+}
+
+export async function POST(
+  request: Request,
+  { params }: any
+) {
+  try {
+    const body = await request.json();
+    const validatedData = completeCuttingSchema.parse(body);
+
+    const order = await prisma.order.update({
+      where: { id: params.id },
+      data: {
+        cutting_bagus: validatedData.cutting_bagus,
+        cutting_reject: validatedData.cutting_reject,
+        catatan_cutting: validatedData.catatan_cutting,
+        cutting_mesin: validatedData.cutting_mesin,
+        cutting_speed: validatedData.cutting_speed,
+        acc: validatedData.acc,
+        power: validatedData.power,
+        cutting_done: new Date(validatedData.cutting_done),
+        status: "COMPLETED",
+        statusm: "COMPLETED",
+        updated_at: new Date(),
+      },
+      include: {
+        customer: true,
+        cutting: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Serialize the response to handle BigInt values
+    const serializedOrder = serializeData(order);
+
+    return NextResponse.json(serializedOrder);
+  } catch (error) {
+    console.error("Error completing cutting:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation error", details: error.errors },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Failed to complete cutting" },
+      { status: 500 }
+    );
+  }
+}

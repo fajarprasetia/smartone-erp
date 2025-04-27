@@ -1,9 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { addDays, format, isAfter, isBefore, parseISO, subDays } from "date-fns";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+// Validation schema for bill creation
+const createBillSchema = z.object({
+  vendorId: z.string(),
+  billNumber: z.string(),
+  issueDate: z.string(),
+  dueDate: z.string(),
+  amount: z.number(),
+  description: z.string().optional(),
+  items: z.array(z.object({
+    description: z.string(),
+    quantity: z.number(),
+    unitPrice: z.number(),
+    accountId: z.string().optional(),
+    taxRate: z.number().optional(),
+  })),
+});
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const url = new URL(req.url);
     
     // Get pagination parameters
@@ -276,76 +302,53 @@ export async function GET(req: NextRequest) {
 // Create a bill
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
-    
-    // Validate the request body
-    if (!body.vendorId || !body.issueDate || !body.dueDate || !body.items || body.items.length === 0) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-    
-    // Generate bill number (you might want to implement a more sophisticated logic)
-    const date = new Date();
-    const yearMonth = format(date, "yyMM");
-    const latestBill = await db.bill.findFirst({
-      where: {
-        billNumber: {
-          startsWith: `BILL-${yearMonth}`
-        }
-      },
-      orderBy: {
-        billNumber: 'desc'
-      }
-    });
-    
-    let billNumber;
-    if (latestBill) {
-      const lastNumber = parseInt(latestBill.billNumber.split('-')[2]);
-      billNumber = `BILL-${yearMonth}-${(lastNumber + 1).toString().padStart(4, '0')}`;
-    } else {
-      billNumber = `BILL-${yearMonth}-0001`;
-    }
-    
-    // Calculate total amount
-    const totalAmount = body.items.reduce((sum: number, item: any) => {
-      return sum + (item.quantity * item.unitPrice);
-    }, 0);
-    
-    // Create bill with items
-    const bill = await db.bill.create({
+    const validatedData = createBillSchema.parse(body);
+
+    // Calculate total amount from items
+    const totalAmount = validatedData.items.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice * (1 + (item.taxRate || 0) / 100),
+      0
+    );
+
+    const bill = await prisma.bill.create({
       data: {
-        billNumber,
-        vendorId: body.vendorId,
-        issueDate: new Date(body.issueDate),
-        dueDate: new Date(body.dueDate),
+        billNumber: validatedData.billNumber,
+        vendorId: validatedData.vendorId,
+        issueDate: new Date(validatedData.issueDate),
+        dueDate: new Date(validatedData.dueDate),
         amount: totalAmount,
-        status: "UNPAID",
-        notes: body.notes,
-        description: body.description,
-        reference: body.reference,
         totalAmount,
+        status: "UNPAID",
+        description: validatedData.description,
         items: {
-          create: body.items.map((item: any) => ({
+          create: validatedData.items.map(item => ({
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            amount: item.quantity * item.unitPrice,
+            amount: item.quantity * item.unitPrice * (1 + (item.taxRate || 0) / 100),
+            accountId: item.accountId,
             taxRate: item.taxRate || 0,
-            accountId: item.accountId
-          }))
-        }
+          })),
+        },
       },
       include: {
         vendor: true,
-        items: true
-      }
+        items: true,
+      },
     });
-    
+
     return NextResponse.json(bill);
   } catch (error) {
     console.error("Error creating bill:", error);
-    return NextResponse.json({ 
-      error: "Failed to create bill",
-      message: error instanceof Error ? error.message : "Unknown error" 
-    }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 } 
