@@ -132,7 +132,7 @@ const bigIntSerializer = (data: any): any => {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
     try {
       console.log("Approval List API called");
       
@@ -141,16 +141,17 @@ export async function GET(req: Request) {
       console.log("Session:", session ? "exists" : "null");
       
       if (!session?.user) {
+        console.log("Unauthorized access attempt");
         return new NextResponse(
           JSON.stringify({ error: "Unauthorized - Please login" }),
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         );
       }
-      console.log("Authenticated user:", session.user.id);
+      console.log("Authenticated user:", session.user.id, "with role:", session.user.role?.name);
     
       // Get query parameters
       const url = new URL(req.url);
-      const filterType = url.searchParams.get("filter") || "design"; // design or process
+      const filterType = url.searchParams.get("filter") || "design";
       const page = parseInt(url.searchParams.get("page") || "1", 10);
       const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
       const sortField = url.searchParams.get("sortField") || "created_at";
@@ -162,17 +163,28 @@ export async function GET(req: Request) {
       // Build filter based on filterType
       let whereCondition: any = {};
       
-      if (filterType === "Approval" || filterType === "READYFORPROD") {
-        whereCondition.status = "READYFORPROD";
-        whereCondition.approval = "APPROVED";
-        whereCondition.OR = [
-          { dp: { not: null } },
-          { biaya_tambahan: { not: null } }
-        ];
+      if (filterType === "READYFORPROD") {
+        console.log(`Using READYFORPROD filter condition`);
+        whereCondition = {
+          AND: [
+            { status: "READYFORPROD" },
+            { approval: "APPROVED" },
+            {
+              OR: [
+                { dp: { not: null } },
+                { biaya_tambahan: { not: null } }
+              ]
+            }
+          ]
+        };
+      } else {
+        console.log(`Using default filter condition for ${filterType}`);
+        whereCondition = {};
       }
       
       // Add search query if provided
       if (searchQuery) {
+        console.log(`Adding search query for: "${searchQuery}"`);
         const searchOR = [
           { spk: { contains: searchQuery, mode: "insensitive" } },
           { produk: { contains: searchQuery, mode: "insensitive" } },
@@ -180,149 +192,113 @@ export async function GET(req: Request) {
           { catatan: { contains: searchQuery, mode: "insensitive" } },
           { customer: { nama: { contains: searchQuery, mode: "insensitive" } } }
         ];
-        if (whereCondition.OR) {
-          // Combine existing OR with search OR using AND
-          whereCondition.AND = [
-            { OR: whereCondition.OR },
-            { OR: searchOR }
-          ];
-          delete whereCondition.OR;
+        
+        if (whereCondition.AND) {
+          whereCondition.AND.push({ OR: searchOR });
         } else {
           whereCondition.OR = searchOR;
         }
       }
       
-      // Count total matching orders (for pagination)
-      const totalCount = await db.order.count({
-        where: whereCondition
-      });
+      console.log("Final where condition:", JSON.stringify(whereCondition));
       
-      console.log(`Found ${totalCount} total orders matching filter`);
-      
-      // Calculate total pages
-      const totalPages = Math.ceil(totalCount / pageSize);
-      
-      // Validate page number
-      const validPage = Math.max(1, Math.min(page, totalPages || 1));
-      
-      // Determine sort direction
-      const sortDirection = sortOrder === "asc" ? "asc" : "desc";
-      
-      
-      // Fetch orders with pagination, sorting, and includes
-      const orders = await db.order.findMany({
-        where: whereCondition,
-        take: pageSize,
-        skip: (validPage - 1) * pageSize,
-        orderBy: {
-          [sortField]: sortDirection
-        },
-        include: {
-          customer: {
-            select: {
-              id: true,
-              nama: true,
-              telp: true
+      try {
+        // Count total matching orders (for pagination)
+        const totalCount = await db.order.count({
+          where: whereCondition
+        });
+        
+        console.log(`Found ${totalCount} total orders matching filter`);
+        
+        // Calculate total pages
+        const totalPages = Math.ceil(totalCount / pageSize);
+        
+        // Validate page number
+        const validPage = Math.max(1, Math.min(page, totalPages || 1));
+        
+        // Determine sort direction
+        const sortDirection = sortOrder === "asc" ? "asc" : "desc";
+        
+        // Fetch orders with pagination, sorting, and includes
+        const orders = await db.order.findMany({
+          where: whereCondition,
+          take: pageSize,
+          skip: (validPage - 1) * pageSize,
+          orderBy: {
+            [sortField]: sortDirection
+          },
+          include: {
+            customer: {
+              select: {
+                id: true,
+                nama: true,
+                telp: true
+              }
             }
           }
-        }
-      });
-      
-      console.log(`Fetched ${orders.length} orders for page ${validPage}`);
+        });
+        
+        console.log(`Fetched ${orders.length} orders for page ${validPage}`);
 
-      // Fetch marketing users for the orders
-      const marketingIds = orders
-        .filter(order => order.marketing)
-        .map(order => order.marketing)
-        .filter(Boolean) as string[];
-      
-      let marketingUsers: Record<string, string> = {};
-      
-      if (marketingIds.length > 0) {
-        try {
-          // Fetch marketing users from the User table
-          const users = await db.user.findMany({
-            where: {
-              id: {
-                in: marketingIds
+        // Fetch marketing users for the orders
+        const marketingIds = orders
+          .filter(order => order.marketing)
+          .map(order => order.marketing)
+          .filter(Boolean) as string[];
+        
+        let marketingUsers: Record<string, string> = {};
+        
+        if (marketingIds.length > 0) {
+          try {
+            const users = await db.user.findMany({
+              where: {
+                id: {
+                  in: marketingIds
+                }
+              },
+              select: {
+                id: true,
+                name: true
               }
-            },
-            select: {
-              id: true,
-              name: true
-            }
-          });
-          
-          // Create a lookup map of user IDs to names
-          marketingUsers = users.reduce((acc: Record<string, string>, user) => {
-            acc[user.id] = user.name;
-            return acc;
-          }, {});
-          
-          console.log(`Found ${users.length} marketing users`);
-        } catch (error) {
-          console.error("Error fetching marketing users:", error);
-          // Continue without marketing user data
-        }
-      }
-      
-      // Fetch designer users for the orders
-      const designerIds = orders
-        .filter(order => order.designer_id)
-        .map(order => order.designer_id)
-        .filter(Boolean) as string[]; // Filter out nulls
-      let designerUsers: Record<string, string> = {};
-      if (designerIds.length > 0) {
-        try {
-          const users = await db.user.findMany({
-            where: {
-              id: {
-                in: designerIds
+            });
+            
+            marketingUsers = users.reduce((acc, user) => {
+              if (user.id && user.name) {
+                acc[user.id] = user.name;
               }
-            },
-            select: {
-              id: true,
-              name: true
-            }
-          });
-          designerUsers = users.reduce((acc: Record<string, string>, user) => {
-            acc[user.id] = user.name;
-            return acc;
-          }, {});
-          console.log(`Found ${users.length} designer users`);
-        } catch (error) {
-          console.error("Error fetching designer users:", error);
+              return acc;
+            }, {} as Record<string, string>);
+          } catch (error) {
+            console.error("Error fetching marketing users:", error);
+          }
         }
+        
+        // Format response with serialized data
+        return new NextResponse(
+          JSON.stringify({
+            orders: bigIntSerializer(orders),
+            marketingUsers,
+            totalCount,
+            totalPages,
+            currentPage: validPage
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      } catch (dbError) {
+        console.error("Database error:", dbError);
+        return new NextResponse(
+          JSON.stringify({
+            error: "Database error",
+            message: dbError instanceof Error ? dbError.message : "Unknown database error"
+          }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
       }
-      
-      const modifiedOrders = orders.map(order => ({
-        ...order,
-        asal_bahan: order.asal_bahan_id === BigInt(22) ? 'SMARTONE' : 'CUSTOMER',
-        marketing: order.marketing
-          ? { id: order.marketing, name: marketingUsers[order.marketing] || order.marketing }
-          : null,
-        designer_id: order.designer_id
-          ? { id: order.designer_id, name: designerUsers[order.designer_id] || order.designer_id }
-          : null
-      }));
-
-      const serializedData = bigIntSerializer({
-        orders: modifiedOrders,
-        totalCount: totalCount,
-        totalPages: totalPages,
-        currentPage: validPage
-      });
-
-      return new NextResponse(
-        JSON.stringify(serializedData),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-      
     } catch (error) {
-      console.error("Error in Approval orders API:", error);
+      console.error("Error in approval list API:", error);
       return new NextResponse(
-        JSON.stringify({ 
-          error: "Failed to fetch Approval orders",
+        JSON.stringify({
+          error: "Failed to fetch approval orders",
           message: error instanceof Error ? error.message : "Unknown error"
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }

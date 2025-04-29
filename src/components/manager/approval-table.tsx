@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { getSession } from "next-auth/react"
 import { 
   Search, 
   RefreshCw, 
@@ -136,58 +137,75 @@ export function OrderTable({
     order: "desc"
   })
 
-  const fetchApprovalOrders = useCallback(async (page = 1, search = searchQuery) => {
-    setIsLoading(true);
+  const fetchApprovalOrders = useCallback(async () => {
     try {
-      const apiUrl = `/api/manager/approval?page=${page}&pageSize=${pageSize}&search=${search}&filter=READYFORPROD`;
-      const response = await fetch(apiUrl);
+      setIsLoading(true);
+      const session = await getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session");
+      }
+
+      const params = new URLSearchParams({
+        page: pagination.currentPage.toString(),
+        pageSize: pageSize.toString(),
+        sortField: ordersSorting.field,
+        sortOrder: ordersSorting.order,
+        filter: approvalStatus,
+        ...(searchQuery && { search: searchQuery })
+      });
+
+      const response = await fetch(`/api/manager/approval?${params.toString()}`);
       
       if (!response.ok) {
-        throw new Error("Failed to fetch Approval orders");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch approval orders");
       }
-      
+
       const data = await response.json();
       
-      // Filter orders based on user role and approval status
-      let filteredOrders = data.orders || [];
-      
-      if (session?.user?.role?.name === "Manager") {
-        // For Manager role, filter out orders that already have "APPROVED" status
-        filteredOrders = filteredOrders.filter((order: ApprovalOrderItem) => order.approve_mng !== "APPROVED");
-      } else if (session?.user?.role?.name === "Operation Manager") {
-        // For Operation Manager role, filter out orders that already have "APPROVED" status
-        filteredOrders = filteredOrders.filter((order: ApprovalOrderItem) => order.approval_opr !== "APPROVED");
+      if (!data.orders) {
+        throw new Error("Invalid response format");
       }
-      
+
+      // Filter orders based on user role
+      let filteredOrders = data.orders;
+      if (session.user.role?.name === "Marketing") {
+        filteredOrders = data.orders.filter((order: any) => 
+          order.marketing === session.user.id
+        );
+      }
+
       setOrders(filteredOrders);
-      setPagination({
-        totalCount: filteredOrders.length, // Update count based on filtered results
-        totalPages: Math.ceil(filteredOrders.length / pageSize) || 1,
+      setPagination(prev => ({
+        ...prev,
+        totalCount: data.totalCount,
+        totalPages: data.totalPages,
         currentPage: data.currentPage || 1
-      });
+      }));
+      setSession(session);
     } catch (error) {
-      console.error("Error fetching Approval orders:", error);
-      toast.error(`Failed to fetch Approval orders: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error fetching approval orders:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to fetch approval orders",
+        variant: "destructive"
+      });
       setOrders([]);
-      setPagination({
+      setPagination(prev => ({
+        ...prev,
         totalCount: 0,
         totalPages: 1,
         currentPage: 1
-      });
+      }));
     } finally {
       setIsLoading(false);
     }
-  }, [pageSize, searchQuery, session]);
+  }, [pagination.currentPage, pageSize, ordersSorting, approvalStatus, searchQuery]);
 
   useEffect(() => {
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-  }, [searchQuery])
-
-  useEffect(() => {
-    if (session) {
-      fetchApprovalOrders(pagination.currentPage, searchQuery);
-    }
-  }, [pagination.currentPage, pageSize, searchQuery, fetchApprovalOrders, session]);
+    fetchApprovalOrders();
+  }, [fetchApprovalOrders]);
 
   // Fetch user session
   useEffect(() => {
@@ -217,7 +235,7 @@ export function OrderTable({
     setSearchQuery(value)
     
     debounce(() => {
-      fetchApprovalOrders(1, value)
+      fetchApprovalOrders()
     }, 500)()
   }
 
@@ -235,12 +253,13 @@ export function OrderTable({
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
-    fetchApprovalOrders(newPage, searchQuery)
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+    fetchApprovalOrders();
   }
 
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
-    fetchApprovalOrders(1, searchQuery);
+    fetchApprovalOrders();
   }
 
   const handleViewOrder = (order: ApprovalOrderItem) => {
@@ -302,7 +321,7 @@ const handleApproveOrder = async (order: ApprovalOrderItem) => {
     }
 
     toast.success(`Order approved successfully. Status set to ${newStatus}`);
-    fetchApprovalOrders(pagination.currentPage, searchQuery);
+    fetchApprovalOrders();
   } catch (error) {
     console.error("Error approving order:", error);
     toast.error(`Failed to approve order: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -350,7 +369,7 @@ const handleRejectOrder = async (order: ApprovalOrderItem) => {
     }
 
     toast.success("Order rejected successfully");
-    fetchApprovalOrders(pagination.currentPage, searchQuery);
+    fetchApprovalOrders();
   } catch (error) {
     console.error("Error rejecting order:", error);
     toast.error(`Failed to reject order: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -394,7 +413,7 @@ const handleRejectOrder = async (order: ApprovalOrderItem) => {
                   onChange={handleSearchChange}
                 />
               </div>
-              <Button variant="outline" size="sm" onClick={() => fetchApprovalOrders(pagination.currentPage, searchQuery)}>
+              <Button variant="outline" size="sm" onClick={() => fetchApprovalOrders()}>
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Refresh
               </Button>

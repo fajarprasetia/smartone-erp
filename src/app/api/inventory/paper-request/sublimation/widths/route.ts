@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 /**
- * GET: Fetch available widths for a specific GSM value
- * Returns width values from paper_stocks for Sublimation Paper type
+ * GET: Fetch available widths for specific GSM
+ * Endpoint: /api/inventory/paper-request/sublimation/widths?gsm=100
  */
 export async function GET(req: Request) {
   try {
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // Get GSM parameter from query
+    // Get GSM from query params
     const url = new URL(req.url);
     const gsm = url.searchParams.get("gsm");
 
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
 
     console.log(`Fetching widths for GSM: ${gsm}`);
 
-    // Get all approved paper requests that have a paper_stock_id
+    // Get approved paper requests with the specified GSM
     const approvedRequests = await db.paperRequest.findMany({
       where: {
         status: "APPROVED",
@@ -44,72 +44,61 @@ export async function GET(req: Request) {
       }
     });
 
-    // Filter for sublimation papers with specific GSM and remaining length
-    const papersWithGsm = approvedRequests.filter(request => {
-      // Check if paper_stock exists and is sublimation paper
+    // Filter for sublimation papers with the specified GSM and remaining length
+    const papers = approvedRequests.filter(request => {
       const paperStock = request.paper_stock;
       if (!paperStock) return false;
-
-      // Check GSM
-      const stockGsm = String(paperStock.gsm || "");
-      const matchesGsm = stockGsm === gsm;
 
       // Check if it's a sublimation paper (case insensitive)
       const paperType = (paperStock.type || "").toLowerCase();
       const isSublimation = paperType.includes("sublim");
-
-      // Check if there's remaining length
+      
+      // Check if GSM matches and there's remaining length
+      const stockGsm = paperStock.gsm ? String(paperStock.gsm) : null;
       const remainingLength = parseFloat(String(paperStock.remainingLength || 0));
 
-      return matchesGsm && isSublimation && remainingLength > 0;
+      return isSublimation && stockGsm === gsm && remainingLength > 0;
     });
 
-    console.log(`Found ${papersWithGsm.length} sublimation papers with GSM ${gsm}`);
+    console.log(`Found ${papers.length} sublimation papers with GSM ${gsm} and remaining length`);
 
-    // Extract and sort unique width values
+    // Extract unique widths and sort them numerically
     const widths = [...new Set(
-      papersWithGsm
+      papers
         .map(paper => paper.paper_stock?.width ? String(paper.paper_stock.width) : null)
         .filter(Boolean)
     )].sort((a, b) => parseInt(a || "0") - parseInt(b || "0"));
 
-    console.log(`Available widths for GSM ${gsm}:`, widths);
-
-    // Filter out papers with no remaining length
-    const availablePapers = papersWithGsm.filter(paper => paper.paper_stock?.remainingLength && paper.paper_stock.remainingLength > 0);
-    
-    // Group papers by width and calculate total remaining length
-    const widthGroups = availablePapers.reduce((acc, paper) => {
-      const width = paper.paper_stock?.width;
-      if (!width) return acc;
+    // Calculate total remaining length for each width
+    const widthsWithStock = widths.map(width => {
+      const papersWithWidth = papers.filter(
+        paper => paper.paper_stock?.width && String(paper.paper_stock.width) === width
+      );
       
-      if (!acc[width]) {
-        acc[width] = {
-          width,
-          totalLength: 0,
-          papers: []
-        };
-      }
-      acc[width].totalLength += paper.paper_stock?.remainingLength || 0;
-      acc[width].papers.push(paper);
-      return acc;
-    }, {} as Record<number, { width: number; totalLength: number; papers: typeof papersWithGsm }>);
+      const totalLength = papersWithWidth.reduce((sum, paper) => {
+        return sum + parseFloat(String(paper.paper_stock?.remainingLength || 0));
+      }, 0);
+      
+      return {
+        width,
+        totalAvailableLength: totalLength,
+        stocks: papersWithWidth.map(paper => ({
+          id: paper.id,
+          paper_stock_id: paper.paper_stock_id,
+          remaining_length: paper.paper_stock?.remainingLength
+        }))
+      };
+    });
 
-    // Return the data
     return NextResponse.json({
       gsm,
       widths,
-      stocks: papersWithGsm.map(paper => ({
-        id: paper.id,
-        paper_stock_id: paper.paper_stock_id,
-        width: paper.paper_stock?.width,
-        remainingLength: paper.paper_stock?.remainingLength
-      }))
+      widthsWithStock
     });
   } catch (error) {
-    console.error(`Error fetching widths for GSM:`, error);
+    console.error("Error fetching widths for sublimation paper:", error);
     return NextResponse.json(
-      { error: "Failed to fetch paper widths" },
+      { error: "Failed to fetch widths for sublimation paper" },
       { status: 500 }
     );
   }

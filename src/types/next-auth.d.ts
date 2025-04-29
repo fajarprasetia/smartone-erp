@@ -4,26 +4,37 @@ import NextAuth from "next-auth";
 declare module "next-auth" {
   interface User {
     id: string;
-    role: Role & {
-      permissions: Permission[];
+    name?: string | null;
+    email?: string | null;
+    role: {
+      id: string;
+      name: string;
+      isAdmin: boolean;
+      isSystem: boolean;
+      permissions: {
+        id: string;
+        name: string;
+      }[];
     };
   }
 
   interface Session {
-    user: User & {
-      id: string;
-      role: Role & {
-        permissions: Permission[];
-      };
-    };
+    user: User;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: Role & {
-      permissions: Permission[];
+    role: {
+      id: string;
+      name: string;
+      isAdmin: boolean;
+      isSystem: boolean;
+      permissions: {
+        id: string;
+        name: string;
+      }[];
     };
   }
 } 

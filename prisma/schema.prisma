@@ -58,12 +58,16 @@ model Role {
   name           String          @unique
   description    String?
   isSystem       Boolean         @default(false)
+  isAdmin        Boolean         @default(false)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  isAdmin        Boolean         @default(false)
   users          User[]
-  dashboardCards DashboardCard[] @relation("DashboardCardRoles")
   permissions    Permission[]    @relation("PermissionToRole")
+  dashboardCards DashboardCard[] @relation("DashboardCardRoles")
+
+  @@index([isSystem])
+  @@index([isAdmin])
+  @@index([createdAt])
 }
 
 model Permission {
@@ -73,6 +77,9 @@ model Permission {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   roles       Role[]   @relation("PermissionToRole")
+
+  @@index([name])
+  @@index([createdAt])
 }
 
 model DashboardCard {

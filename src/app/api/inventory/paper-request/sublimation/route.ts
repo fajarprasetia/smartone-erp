@@ -74,10 +74,32 @@ export async function GET(req: Request) {
       widthsByGsm[gsm as string] = widths;
     });
 
+    // Group papers by GSM and width and calculate total remaining length
+    const stocksByGsmAndWidth: Record<string, Record<string, number>> = {};
+    
+    sublimationPapers.forEach(paper => {
+      const gsm = paper.paper_stock?.gsm ? String(paper.paper_stock.gsm) : null;
+      const width = paper.paper_stock?.width ? String(paper.paper_stock.width) : null;
+      const remaining = parseFloat(String(paper.paper_stock?.remainingLength || 0));
+      
+      if (gsm && width && remaining > 0) {
+        if (!stocksByGsmAndWidth[gsm]) {
+          stocksByGsmAndWidth[gsm] = {};
+        }
+        
+        if (!stocksByGsmAndWidth[gsm][width]) {
+          stocksByGsmAndWidth[gsm][width] = 0;
+        }
+        
+        stocksByGsmAndWidth[gsm][width] += remaining;
+      }
+    });
+
     // Return the data
     return NextResponse.json({
       gsms,
       widthsByGsm,
+      stocksByGsmAndWidth,
       stocks: sublimationPapers.map(paper => ({
         id: paper.id,
         paper_stock_id: paper.paper_stock_id,

@@ -33,10 +33,6 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
     setIsSubmitting,
     customers,
     marketingUsers,
-    isCustomerOpen,
-    setIsCustomerOpen,
-    isMarketingOpen,
-    setIsMarketingOpen,
     fabricNames,
     selectedFabric,
     setSelectedFabric,
@@ -187,10 +183,6 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
                   telp: c.telp || null
                 }))}
                 marketingUsers={marketingUsers}
-                isCustomerOpen={isCustomerOpen}
-                setIsCustomerOpen={setIsCustomerOpen}
-                isMarketingOpen={isMarketingOpen}
-                setIsMarketingOpen={setIsMarketingOpen}
                 spkNumber={spkNumber}
                 fetchSpkNumber={fetchSpkNumber}
                 refreshCustomers={refreshCustomers}

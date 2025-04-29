@@ -7,7 +7,13 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Role, Permission } from "@prisma/client"
 import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -15,26 +21,25 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
-import { getMenuPermissions } from "@/lib/menu-permissions"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, X } from "lucide-react"
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
   isAdmin: z.boolean(),
-  permissions: z.array(z.string()).min(1, "Select at least one permission"),
+  isSystem: z.boolean(),
+  permissionIds: z.array(z.string()).min(1, "Select at least one permission"),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -43,31 +48,28 @@ interface RoleFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   role?: (Role & { permissions: Permission[] }) | null
+  permissions: Permission[]
 }
 
 export function RoleFormDialog({
   open,
   onOpenChange,
   role,
+  permissions,
 }: RoleFormDialogProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState<string[]>([])
 
-  const menuPermissions = getMenuPermissions()
-  const categories = Array.from(new Set(menuPermissions.map(p => p.category)))
-
-  // Add overflow hidden to body when modal is open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "auto"
+  // Group permissions by category
+  const groupedPermissions = permissions.reduce((acc, permission) => {
+    const [category] = permission.name.split('.')
+    if (!acc[category]) {
+      acc[category] = []
     }
-    return () => {
-      document.body.style.overflow = "auto"
-    }
-  }, [open])
+    acc[category].push(permission)
+    return acc
+  }, {} as Record<string, Permission[]>)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,25 +77,27 @@ export function RoleFormDialog({
       name: "",
       description: "",
       isAdmin: false,
-      permissions: [],
+      isSystem: false,
+      permissionIds: [],
     },
   })
 
-  // Reset form with role data when dialog opens or role changes
   useEffect(() => {
     if (open && role) {
       form.reset({
         name: role.name,
         description: role.description || "",
-        isAdmin: role.isAdmin || false,
-        permissions: role.permissions.map(p => p.id),
+        isAdmin: role.isAdmin,
+        isSystem: role.isSystem,
+        permissionIds: role.permissions.map(p => p.id),
       })
     } else if (!open) {
       form.reset({
         name: "",
         description: "",
         isAdmin: false,
-        permissions: [],
+        isSystem: false,
+        permissionIds: [],
       })
     }
   }, [open, role, form])
@@ -149,21 +153,19 @@ export function RoleFormDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
         onClick={() => onOpenChange(false)}
       />
 
       {/* Modal */}
-      <div className="bg-background z-50 rounded-lg border shadow-lg w-full max-w-2xl mx-4 overflow-auto max-h-[90vh]">
-        <div className="flex justify-between items-center p-6 border-b">
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
           <div>
             <h2 className="text-lg font-semibold">
               {role ? "Edit Role" : "Create Role"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {role
-                ? "Edit role details below"
-                : "Fill in the details to create a new role"}
+              {role ? "Update role details and permissions" : "Create a new role with specific permissions"}
             </p>
           </div>
           <Button
@@ -175,7 +177,7 @@ export function RoleFormDialog({
           </Button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 space-y-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -222,9 +224,31 @@ export function RoleFormDialog({
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>Administrator Role</FormLabel>
-                      <FormDescription>
+                      <p className="text-sm text-muted-foreground">
                         This role will have access to all permissions
-                      </FormDescription>
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isSystem"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 border">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={role?.isSystem}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>System Role</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        This role cannot be deleted and is required for system operation
+                      </p>
                     </div>
                   </FormItem>
                 )}
@@ -233,117 +257,60 @@ export function RoleFormDialog({
               <div className="space-y-4">
                 <FormLabel>Permissions</FormLabel>
                 <div className="space-y-2">
-                  {categories.map((category) => {
-                    const categoryPermissions = menuPermissions.filter(
-                      p => p.category === category
-                    )
-                    const subcategories = Array.from(
-                      new Set(categoryPermissions.map(p => p.subcategory))
-                    ).filter(Boolean)
-
-                    return (
-                      <Collapsible
-                        key={category}
-                        open={expandedCategories.includes(category)}
-                        onOpenChange={() => toggleCategory(category)}
-                        className="space-y-2"
-                      >
-                        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded-md hover:bg-accent">
-                          <span className="font-medium">{category}</span>
-                          <ChevronDown
-                            className={cn(
-                              "h-4 w-4 transition-transform",
-                              expandedCategories.includes(category) && "rotate-180"
+                  {Object.entries(groupedPermissions).map(([category, categoryPermissions]) => (
+                    <Collapsible
+                      key={category}
+                      open={expandedCategories.includes(category)}
+                      onOpenChange={() => toggleCategory(category)}
+                      className="space-y-2"
+                    >
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded-md hover:bg-accent">
+                        <span className="font-medium">{category}</span>
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition-transform",
+                            expandedCategories.includes(category) && "rotate-180"
+                          )}
+                        />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 pl-4">
+                        {categoryPermissions.map((permission) => (
+                          <FormField
+                            key={permission.id}
+                            control={form.control}
+                            name="permissionIds"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(permission.id)}
+                                    onCheckedChange={(checked) => {
+                                      const current = field.value || []
+                                      if (checked) {
+                                        field.onChange([...current, permission.id])
+                                      } else {
+                                        field.onChange(
+                                          current.filter((value) => value !== permission.id)
+                                        )
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel className="text-sm font-normal">
+                                    {permission.name}
+                                  </FormLabel>
+                                  <p className="text-xs text-muted-foreground">
+                                    {permission.description}
+                                  </p>
+                                </div>
+                              </FormItem>
                             )}
                           />
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="space-y-2 pl-4">
-                          {subcategories.length > 0 ? (
-                            subcategories.map((subcategory) => (
-                              <div key={subcategory} className="space-y-2 pl-4">
-                                <h4 className="text-sm font-medium">{subcategory}</h4>
-                                <div className="space-y-2">
-                                  {categoryPermissions
-                                    .filter(p => p.subcategory === subcategory)
-                                    .map((permission) => (
-                                      <FormField
-                                        key={permission.id}
-                                        control={form.control}
-                                        name="permissions"
-                                        render={({ field }) => (
-                                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                            <FormControl>
-                                              <Checkbox
-                                                checked={field.value?.includes(permission.id)}
-                                                onCheckedChange={(checked) => {
-                                                  const current = field.value || []
-                                                  if (checked) {
-                                                    field.onChange([...current, permission.id])
-                                                  } else {
-                                                    field.onChange(
-                                                      current.filter((value) => value !== permission.id)
-                                                    )
-                                                  }
-                                                }}
-                                              />
-                                            </FormControl>
-                                            <div className="space-y-1 leading-none">
-                                              <FormLabel className="text-sm font-normal">
-                                                {permission.name}
-                                              </FormLabel>
-                                              <FormDescription className="text-xs">
-                                                {permission.description}
-                                              </FormDescription>
-                                            </div>
-                                          </FormItem>
-                                        )}
-                                      />
-                                    ))}
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="space-y-2">
-                              {categoryPermissions.map((permission) => (
-                                <FormField
-                                  key={permission.id}
-                                  control={form.control}
-                                  name="permissions"
-                                  render={({ field }) => (
-                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                      <FormControl>
-                                        <Checkbox
-                                          checked={field.value?.includes(permission.id)}
-                                          onCheckedChange={(checked) => {
-                                            const current = field.value || []
-                                            if (checked) {
-                                              field.onChange([...current, permission.id])
-                                            } else {
-                                              field.onChange(
-                                                current.filter((value) => value !== permission.id)
-                                              )
-                                            }
-                                          }}
-                                        />
-                                      </FormControl>
-                                      <div className="space-y-1 leading-none">
-                                        <FormLabel className="text-sm font-normal">
-                                          {permission.name}
-                                        </FormLabel>
-                                        <FormDescription className="text-xs">
-                                          {permission.description}
-                                        </FormDescription>
-                                      </div>
-                                    </FormItem>
-                                  )}
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </CollapsibleContent>
-                      </Collapsible>
-                    )
-                  })}
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))}
                 </div>
               </div>
 

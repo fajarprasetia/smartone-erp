@@ -37,6 +37,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 // Define the form schema with validation
 const formSchema = z.object({
@@ -86,40 +93,12 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
-  // Initialize form with default values
+  // Initialize form without default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      asal_bahan: "",
-      nama_bahan: "",
-      lebar_bahan: "",
-      berat_bahan: "",
-      est_pjg_bahan: "",
-      tanggal: new Date(),
-      foto: "",
-      roll: "",
-      keterangan: "",
-    },
   })
 
-  // Watch the weight field to calculate estimated length
-  const beratBahan = useWatch({
-    control: form.control,
-    name: "berat_bahan",
-  })
-
-  // Update estimated length when weight changes
-  useEffect(() => {
-    if (beratBahan) {
-      const weight = parseFloat(beratBahan)
-      if (!isNaN(weight)) {
-        const estimatedLength = (weight * 3).toString()
-        form.setValue("est_pjg_bahan", estimatedLength)
-      }
-    }
-  }, [beratBahan, form])
-
-  // Update form values when initialData changes
+  // Set form values based on whether we're editing or adding
   useEffect(() => {
     if (initialData) {
       form.reset({
@@ -143,8 +122,39 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
       } else {
         setImages([]);
       }
+    } else {
+      // Reset form to empty values when adding new item
+      form.reset({
+        asal_bahan: "",
+        nama_bahan: "",
+        lebar_bahan: "",
+        berat_bahan: "",
+        est_pjg_bahan: "",
+        tanggal: new Date(),
+        foto: "",
+        roll: "",
+        keterangan: "",
+      });
+      setImages([]);
     }
   }, [initialData, form]);
+
+  // Watch the weight field to calculate estimated length
+  const beratBahan = useWatch({
+    control: form.control,
+    name: "berat_bahan",
+  })
+
+  // Update estimated length when weight changes
+  useEffect(() => {
+    if (beratBahan) {
+      const weight = parseFloat(beratBahan)
+      if (!isNaN(weight)) {
+        const estimatedLength = (weight * 3).toString()
+        form.setValue("est_pjg_bahan", estimatedLength)
+      }
+    }
+  }, [beratBahan, form])
 
   // Change the title and description based on whether we're editing or adding
   const isEditing = !!initialData;
@@ -439,100 +449,42 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Fabric Source</FormLabel>
-                    <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? customers.find(customer => customer.id === field.value)?.nama
-                              : "Select customer"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[300px] p-0">
-                        <Command
-                          filter={(value, search) => {
-                            // If the regular filter would match, return true
-                            if (value.toLowerCase().includes(search.toLowerCase())) {
-                              return 1;
-                            }
-                            
-                            // Normalize the search query for phone numbers
-                            const normalizedSearch = search.replace(/^(0|62)/, '');
-                            
-                            // If the search looks like a phone number (only digits)
-                            if (/^\d+$/.test(normalizedSearch) && value.includes(normalizedSearch)) {
-                              return 1;
-                            }
-                            
-                            return 0;
-                          }}
-                        >
-                          <CommandInput 
-                            placeholder="Search by name or phone..." 
-                            onValueChange={(search) => {
-                              // Let's keep the original search as is, as the CommandItem values
-                              // now include multiple phone formats to match against
-                            }}
-                          />
-                          <CommandEmpty>
-                              <Button 
-                                variant="ghost" 
-                                className="w-full"
-                                onClick={() => {
-                                  setComboboxOpen(false);
-                                  setCustomerFormOpen(true);
-                                }}
-                              >
-                                <Plus className="mr-2 h-4 w-4" /> Add New Customer
-                              </Button>
-                            </CommandEmpty>
-                          <CommandGroup>
-                            {customers.map(customer => {
-                              const customerPhone = customer.telp || '';
-                              
-                              // Create different formats of the phone number for search
-                              let phoneFormats = '';
-                              if (customerPhone) {
-                                // Original format (e.g., "812345678")
-                                phoneFormats = customerPhone;
-                                // With leading 0 (e.g., "0812345678")
-                                phoneFormats += ' 0' + customerPhone;
-                                // With leading 62 (e.g., "62812345678")
-                                phoneFormats += ' 62' + customerPhone;
-                              }
-                              
-                              return (
-                                <CommandItem
-                                  value={`${customer.nama.toLowerCase()} ${phoneFormats.toLowerCase()}`}
-                                  key={customer.id}
-                                  onSelect={() => {
-                                    form.setValue("asal_bahan", customer.id)
-                                    setComboboxOpen(false)
-                                  }}
-                                  className="flex justify-between"
-                                >
-                                  <span>{customer.nama}</span>
-                                  {customer.telp && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {customer.telp}
-                                    </span>
-                                  )}
-                                </CommandItem>
-                              );
-                            })}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <div className="flex gap-2">
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select customer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              <div className="flex justify-between">
+                                <span>{customer.nama}</span>
+                                {customer.telp && (
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    0{customer.telp}
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCustomerFormOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

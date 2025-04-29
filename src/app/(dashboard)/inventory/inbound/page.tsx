@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { PlusCircle, Search, RefreshCw, X, ChevronLeft, ChevronRight, ChevronsUpDown, Pencil } from "lucide-react"
+import { PlusCircle, Search, RefreshCw, X, ChevronLeft, ChevronRight, ChevronsUpDown, Pencil, Eye, Trash2 } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, UseFormReturn } from "react-hook-form"
 import { z } from "zod"
@@ -136,6 +136,9 @@ const pageSizeOptions = [10, 20, 50, 100];
 // Import the InboundForm component
 import { InboundForm } from "@/components/inventory/inbound-form"
 import { CustomerFormDialogNew } from "@/components/marketing/customer-form-dialog-new"
+
+// Add this constant at the top of the file with other imports
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40' fill='none'%3E%3Crect width='40' height='40' rx='4' fill='%23E5E7EB'/%3E%3Cpath d='M20 12C15.5817 12 12 15.5817 12 20C12 24.4183 15.5817 28 20 28C24.4183 28 28 24.4183 28 20C28 15.5817 24.4183 12 20 12ZM20 26C16.6863 26 14 23.3137 14 20C14 16.6863 16.6863 14 20 14C23.3137 14 26 16.6863 26 20C26 23.3137 23.3137 26 20 26Z' fill='%239CA3AF'/%3E%3Cpath d='M20 16C17.7909 16 16 17.7909 16 20C16 22.2091 17.7909 24 20 24C22.2091 24 24 22.2091 24 20C24 17.7909 22.2091 16 20 16Z' fill='%239CA3AF'/%3E%3C/svg%3E";
 
 export default function InventoryInboundPage() {
   const router = useRouter()
@@ -361,6 +364,25 @@ if (!response.ok) {
     setIsAddDialogOpen(true);
   };
 
+  // Add handleDeleteItem function
+  const handleDeleteItem = async (item: InventoryItem) => {
+    try {
+      const response = await fetch(`/api/inventory/inbound/${item.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete item');
+      }
+
+      toast.success('Item deleted successfully');
+      fetchInventory(pagination.page, pageSize, searchQuery);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to delete item');
+    }
+  };
+
   return (
     <div className="container mx-auto space-y-4 h-full flex flex-col overflow-visible">
       {/* Page Header */}
@@ -551,23 +573,61 @@ if (!response.ok) {
                           </TableCell>
                           <TableCell className="py-3">
                             {item.foto ? (
-                              <img 
-                                src={item.foto} 
-                                alt="Fabric capture" 
-                                className="h-10 w-10 object-cover rounded"
-                              />
-                            ) : "N/A"}
+                              <div className="relative group">
+                                <img 
+                                  src={item.foto} 
+                                  alt={`Fabric ${item.nama_bahan || 'capture'}`}
+                                  className="h-10 w-10 object-cover rounded-md border border-border/50 hover:scale-110 transition-transform duration-200"
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    if (target.src !== PLACEHOLDER_IMAGE) {
+                                      target.src = PLACEHOLDER_IMAGE;
+                                      target.alt = 'Image not found';
+                                    }
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md flex items-center justify-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-white hover:text-white/80"
+                                    onClick={() => {
+                                      if (item.foto) {
+                                        window.open(item.foto, '_blank');
+                                      }
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="h-10 w-10 flex items-center justify-center bg-muted rounded-md">
+                                <span className="text-xs text-muted-foreground">No Image</span>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="py-3 text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditItem(item)}
-                              className="h-8 bg-transparent border-border/50 hover:bg-background/10"
-                            >
-                              <Pencil className="h-3.5 w-3.5 mr-1" />
-                              Edit
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditItem(item)}
+                                className="h-8 bg-transparent border-border/50 hover:bg-background/10"
+                              >
+                                <Pencil className="h-3.5 w-3.5 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteItem(item)}
+                                className="h-8 bg-transparent border-border/50 hover:bg-destructive/10 hover:text-destructive"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))

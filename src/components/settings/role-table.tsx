@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, ShieldCheck } from "lucide-react"
+import { Pencil, Trash2, ShieldCheck, Shield } from "lucide-react"
 import { RoleFormDialog } from "./role-form-dialog"
 import { RoleDeleteDialog } from "./role-delete-dialog"
 import { toast } from "@/components/ui/use-toast"
@@ -26,7 +26,7 @@ interface RoleTableProps {
     }
   })[]
   permissions: Permission[]
-  onEditRole: (role: Role) => void
+  onEditRole: (role: Role & { permissions: Permission[] }) => void
 }
 
 export function RoleTable({ roles, permissions, onEditRole }: RoleTableProps) {
@@ -63,16 +63,23 @@ export function RoleTable({ roles, permissions, onEditRole }: RoleTableProps) {
                 <TableCell>{role.name}</TableCell>
                 <TableCell>{role.description}</TableCell>
                 <TableCell>
-                  {role.isAdmin ? (
-                    <Badge className="bg-amber-500 text-white">
-                      <ShieldCheck className="h-3 w-3 mr-1" />
-                      Admin
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">
-                      Regular
-                    </Badge>
-                  )}
+                  <div className="flex gap-1">
+                    {role.isSystem && (
+                      <Badge variant="secondary">
+                        <Shield className="h-3 w-3 mr-1" />
+                        System
+                      </Badge>
+                    )}
+                    {role.isAdmin && (
+                      <Badge className="bg-amber-500 text-white">
+                        <ShieldCheck className="h-3 w-3 mr-1" />
+                        Admin
+                      </Badge>
+                    )}
+                    {!role.isSystem && !role.isAdmin && (
+                      <Badge variant="outline">Regular</Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary">
@@ -96,6 +103,7 @@ export function RoleTable({ roles, permissions, onEditRole }: RoleTableProps) {
                       onClick={() => {
                         setSelectedRole(role)
                         setIsEditDialogOpen(true)
+                        onEditRole(role)
                       }}
                       disabled={role.isSystem}
                     >

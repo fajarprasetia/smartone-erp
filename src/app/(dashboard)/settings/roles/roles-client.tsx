@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Role, Permission } from "@prisma/client"
 import { Button } from "@/components/ui/button"
-import { ShieldPlus } from "lucide-react"
+import { Plus } from "lucide-react"
 import { RoleTable } from "@/components/settings/role-table"
 import { RoleFormDialog } from "@/components/settings/role-form-dialog"
 
@@ -19,9 +19,9 @@ interface RolesClientProps {
 
 export function RolesClient({ roles, permissions }: RolesClientProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+  const [selectedRole, setSelectedRole] = useState<(Role & { permissions: Permission[] }) | null>(null)
 
-  const handleEditRole = (role: Role) => {
+  const handleEditRole = (role: Role & { permissions: Permission[] }) => {
     setSelectedRole(role)
     setIsDialogOpen(true)
   }
@@ -29,11 +29,6 @@ export function RolesClient({ roles, permissions }: RolesClientProps) {
   const handleCreateRole = () => {
     setSelectedRole(null)
     setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false)
-    setSelectedRole(null)
   }
 
   return (
@@ -46,8 +41,8 @@ export function RolesClient({ roles, permissions }: RolesClientProps) {
           </p>
         </div>
         <Button onClick={handleCreateRole}>
-          <ShieldPlus className="mr-2 h-4 w-4" />
-          Add Role
+          <Plus className="h-4 w-4 mr-2" />
+          Create Role
         </Button>
       </div>
 
@@ -61,8 +56,9 @@ export function RolesClient({ roles, permissions }: RolesClientProps) {
 
       <RoleFormDialog
         open={isDialogOpen}
-        onOpenChange={handleDialogClose}
+        onOpenChange={setIsDialogOpen}
         role={selectedRole}
+        permissions={permissions}
       />
     </div>
   )

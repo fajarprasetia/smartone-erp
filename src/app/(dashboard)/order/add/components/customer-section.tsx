@@ -17,25 +17,28 @@ import {
   CommandItem,
 } from "@/components/ui/command"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, ChevronsUpDown, Plus, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { OrderFormValues, Customer } from "../schemas/order-form-schema"
 import { CustomerFormDialogNew } from "@/components/marketing/customer-form-dialog-new"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface CustomerSectionProps {
   form: UseFormReturn<OrderFormValues>
   customers: Customer[]
   marketingUsers: Array<{ id: string; name: string; email: string }>
-  isCustomerOpen: boolean
-  setIsCustomerOpen: (open: boolean) => void
-  isMarketingOpen: boolean
-  setIsMarketingOpen: (open: boolean) => void
   spkNumber: string
   fetchSpkNumber: () => Promise<void>
   refreshCustomers: () => Promise<Customer[]>
@@ -45,16 +48,23 @@ export function CustomerSection({
   form,
   customers,
   marketingUsers,
-  isCustomerOpen,
-  setIsCustomerOpen,
-  isMarketingOpen,
-  setIsMarketingOpen,
   spkNumber,
   fetchSpkNumber,
   refreshCustomers,
 }: CustomerSectionProps) {
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [marketingSearch, setMarketingSearch] = useState("");
   
+  const filteredCustomers = customers.filter(customer => 
+    customer.nama.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    (customer.telp && customer.telp.includes(customerSearch))
+  );
+
+  const filteredMarketingUsers = marketingUsers.filter(user =>
+    user.name.toLowerCase().includes(marketingSearch.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Customer & Order Information</h3>
@@ -98,97 +108,55 @@ export function CustomerSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Customer*</FormLabel>
-              <Popover open={isCustomerOpen} onOpenChange={setIsCustomerOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        "justify-between w-full",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value
-                        ? customers.find((customer) => customer.id === field.value)?.nama ||
-                          "Select customer"
-                        : "Select customer"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-[300px]">
-                  <Command
-                    filter={(value, search) => {
-                      // If the regular filter would match, return true
-                      if (value.toLowerCase().includes(search.toLowerCase())) {
-                        return 1;
-                      }
-                      
-                      // Normalize the search query for phone numbers
-                      const normalizedSearch = search.replace(/^(0|62)/, '');
-                      
-                      // If the search looks like a phone number (only digits)
-                      if (/^\d+$/.test(normalizedSearch) && value.includes(normalizedSearch)) {
-                        return 1;
-                      }
-                      
-                      return 0;
-                    }}
-                  >
-                    <CommandInput placeholder="Search customers by phone number..." />
-                    <CommandEmpty>
-                      <div className="py-3 text-center">
-                        <p className="text-sm text-muted-foreground mb-2">No customer found</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex items-center justify-center w-full"
-                          onClick={() => {
-                            setIsCustomerOpen(false);
-                            setCustomerFormOpen(true);
-                          }}
-                        >
-                          <Plus className="mr-2 h-4 w-4" /> Add New Customer
-                        </Button>
-                      </div>
-                    </CommandEmpty>
-                    <CommandGroup className="max-h-[300px] overflow-y-auto">
-                      {customers.map((customer) => (
-                        <CommandItem
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  form.setValue("namaBahan", "");
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select customer">
+                      {field.value ? customers.find(c => c.id === field.value)?.nama : "Select customer"}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="Search customers..."
+                      className="mb-2"
+                      value={customerSearch}
+                      onChange={(e) => setCustomerSearch(e.target.value)}
+                    />
+                    <div className="max-h-[300px] overflow-y-auto">
+                      {filteredCustomers.map((customer) => (
+                        <SelectItem
                           key={customer.id}
-                          value={`${customer.nama.toLowerCase()} ${customer.telp || ''}`}
-                          onSelect={() => {
-                            form.setValue("customerId", customer.id)
-                            setIsCustomerOpen(false)
-                            
-                            // Reset fabric name when customer changes
-                            form.setValue("namaBahan", "")
-                          }}
+                          value={customer.id}
                           className="flex justify-between"
                         >
-                          <div className="flex items-center">
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                customer.id === form.getValues("customerId")
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            <span>{customer.nama}</span>
-                          </div>
+                          <span>{customer.nama}</span>
                           {customer.telp && (
                             <span className="text-xs text-muted-foreground">
-                              {customer.telp}
+                              0{customer.telp}
                             </span>
                           )}
-                        </CommandItem>
+                        </SelectItem>
                       ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs w-full mt-2"
+                      onClick={() => setCustomerFormOpen(true)}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add New Customer
+                    </Button>
+                  </div>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -201,54 +169,38 @@ export function CustomerSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Marketing</FormLabel>
-              <Popover open={isMarketingOpen} onOpenChange={setIsMarketingOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        "justify-between w-full",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value
-                        ? marketingUsers.find((user) => user.id === field.value)?.name ||
-                          "Select marketing"
-                        : "Select marketing"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-[300px]">
-                  <Command>
-                    <CommandInput placeholder="Search marketing users..." />
-                    <CommandEmpty>No marketing user found.</CommandEmpty>
-                    <CommandGroup className="max-h-[300px] overflow-y-auto">
-                      {marketingUsers.map((user) => (
-                        <CommandItem
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select marketing">
+                      {field.value ? marketingUsers.find(m => m.id === field.value)?.name : "Select marketing"}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="Search marketing users..."
+                      className="mb-2"
+                      value={marketingSearch}
+                      onChange={(e) => setMarketingSearch(e.target.value)}
+                    />
+                    <div className="max-h-[300px] overflow-y-auto">
+                      {filteredMarketingUsers.map((user) => (
+                        <SelectItem
                           key={user.id}
-                          value={user.name}
-                          onSelect={() => {
-                            form.setValue("marketing", user.id)
-                            setIsMarketingOpen(false)
-                          }}
+                          value={user.id}
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              user.id === field.value
-                                ? "opacity-100"
-                                : "opacity-0"
-                            )}
-                          />
                           {user.name}
-                        </CommandItem>
+                        </SelectItem>
                       ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                    </div>
+                  </div>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -270,15 +222,8 @@ export function CustomerSection({
               
               // If we have a new customer ID, select it in the dropdown
               if (newCustomerId) {
-                // Set a small timeout to ensure the customers list is updated
-                setTimeout(() => {
-                  form.setValue("customerId", newCustomerId);
-                  form.setValue("namaBahan", "");
-                  // Force open the dropdown to show the selection
-                  setIsCustomerOpen(true);
-                  // Then close it after a moment
-                  setTimeout(() => setIsCustomerOpen(false), 500);
-                }, 300);
+                form.setValue("customerId", newCustomerId);
+                form.setValue("namaBahan", "");
               }
             } catch (error) {
               console.error("Error refreshing customers:", error);

@@ -8,65 +8,67 @@
 
 @layer base {
 :root {
-    --background: 250 70% 40%;
-    --foreground: 0 0% 0%;
+    /* Light theme colors */
+    --background: 250 40% 98%;
+    --foreground: 240 10% 3.9%;
 
-    --card: transparent;
-    --card-foreground: transparent;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
 
-    --popover: 270 70% 40%;
-    --popover-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: transparent;
-    --primary-foreground: transparent;
+    --primary: 270 50% 50%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 270 30% 50%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 270 30% 95%;
+    --secondary-foreground: 270 20% 25%;
 
-    --muted: 270 30% 60%;
-    --muted-foreground: 0 0% 30%;
+    --muted: 270 30% 95%;
+    --muted-foreground: 270 10% 40%;
 
-    --accent: 270 30% 50%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 270 30% 90%;
+    --accent-foreground: 270 20% 25%;
 
     --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 0%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 270 30% 70%;
-    --input: 270 30% 70%;
-    --ring: 270 100% 60%;
+    --border: 270 30% 90%;
+    --input: 270 30% 90%;
+    --ring: 270 50% 50%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 270 50% 5%;
-    --foreground: 0 0% 100%;
+    /* Dark theme colors - now using dark blues and blacks */
+    --background: 220 50% 5%;
+    --foreground: 0 0% 98%;
 
-    --card: 270 50% 5%;
-    --card-foreground: 0 0% 100%;
+    --card: 220 50% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 270 50% 5%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 220 50% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 270 50% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 220 70% 50%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 270 30% 15%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 220 50% 15%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 270 30% 15%;
-    --muted-foreground: 0 0% 80%;
+    --muted: 220 40% 15%;
+    --muted-foreground: 240 5% 64.9%;
 
-    --accent: 270 30% 15%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 220 40% 20%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 270 30% 20%;
-    --input: 270 30% 20%;
-    --ring: 270 100% 50%;
+    --border: 220 30% 20%;
+    --input: 220 30% 20%;
+    --ring: 220 70% 50%;
   }
 }
 
@@ -76,37 +78,65 @@
   }
   body {
     @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))];
+    /* Light theme background */
     background-image: 
-      radial-gradient(circle at 10% 20%, rgba(147, 112, 219, 0.3) 0%, transparent 20%),
-      radial-gradient(circle at 90% 80%, rgba(186, 104, 200, 0.3) 0%, transparent 20%),
-      radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.2) 0%, transparent 50%),
-      linear-gradient(135deg, rgba(147, 112, 219, 0.1) 0%, rgba(186, 104, 200, 0.1) 100%);
+      radial-gradient(circle at 10% 20%, rgba(147, 112, 219, 0.2) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, rgba(186, 104, 200, 0.2) 0%, transparent 20%),
+      radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+      linear-gradient(135deg, rgba(147, 112, 219, 0.05) 0%, rgba(186, 104, 200, 0.05) 100%);
+    background-attachment: fixed;
+  }
+  
+  .dark body {
+    /* Dark theme background - now using dark blues */
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(30, 50, 100, 0.15) 0%, transparent 25%),
+      radial-gradient(circle at 90% 80%, rgba(20, 40, 80, 0.15) 0%, transparent 25%),
+      radial-gradient(circle at 50% 50%, rgba(10, 30, 70, 0.1) 0%, transparent 60%),
+      linear-gradient(135deg, rgba(5, 20, 50, 0.1) 0%, rgba(20, 40, 80, 0.1) 100%);
     background-attachment: fixed;
   }
   
   h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select, label, li, td, th {
-    @apply text-black dark:text-white;
+    @apply text-[hsl(var(--foreground))];
   }
   
   .text-muted-foreground {
-    @apply text-black/70 dark:text-white/70;
+    @apply text-[hsl(var(--muted-foreground))];
   }
 }
 
+/* Glass effects for light theme */
 .glass-effect {
-  @apply bg-white/10 dark:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-lg shadow-lg;
+  @apply bg-white/20 backdrop-blur-md border border-white/30 shadow-sm;
+}
+
+.dark .glass-effect {
+  @apply bg-black/20 backdrop-blur-md border border-white/10 shadow-lg;
 }
 
 .glass-card {
-  @apply bg-white/20 dark:bg-black/20 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-lg shadow-lg;
+  @apply bg-white/30 backdrop-blur-xl border border-white/40 shadow-sm;
+}
+
+.dark .glass-card {
+  @apply bg-black/30 backdrop-blur-xl border border-white/10 shadow-md;
 }
 
 .glass-button {
-  @apply bg-white/30 dark:bg-white/10 backdrop-blur-md border border-white/40 dark:border-white/20 rounded-md shadow-md hover:bg-white/40 dark:hover:bg-white/20 transition-all duration-300;
+  @apply bg-white/40 backdrop-blur-md border border-white/50 shadow-sm hover:bg-white/50 transition-all duration-300;
+}
+
+.dark .glass-button {
+  @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-md hover:bg-white/20 transition-all duration-300;
 }
 
 .glass-input {
-  @apply bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-md shadow-inner;
+  @apply bg-white/30 backdrop-blur-md border border-white/40 shadow-inner;
+}
+
+.dark .glass-input {
+  @apply bg-black/30 backdrop-blur-md border border-white/10 shadow-inner;
 }
 
 .glass-select {
@@ -323,7 +353,7 @@
 
 /* Light theme background with deeper purple base and white glassmorphism */
 :root {
-  background: linear-gradient(135deg, hsl(270, 70%, 40%) 0%, hsl(280, 60%, 30%) 100%);
+  background: linear-gradient(135deg, hsl(180, 100%, 93%) 0%, hsl(280, 33%, 61%) 100%);
   position: relative;
   overflow: hidden;
   --radius: 0.625rem;
@@ -368,12 +398,12 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%),
-    radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(circle at 15% 50%, rgb(226, 168, 197) 0%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(circle at 85% 30%, rgba(235, 9, 186, 0.5) 0%, rgba(255, 255, 255, 0) 50%),
     radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%),
-    radial-gradient(circle at 10% 20%, rgba(200, 150, 255, 0.6) 0%, rgba(200, 150, 255, 0) 40%),
-    radial-gradient(circle at 90% 40%, rgba(180, 130, 255, 0.6) 0%, rgba(180, 130, 255, 0) 40%),
-    radial-gradient(circle at 30% 70%, rgba(160, 110, 255, 0.6) 0%, rgba(160, 110, 255, 0) 40%);
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.6) 0%, rgba(200, 150, 255, 0) 40%),
+    radial-gradient(circle at 90% 40%, rgba(249, 246, 253, 0.6) 0%, rgba(180, 130, 255, 0) 40%),
+    radial-gradient(circle at 30% 70%, rgba(254, 253, 255, 0.6) 0%, rgba(160, 110, 255, 0) 40%);
   z-index: 0;
 }
 
@@ -387,14 +417,14 @@
   background: 
     radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 30%),
     radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 30%),
-    radial-gradient(circle at 60% 10%, rgba(230, 200, 255, 0.5) 0%, rgba(230, 200, 255, 0) 30%),
-    radial-gradient(circle at 40% 90%, rgba(210, 180, 255, 0.5) 0%, rgba(210, 180, 255, 0) 30%);
+    radial-gradient(circle at 60% 10%, rgba(207, 185, 224, 0.644) 0%, rgba(230, 200, 255, 0) 30%),
+    radial-gradient(circle at 40% 90%, rgba(228, 226, 231, 0.5) 0%, rgba(210, 180, 255, 0) 30%);
   z-index: 0;
 }
 
-/* Dark theme background with colorful glassmorphism style */
+/* Dark theme background with dark blue glassmorphism style */
 .dark {
-  background: linear-gradient(120deg, #1a1a1a 0%, #121212 100%);
+  background: linear-gradient(120deg, #000000 0%, #013ba0 100%);
   position: relative;
   overflow: hidden;
   --background: oklch(0.145 0 0);
@@ -438,12 +468,12 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 15% 50%, rgba(40, 40, 40, 0.8) 0%, rgba(40, 40, 40, 0) 50%),
-    radial-gradient(circle at 85% 30%, rgba(40, 40, 40, 0.8) 0%, rgba(40, 40, 40, 0) 50%),
-    radial-gradient(circle at 50% 80%, rgba(40, 40, 40, 0.8) 0%, rgba(40, 40, 40, 0) 50%),
-    radial-gradient(circle at 10% 20%, rgba(25, 25, 112, 0.4) 0%, rgba(25, 25, 112, 0) 40%),
-    radial-gradient(circle at 90% 40%, rgba(75, 0, 130, 0.4) 0%, rgba(75, 0, 130, 0) 40%),
-    radial-gradient(circle at 30% 70%, rgba(47, 79, 79, 0.4) 0%, rgba(47, 79, 79, 0) 40%);
+    radial-gradient(circle at 15% 50%, rgba(83, 3, 3, 0.8) 0%, rgba(173, 185, 204, 0) 50%),
+    radial-gradient(circle at 85% 30%, rgba(134, 72, 1, 0.8) 0%, rgba(212, 148, 27, 0) 50%),
+    radial-gradient(circle at 50% 80%, rgba(209, 92, 255, 0.8) 0%, rgba(20, 40, 70, 0) 50%),
+    radial-gradient(circle at 10% 20%, rgba(0, 0, 0, 0.4) 0%, rgba(0, 20, 80, 0) 40%),
+    radial-gradient(circle at 90% 40%, rgba(0, 0, 0, 0.4) 0%, rgba(0, 30, 100, 0) 40%),
+    radial-gradient(circle at 30% 70%, rgba(122, 160, 207, 0.4) 0%, rgba(0, 40, 90, 0) 40%);
   z-index: 0;
 }
 
@@ -455,10 +485,10 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 25% 25%, rgba(40, 40, 40, 0.3) 0%, rgba(40, 40, 40, 0) 30%),
-    radial-gradient(circle at 75% 75%, rgba(40, 40, 40, 0.3) 0%, rgba(40, 40, 40, 0) 30%),
-    radial-gradient(circle at 60% 10%, rgba(72, 61, 139, 0.3) 0%, rgba(72, 61, 139, 0) 30%),
-    radial-gradient(circle at 40% 90%, rgba(85, 107, 47, 0.3) 0%, rgba(85, 107, 47, 0) 30%);
+    radial-gradient(circle at 25% 25%, rgba(20, 40, 70, 0.3) 0%, rgba(20, 40, 70, 0) 30%),
+    radial-gradient(circle at 75% 75%, rgba(20, 40, 70, 0.3) 0%, rgba(20, 40, 70, 0) 30%),
+    radial-gradient(circle at 60% 10%, rgba(0, 50, 150, 0.3) 0%, rgba(0, 50, 150, 0) 30%),
+    radial-gradient(circle at 40% 90%, rgba(0, 30, 100, 0.3) 0%, rgba(0, 30, 100, 0) 30%);
   z-index: 0;
 }
 
@@ -679,5 +709,29 @@ body > * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+  }
+}
+
+/* Responsive theme styles */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: 270 30% 5%;
+    --foreground: 0 0% 98%;
+    /* Include all other dark theme variables here */
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --border: 0 0% 0%;
+  }
+  
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --border: 0 0% 100%;
   }
 }
