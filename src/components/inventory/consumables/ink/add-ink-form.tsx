@@ -25,7 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, XCircle, Loader2, QrCode, Printer, RefreshCw } from "lucide-react"
+import { CalendarIcon, XCircle, Loader2, QrCode, Printer, RefreshCw, X } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -50,9 +50,19 @@ type AddInkFormProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => Promise<void>;
+  initialData?: {
+    id: string;
+    barcode_id: string;
+    supplier: string;
+    type: string;
+    color: string;
+    quantity: string;
+    unit: string;
+    notes: string;
+  };
 };
 
-export function AddInkForm({ open, onOpenChange, onSubmit }: AddInkFormProps) {
+export function AddInkForm({ open, onOpenChange, onSubmit, initialData }: AddInkFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [scanActive, setScanActive] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
@@ -75,16 +85,32 @@ export function AddInkForm({ open, onOpenChange, onSubmit }: AddInkFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      barcode_id: "",
-      supplier: "",
-      ink_type: "Sublimation Ink",
-      color: "",
+      barcode_id: initialData?.barcode_id || "",
+      supplier: initialData?.supplier || "",
+      ink_type: initialData?.type || "Sublimation Ink",
+      color: initialData?.color || "",
       custom_color: "",
-      quantity: "",
-      unit: "ml",
-      notes: "",
+      quantity: initialData?.quantity || "",
+      unit: initialData?.unit || "ml",
+      notes: initialData?.notes || "",
     },
   });
+
+  // Reset form when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        barcode_id: initialData.barcode_id,
+        supplier: initialData.supplier,
+        ink_type: initialData.type,
+        color: initialData.color,
+        custom_color: "",
+        quantity: initialData.quantity,
+        unit: initialData.unit,
+        notes: initialData.notes,
+      });
+    }
+  }, [initialData, form]);
 
   // Watch the color field to show/hide custom color field
   useEffect(() => {
@@ -623,16 +649,18 @@ export function AddInkForm({ open, onOpenChange, onSubmit }: AddInkFormProps) {
         ? values.custom_color 
         : values.color;
       
-      // Add calculated name field based on color and type
+      // Create data object with only the fields we need
       const dataToSubmit = {
-        ...values,
+        barcode_id: values.barcode_id,
+        supplier: values.supplier,
+        type: values.ink_type,
         color: finalColor,
-        name: `${finalColor} ${values.ink_type}`, // Generate name from color and type
-        availability: "YES", // Set availability to YES
+        quantity: values.quantity,
+        unit: values.unit,
+        notes: values.notes,
+        name: `${finalColor} ${values.ink_type}`,
+        availability: "YES",
       };
-      
-      // Remove custom_color as it's not in the database schema
-      delete dataToSubmit.custom_color;
       
       await onSubmit(dataToSubmit);
       form.reset();
@@ -651,367 +679,260 @@ export function AddInkForm({ open, onOpenChange, onSubmit }: AddInkFormProps) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={() => {
-          if (showScanner) {
-            stopBarcodeScanner()
-          } else {
-            onOpenChange(false)
-          }
-        }}
+        onClick={() => onOpenChange(false)}
       />
 
       {/* Modal */}
-      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 overflow-auto max-h-[90vh]">
-        {showScanner ? (
-          <div className="p-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Scan Barcode</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={stopBarcodeScanner}
-              >
-                <XCircle className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {scannerError ? (
-              <div className="space-y-4">
-                <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-md text-sm">
-                  {scannerError}
-                </div>
-                
-                <div className="space-y-3">
-                  <p className="text-sm">Enter your barcode manually instead:</p>
-                  <div className="flex space-x-2">
-                    <Input 
-                      placeholder="Type barcode number"
-                      className="bg-background"
-                      value={form.getValues("barcode_id") || ""}
-                      onChange={(e) => form.setValue("barcode_id", e.target.value)}
-                    />
-                    <Button onClick={stopBarcodeScanner}>Done</Button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setScannError(null);
-                      startBarcodeScanner();
-                    }}
-                  >
-                    Try Again
-                  </Button>
-                  <Button 
-                    variant="secondary"
-                    onClick={generateTestBarcode}
-                  >
-                    Generate Test Barcode
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Note: The test barcode option is available for development purposes
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="relative overflow-hidden rounded-lg border border-border h-64 bg-black">
-                  <video 
-                    ref={videoRef} 
-                    className="absolute inset-0 h-full w-full object-cover"
-                    autoPlay
-                    playsInline
-                    muted
-                    id="barcode-scanner-view"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-4/5 h-3/5 border-2 border-yellow-400/50 rounded-lg"></div>
-                  </div>
-                  {scanActive && (
-                    <div className="absolute bottom-2 left-2 bg-yellow-500 h-2 w-2 rounded-full animate-pulse"></div>
-                  )}
-                </div>
-                
-                {scanActive && (
-                  <div className="space-y-1 mt-2">
-                    <Progress 
-                      value={scanProgress} 
-                      className="h-1" 
-                      role="progressbar"
-                      aria-label="Barcode scanning progress"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={scanProgress}
-                    />
-                    <p className="text-xs text-center text-muted-foreground">Scanning...</p>
-                  </div>
-                )}
-                
-                <Button onClick={() => stopBarcodeScanner()} variant="outline" className="w-full">
-                  <XCircle className="h-4 w-4 mr-2" /> Cancel
-                </Button>
-                
-                <p className="text-sm text-muted-foreground text-center">
-                  Position the barcode within the highlighted area. Scanning automatically...
-                </p>
-              </>
-            )}
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
+          <div>
+            <h2 className="text-lg font-semibold">{initialData ? "Edit Ink Stock" : "Add Ink Stock"}</h2>
+            <p className="text-sm text-muted-foreground">
+              {initialData ? "Update existing ink stock" : "Add new ink to the inventory"}
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center p-6 border-b border-border/40">
-              <div>
-                <h2 className="text-lg font-semibold">Add New Ink</h2>
-                <p className="text-sm text-muted-foreground">
-                  Fill in the details below to add a new ink to inventory.
-                </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+              <div className="flex space-x-2 items-end">
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="barcode_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Barcode ID</FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter barcode ID" 
+                              {...field} 
+                              className="bg-background"
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={generateBarcodeId}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="mb-1"
+                  onClick={startBarcodeScanner}
+                >
+                  <QrCode className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-              >
-                <XCircle className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="p-6">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-                  <div className="flex space-x-2 items-end">
-                    <div className="flex-1">
-                      <FormField
-                        control={form.control}
-                        name="barcode_id"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Barcode ID</FormLabel>
-                            <div className="flex gap-2">
-                              <FormControl>
-                                <Input 
-                                  placeholder="Enter barcode ID" 
-                                  {...field} 
-                                  className="bg-background/50"
-                                />
-                              </FormControl>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={generateBarcodeId}
-                                disabled={isLoading}
-                              >
-                                {isLoading ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+              
+              {showBarcodePreview && lastGeneratedBarcode && (
+                <div className="p-2 border rounded-lg bg-white flex flex-col items-center space-y-2">
+                  <canvas ref={barcodeCanvasRef} className="w-full h-10"></canvas>
+                  <Button
+                    type="button" 
+                    variant="outline" 
+                    onClick={printBarcode}
+                    className="w-full text-xs"
+                  >
+                    <Printer className="h-3 w-3 mr-1" /> Print Barcode Label
+                  </Button>
+                </div>
+              )}
+              
+              <FormField
+                control={form.control}
+                name="supplier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Supplier (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter supplier name" 
+                        {...field} 
+                        className="bg-background"
                       />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="mb-1"
-                      onClick={startBarcodeScanner}
-                    >
-                      <QrCode className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {showBarcodePreview && lastGeneratedBarcode && (
-                    <div className="p-2 border rounded-lg bg-white flex flex-col items-center space-y-2">
-                      <canvas ref={barcodeCanvasRef} className="w-full h-10"></canvas>
-                      <Button
-                        type="button" 
-                        variant="outline" 
-                        onClick={printBarcode}
-                        className="w-full text-xs"
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="ink_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ink Type</FormLabel>
+                    <FormControl>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        {...field}
                       >
-                        <Printer className="h-3 w-3 mr-1" /> Print Barcode Label
-                      </Button>
-                    </div>
+                        <option value="Sublimation Ink">Sublimation Ink</option>
+                        <option value="DTF Ink">DTF Ink</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Color</FormLabel>
+                    <FormControl>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        {...field}
+                      >
+                        <option value="" disabled>Select a color</option>
+                        <option value="CYAN">CYAN</option>
+                        <option value="MAROON">MAROON</option>
+                        <option value="YELLOW">YELLOW</option>
+                        <option value="KEY/BLACK">KEY/BLACK</option>
+                        <option value="WHITE">WHITE</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {showCustomColorField && (
+                <FormField
+                  control={form.control}
+                  name="custom_color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Custom Color</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter custom color name" 
+                          {...field} 
+                          className="bg-background"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                  
-                  <FormField
-                    control={form.control}
-                    name="supplier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Supplier (Optional)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter supplier name" 
-                            {...field} 
-                            className="bg-background/50"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="ink_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ink Type</FormLabel>
-                        <FormControl>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            {...field}
-                          >
-                            <option value="Sublimation Ink">Sublimation Ink</option>
-                            <option value="DTF Ink">DTF Ink</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Color</FormLabel>
-                        <FormControl>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            {...field}
-                          >
-                            <option value="" disabled>Select a color</option>
-                            <option value="CYAN">CYAN</option>
-                            <option value="MAROON">MAROON</option>
-                            <option value="YELLOW">YELLOW</option>
-                            <option value="KEY/BLACK">KEY/BLACK</option>
-                            <option value="WHITE">WHITE</option>
-                            <option value="Others">Others</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {showCustomColorField && (
-                    <FormField
-                      control={form.control}
-                      name="custom_color"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Custom Color</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter custom color name" 
-                              {...field} 
-                              className="bg-background/50"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                />
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="e.g. 1000" 
+                          {...field} 
+                          className="bg-background"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="quantity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quantity</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="e.g. 1000" 
-                              {...field} 
-                              className="bg-background/50"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="unit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Unit</FormLabel>
-                          <FormControl>
-                            <select
-                              className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              {...field}
-                            >
-                              <option value="ml">ml</option>
-                              <option value="L">L</option>
-                              <option value="kg">kg</option>
-                              <option value="gr">gr</option>
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes (Optional)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Additional information about this ink"
-                            className="resize-none bg-background/50"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => onOpenChange(false)}
-                      disabled={isLoading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        "Add Ink"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </div>
-          </>
-        )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <FormControl>
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          {...field}
+                        >
+                          <option value="ml">ml</option>
+                          <option value="L">L</option>
+                          <option value="kg">kg</option>
+                          <option value="gr">gr</option>
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional information about this ink"
+                        className="resize-none bg-background"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Add Ink"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </div>
       
       {/* Hidden iframe for printing if needed */}

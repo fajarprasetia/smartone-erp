@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/users
- * Optional query parameter: role - Filter users by role
+ * Optional query parameter: search - Filter users by name or email
  */
 export async function GET(req: Request) {
   try {
@@ -18,28 +18,21 @@ export async function GET(req: Request) {
       );
     }
 
-    // Parse query parameters
-    const url = new URL(req.url);
-    const role = url.searchParams.get("role");
-    
-    // Build where clause
-    const where = role ? {
-      roleId: role
-    } : undefined;
-    
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search") || "";
+
     // Fetch users
     const users = await prisma.user.findMany({
-      where,
+      where: {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      },
       select: {
         id: true,
         name: true,
         email: true,
-        role: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
       orderBy: {
         name: "asc",

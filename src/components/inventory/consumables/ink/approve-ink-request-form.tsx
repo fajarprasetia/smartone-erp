@@ -358,204 +358,103 @@ export function ApproveInkRequestForm({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={() => {
-          if (showBarcodeScanner) {
-            stopBarcodeScanner()
-          } else {
-            onOpenChange(false)
-          }
-        }}
+        onClick={() => onOpenChange(false)}
       />
 
       {/* Modal */}
-      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 overflow-auto max-h-[90vh]">
-        {showBarcodeScanner ? (
-          <div className="p-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Scan Barcode</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={stopBarcodeScanner}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
+          <div>
+            <h2 className="text-lg font-semibold">Approve Ink Request</h2>
+            <p className="text-sm text-muted-foreground">
+              Review and approve the ink request
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Request details */}
+          <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border/40">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <p><span className="font-medium">Requested by:</span> {inkRequest.requester_name || "N/A"}</p>
+              <p><span className="font-medium">Ink type:</span> {inkRequest.ink_type}</p>
+              <p><span className="font-medium">Color:</span> {inkRequest.color}</p>
+              <p><span className="font-medium">Quantity:</span> {inkRequest.quantity} {inkRequest.unit}</p>
             </div>
-            
-            {scannerError ? (
-              <div className="space-y-4">
-                <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-md text-sm">
-                  {scannerError}
-                </div>
-                
-                <div className="space-y-3">
-                  <p className="text-sm">Enter your barcode manually instead:</p>
-                  <div className="flex space-x-2">
-                    <Input 
-                      placeholder="Type barcode number"
-                      className="bg-background"
-                      value={form.getValues("barcode_id") || ""}
-                      onChange={(e) => {
-                        form.setValue("barcode_id", e.target.value, { shouldValidate: true });
-                        form.trigger("barcode_id");
-                      }}
-                    />
-                    <Button onClick={stopBarcodeScanner}>Done</Button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setScannerError(null);
-                      startBarcodeScanner();
-                    }}
-                  >
-                    Try Again
-                  </Button>
-                  <Button 
-                    variant="secondary"
-                    onClick={generateMockBarcode}
-                  >
-                    Generate Test Barcode
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Note: The test barcode option is available for development purposes
-                </p>
+            {inkRequest.user_notes && (
+              <div className="mt-2 pt-2 border-t border-border/40">
+                <p className="font-medium">Notes:</p>
+                <p className="text-sm mt-1">{inkRequest.user_notes}</p>
               </div>
-            ) : (
-              <>
-                <div className="relative overflow-hidden rounded-lg border border-border h-64 bg-black">
-                  <video 
-                    ref={videoRef} 
-                    className="absolute inset-0 h-full w-full object-cover"
-                    autoPlay
-                    playsInline
-                    muted
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-4/5 h-3/5 border-2 border-yellow-400/50 rounded-lg"></div>
-                  </div>
-                  {scanActive && (
-                    <div className="absolute bottom-2 left-2 bg-yellow-500 h-2 w-2 rounded-full animate-pulse"></div>
-                  )}
-                </div>
-                
-                {scanActive && (
-                  <div className="space-y-1 mt-2">
-                    <Progress value={scanProgress} className="h-1" />
-                    <p className="text-xs text-center text-muted-foreground">Scanning...</p>
-                  </div>
-                )}
-                
-                <Button onClick={() => stopBarcodeScanner()} variant="outline" className="w-full">
-                  <X className="h-4 w-4 mr-2" /> Cancel
-                </Button>
-                
-                <p className="text-sm text-muted-foreground text-center">
-                  Position the barcode within the highlighted area. Scanning automatically...
-                </p>
-              </>
             )}
           </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center p-6 border-b border-border/40">
-              <div>
-                <h2 className="text-lg font-semibold">Approve Ink Request</h2>
-                <p className="text-sm text-muted-foreground">
-                  Enter or scan a barcode to assign to this ink stock
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
 
-            <div className="p-6">
-              {/* Request details */}
-              <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border/40">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <p><span className="font-medium">Requested by:</span> {inkRequest.requester_name || "N/A"}</p>
-                  <p><span className="font-medium">Ink type:</span> {inkRequest.ink_type}</p>
-                  <p><span className="font-medium">Color:</span> {inkRequest.color}</p>
-                  <p><span className="font-medium">Quantity:</span> {inkRequest.quantity} {inkRequest.unit}</p>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <div className="flex space-x-2 items-end">
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="barcode_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Barcode ID</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter or scan barcode"
+                            className="bg-background/50"
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger("barcode_id");
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                {inkRequest.user_notes && (
-                  <div className="mt-2 pt-2 border-t border-border/40">
-                    <p className="font-medium">Notes:</p>
-                    <p className="text-sm mt-1">{inkRequest.user_notes}</p>
-                  </div>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="mb-1"
+                  onClick={startBarcodeScanner}
+                >
+                  <Barcode className="h-4 w-4" />
+                </Button>
               </div>
-
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                  <div className="flex space-x-2 items-end">
-                    <div className="flex-1">
-                      <FormField
-                        control={form.control}
-                        name="barcode_id"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Barcode ID</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Enter or scan barcode"
-                                className="bg-background/50"
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  form.trigger("barcode_id");
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="mb-1"
-                      onClick={startBarcodeScanner}
-                    >
-                      <Barcode className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {validationError && (
-                    <div className="text-sm text-red-600 bg-red-100 rounded p-2">
-                      {validationError}
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => onOpenChange(false)}
-                      disabled={isLoading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isLoading || !form.formState.isValid}>
-                      {isLoading ? "Approving..." : "Approve Request"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </div>
-          </>
-        )}
+              
+              {validationError && (
+                <div className="text-sm text-red-600 bg-red-100 rounded p-2">
+                  {validationError}
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading || !form.formState.isValid}>
+                  {isLoading ? "Approving..." : "Approve Request"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </div>
     </div>
   )

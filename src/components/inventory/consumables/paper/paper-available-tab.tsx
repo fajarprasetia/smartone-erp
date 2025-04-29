@@ -52,6 +52,19 @@ import {
 } from "@/components/ui/dialog"
 import { AddPaperForm } from "@/components/inventory/consumables/paper/add-paper-form"
 import { EditPaperForm } from "@/components/inventory/consumables/paper/edit-paper-form"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 
 // Define interfaces
 interface PaperStock {
@@ -68,7 +81,9 @@ interface PaperStock {
   waste: string | null
   remaining_length: string
   remainingLength: string | number | null
-  addedByUserId: string
+  addedByUser: {
+    name: string
+  }
   added_by: string
   taken_by: string | null
   notes: string | null
@@ -111,6 +126,9 @@ export function PaperAvailableTab() {
   const [selectedStock, setSelectedStock] = useState<PaperStock | null>(null)
   const [scannedBarcode, setScannedBarcode] = useState<string>("")
   const cameraRef = useRef(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Initialize form
   const addPaperForm = useForm<AddPaperFormValues>({
@@ -162,10 +180,10 @@ export function PaperAvailableTab() {
   };
 
   // Handle edit paper
-  const handleEditPaper = (stock: PaperStock) => {
-    setSelectedStock(stock);
-    setIsEditPaperDialogOpen(true);
-  };
+  const handleEdit = (stock: PaperStock) => {
+    setSelectedStock(stock)
+    setIsEditOpen(true)
+  }
 
   // Handle delete paper
   const handleDeletePaper = (stock: PaperStock) => {
@@ -174,47 +192,55 @@ export function PaperAvailableTab() {
   };
 
   // Handle edit paper form submission
-  const onEditPaperSubmit = async (data: Omit<AddPaperFormValues, 'remaining_length'> & { remaining_length: string }) => {
-    if (!selectedStock) return Promise.reject(new Error("No stock selected"));
-    
+  const handleEditSubmit = async (data: {
+    barcode_id?: string
+    supplier?: string
+    paper_type: string
+    gsm: number
+    width: number
+    length: number
+    remaining_length: number
+    notes?: string
+  }) => {
     try {
-      // Make sure we have all required fields
-      if (!data.paper_type || !data.gsm || !data.width || !data.length) {
-        toast.error("Please fill in all required fields");
-        return Promise.reject(new Error("Missing required fields"));
-      }
-      
-      console.log("Updating paper data:", data);
-      
-      const response = await fetch(`/api/inventory/paper/${selectedStock.id}`, {
-        method: 'PUT',
+      setIsLoading(true)
+      const response = await fetch(`/api/inventory/paper/${selectedStock?.id}`, {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
-      });
-      
-      const responseData = await response.json();
-      
+        body: JSON.stringify({
+          ...data,
+          qrCode: data.barcode_id,
+          manufacturer: data.supplier,
+          type: data.paper_type,
+          remainingLength: data.remaining_length,
+        }),
+      })
+
+      const responseData = await response.json()
+
       if (!response.ok) {
-        const errorMsg = responseData.details || responseData.error || `Error: ${response.status}`;
-        console.error("API error:", errorMsg);
-        toast.error(errorMsg);
-        throw new Error(errorMsg);
+        const errorMsg = responseData.details || responseData.error || `Error: ${response.status}`
+        console.error("API error:", errorMsg)
+        toast.error(errorMsg)
+        throw new Error(errorMsg)
       }
-      
-      // Successfully updated paper stock
-      await fetchPaperStocks(); // Refresh the list
-      toast.success("Paper stock updated successfully");
-      setIsEditPaperDialogOpen(false);
-      return Promise.resolve();
+
+      // Refresh the stocks list
+      await fetchPaperStocks()
+      setIsEditOpen(false)
+      setSelectedStock(null)
+      toast.success("Paper stock updated successfully")
     } catch (error) {
-      console.error("Error updating paper stock:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to update paper stock";
-      toast.error(errorMessage);
-      return Promise.reject(error);
+      console.error("Error updating paper stock:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to update paper stock"
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   // Handle confirm delete
   const handleConfirmDelete = async () => {
@@ -337,11 +363,19 @@ export function PaperAvailableTab() {
             <Search className="h-4 w-4" />
           </Button>
         </div>
-        <Button onClick={() => setIsAddPaperDialogOpen(true)}>
+        <Button onClick={() => setIsAddOpen(true)}>
           <PlusCircle className="h-4 w-4 mr-2" /> Add Paper
         </Button>
       </div>
       
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -358,7 +392,7 @@ export function PaperAvailableTab() {
               <TableHead>Added By</TableHead>
               <TableHead>Date Added</TableHead>
               <TableHead>Notes</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="sticky right-0 bg-muted/80 whitespace-nowrap">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -389,15 +423,15 @@ export function PaperAvailableTab() {
                   <TableCell>{stock.used || "0"}</TableCell>
                   <TableCell>{stock.waste || "0"}</TableCell>
                   <TableCell>{stock.remainingLength || stock.remaining_length}</TableCell>
-                  <TableCell>{stock.user_name || "N/A"}</TableCell>
+                  <TableCell>{stock.addedByUser.name || "N/A"}</TableCell>
                   <TableCell>{formatDate(stock.dateAdded || stock.created_at)}</TableCell>
                   <TableCell className="max-w-xs truncate">{stock.notes || "N/A"}</TableCell>
-                  <TableCell>
+                  <TableCell className="sticky right-0 bg-muted/80 whitespace-nowrap">
                     <div className="flex space-x-2">
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => handleEditPaper(stock)}
+                        onClick={() => handleEdit(stock)}
                       >
                         <Pencil className="h-4 w-4 text-blue-500" />
                       </Button>
@@ -419,17 +453,20 @@ export function PaperAvailableTab() {
       
       {/* Add Paper Form */}
       <AddPaperForm
-        open={isAddPaperDialogOpen}
-        onOpenChange={setIsAddPaperDialogOpen}
+        open={isAddOpen}
+        onOpenChange={setIsAddOpen}
         onSubmit={onAddPaperSubmit}
       />
 
       {/* Edit Paper Form */}
       {selectedStock && (
         <EditPaperForm
-          open={isEditPaperDialogOpen}
-          onOpenChange={setIsEditPaperDialogOpen}
-          onSubmit={onEditPaperSubmit}
+          open={isEditOpen}
+          onOpenChange={(open) => {
+            setIsEditOpen(open)
+            if (!open) setSelectedStock(null)
+          }}
+          onSubmit={handleEditSubmit}
           stock={selectedStock}
         />
       )}

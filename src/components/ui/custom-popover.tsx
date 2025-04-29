@@ -50,11 +50,28 @@ function CustomPopover({
     const triggerRect = triggerRef.current.getBoundingClientRect()
     const contentRect = contentRef.current.getBoundingClientRect()
     
-    const viewportHeight = window.innerHeight
+    // Get actual viewport height from window or document
+    const viewportHeight = Math.min(
+      window.innerHeight,
+      document.documentElement.clientHeight,
+      window.visualViewport?.height || window.innerHeight
+    )
     const viewportWidth = window.innerWidth
     
     // Space needed for padding at viewport edges
     const viewportPadding = 10
+    
+    // Responsive max width based on viewport width
+    const maxWidth = Math.min(
+      viewportWidth - (viewportPadding * 2),
+      contentRect.width
+    )
+    
+    // Responsive max height based on viewport height
+    const maxHeight = Math.min(
+      viewportHeight - (viewportPadding * 2),
+      contentRect.height
+    )
     
     let top = 0
     let left = 0
@@ -87,7 +104,7 @@ function CustomPopover({
             top = Math.max(viewportPadding, viewportHeight - contentRect.height - viewportPadding);
           } else {
             // For regular content, allow scrolling
-            contentRef.current.style.maxHeight = `${viewportHeight - triggerRect.bottom - sideOffset - viewportPadding * 2}px`;
+            contentRef.current.style.maxHeight = `${maxHeight}px`;
             contentRef.current.style.overflowY = 'auto';
           }
         }
@@ -128,26 +145,15 @@ function CustomPopover({
       }
     }
     
-    // Handle vertical overflow for left/right positions
-    if ((side === "left" || side === "right") && 
-        (top < viewportPadding || top + contentRect.height > viewportHeight - viewportPadding)) {
+    // Apply responsive styles
+    if (contentRef.current) {
+      contentRef.current.style.maxWidth = `${maxWidth}px`;
+      contentRef.current.style.width = 'auto';
       
-      // Adjust vertically to fit within viewport
-      if (contentRect.height <= viewportHeight - viewportPadding * 2) {
-        // If content fits in viewport height, center it within available space
-        if (top < viewportPadding) {
-          top = viewportPadding
-        } else if (top + contentRect.height > viewportHeight - viewportPadding) {
-          top = viewportHeight - contentRect.height - viewportPadding
-        }
-      } else {
-        // If content is taller than viewport, position at top with scrolling
-        top = viewportPadding
-        // For calendars, avoid adding scrolling as it can interfere with month navigation
-        if (!isCalendarPopover) {
-          contentRef.current.style.maxHeight = `${viewportHeight - viewportPadding * 2}px`
-          contentRef.current.style.overflowY = 'auto'
-        }
+      // For non-calendar popovers, apply max height
+      if (!isCalendarPopover) {
+        contentRef.current.style.maxHeight = `${maxHeight}px`;
+        contentRef.current.style.overflowY = 'auto';
       }
     }
     
@@ -176,13 +182,18 @@ function CustomPopover({
       
       const handleScroll = () => calculatePosition()
       const handleResize = () => calculatePosition()
+      const handleVisualViewportChange = () => calculatePosition()
       
       window.addEventListener('scroll', handleScroll, true)
       window.addEventListener('resize', handleResize)
+      window.visualViewport?.addEventListener('resize', handleVisualViewportChange)
+      window.visualViewport?.addEventListener('scroll', handleVisualViewportChange)
       
       return () => {
         window.removeEventListener('scroll', handleScroll, true)
         window.removeEventListener('resize', handleResize)
+        window.visualViewport?.removeEventListener('resize', handleVisualViewportChange)
+        window.visualViewport?.removeEventListener('scroll', handleVisualViewportChange)
       }
     }
   }, [isOpen])
@@ -208,22 +219,6 @@ function CustomPopover({
     }
   }, [isOpen, handleOpenChange])
   
-  // Create portal container if not exists
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    
-    if (!document.getElementById('custom-popover-portal')) {
-      const portalContainer = document.createElement('div')
-      portalContainer.id = 'custom-popover-portal'
-      portalContainer.style.position = 'fixed'
-      portalContainer.style.top = '0'
-      portalContainer.style.left = '0'
-      portalContainer.style.zIndex = '9999'
-      portalContainer.style.pointerEvents = 'none'
-      document.body.appendChild(portalContainer)
-    }
-  }, [])
-  
   return (
     <>
       <div 
@@ -239,22 +234,22 @@ function CustomPopover({
           <div
             ref={contentRef}
             className={cn(
-              "absolute z-50 bg-white dark:bg-gray-800 rounded-md border border-border shadow-lg",
+              "absolute z-[999] bg-white dark:bg-gray-800 rounded-md border border-border shadow-lg",
               "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
               "pointer-events-auto",
+              "transition-all duration-200 ease-in-out",
               contentClassName
             )}
             style={{
               position: 'fixed',
               top: `${position.top}px`,
               left: `${position.left}px`,
-              // Don't set fixed max-height by default, let calculatePosition handle it
               maxWidth: 'calc(100vw - 20px)',
             }}
           >
             {content}
           </div>,
-          document.getElementById('custom-popover-portal') || document.body
+          document.getElementById('popover-portal') || document.body
         )
       )}
     </>

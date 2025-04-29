@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
     
     if (searchQuery) {
       whereClause.OR = [
-        { name: { contains: searchQuery, mode: "insensitive" } },
+        { item_name: { contains: searchQuery, mode: "insensitive" } },
         { category: { contains: searchQuery, mode: "insensitive" } },
-        { qrCode: { contains: searchQuery, mode: "insensitive" } },
+        { qr_code: { contains: searchQuery, mode: "insensitive" } },
         { description: { contains: searchQuery, mode: "insensitive" } },
       ];
     }
@@ -40,6 +40,12 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        taken_by_user: {
           select: {
             id: true,
             name: true,
@@ -58,19 +64,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       items: items.map((item: any) => ({
         id: item.id,
-        qrCode: item.qr_code,
-        name: item.item_name,
+        qr_code: item.qr_code,
         category: item.category,
+        item_name: item.item_name,
+        description: item.description,
         quantity: item.quantity,
         unit: item.unit,
-        description: item.description,
-        dateTaken: item.taken_at || null,
-        takenBy: item.taken_by_user_id ? {
-          id: item.user?.id,
-          name: item.user?.name,
-        } : null,
+        location: item.location,
         notes: item.notes,
+        availability: item.availability,
+        user_id: item.user_id,
+        taken_by_user_id: item.taken_by_user_id,
         created_at: item.created_at,
+        used_at: item.taken_at,
+        user: {
+          name: item.user?.name,
+        },
+        taken_by_user: item.taken_by_user ? {
+          name: item.taken_by_user.name,
+        } : null,
       })),
       count,
     });

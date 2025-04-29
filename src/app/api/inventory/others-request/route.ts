@@ -43,6 +43,20 @@ export async function GET(req: NextRequest) {
             name: true,
           }
         },
+        rejector: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        item: {
+          select: {
+            id: true,
+            item_name: true,
+            category: true,
+            unit: true,
+          }
+        }
       }
     })
     
@@ -56,53 +70,87 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-  
+export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await req.json()
-    
-    const { category, item_name, quantity, unit, user_notes } = body
-    
-    if (!category || !item_name || !quantity || !unit) {
+    const { item_id, quantity, user_notes } = body
+
+    // Validate required fields
+    if (!item_id || !quantity) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Item ID and quantity are required" },
         { status: 400 }
       )
     }
-    
-    // Create the others request
+
+    // Check if item exists and is available
+    const item = await prisma.othersItem.findUnique({
+      where: { id: item_id },
+    })
+
+    if (!item) {
+      return NextResponse.json(
+        { error: "Item not found" },
+        { status: 404 }
+      )
+    }
+
+    if (!item.availability) {
+      return NextResponse.json(
+        { error: "Item is not available" },
+        { status: 400 }
+      )
+    }
+
+    if (item.quantity < quantity) {
+      return NextResponse.json(
+        { error: "Requested quantity exceeds available quantity" },
+        { status: 400 }
+      )
+    }
+
+    // Create the request
     const request = await prisma.othersRequest.create({
       data: {
-        category,
-        item_name,
-        quantity,
-        unit,
-        user_notes: user_notes || "",
-        status: "PENDING",
         user_id: session.user.id,
+        item_id: item_id,
+        category: item.category,
+        item_name: item.item_name,
+        quantity: quantity,
+        unit: item.unit,
+        user_notes: user_notes,
+        status: "PENDING",
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
     })
-    
-    // Log the request creation
+
+    // Create log entry
     await prisma.othersLog.create({
       data: {
         action: "REQUESTED",
-        others_request_id: request.id,
         user_id: session.user.id,
-        notes: `Requested ${quantity} ${unit} of ${item_name}`,
-      },
+        others_request_id: request.id,
+        notes: `Requested ${quantity} ${item.unit} of ${item.item_name}`,
+      }
     })
-    
+
     return NextResponse.json({ request }, { status: 201 })
   } catch (error) {
     console.error("Error creating others request:", error)
     return NextResponse.json(
-      { error: "Failed to create others request" },
+      { error: "Failed to create request" },
       { status: 500 }
     )
   }

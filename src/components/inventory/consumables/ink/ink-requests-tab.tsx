@@ -316,14 +316,14 @@ export function InkRequestsTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Status</TableHead>
-              <TableHead>Requested By</TableHead>
+              <TableHead className="sticky left-12 bg-muted/50 whitespace-nowrap">Requested By</TableHead>
               <TableHead>Date Requested</TableHead>
               <TableHead>Ink Type</TableHead>
               <TableHead>Color</TableHead>
               <TableHead>Quantity</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead>Action Date</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="sticky right-0 bg-muted/80 whitespace-nowrap">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -344,7 +344,7 @@ export function InkRequestsTab() {
             ) : (
               filteredRequests.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell>
+                  <TableCell className="sticky left-0 bg-muted/80 whitespace-nowrap">
                     {request.status ? (
                       <Badge variant="outline" className={
                         request.status === "APPROVED" 

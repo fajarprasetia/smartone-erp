@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, RefreshCw, Plus, MoreHorizontal } from "lucide-react"
+import { Search, RefreshCw, Plus, MoreHorizontal, Edit, Send } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -27,6 +27,7 @@ import { format } from "date-fns"
 
 // Import the add form component
 import { AddOthersForm } from "./add-others-form"
+import { RequestOthersForm } from "./request-others-form"
 
 interface OthersItem {
   id: string
@@ -54,6 +55,9 @@ export function OthersAvailableTab() {
   const [isError, setIsError] = useState<string | null>(null)
   const [items, setItems] = useState<OthersItem[]>([])
   const [isAddFormOpen, setIsAddFormOpen] = useState(false)
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
+  const [isRequestFormOpen, setIsRequestFormOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<OthersItem | null>(null)
 
   // Fetch available items
   const fetchItems = async () => {
@@ -105,6 +109,30 @@ export function OthersAvailableTab() {
     setIsAddFormOpen(false)
   }
 
+  // Handle edit item
+  const handleEditItem = (item: OthersItem) => {
+    setSelectedItem(item)
+    setIsEditFormOpen(true)
+  }
+
+  // Handle request item
+  const handleRequestItem = (item: OthersItem) => {
+    setSelectedItem(item)
+    setIsRequestFormOpen(true)
+  }
+
+  // Handle item edited successfully
+  const handleItemEdited = () => {
+    fetchItems()
+    setIsEditFormOpen(false)
+    setSelectedItem(null)
+  }
+
+  // Handle request approval
+  const handleRequestApproved = () => {
+    fetchItems() // Refresh the items list
+  }
+
   // Format date for display
   const formatDate = (dateString: string) => {
     try {
@@ -143,122 +171,132 @@ export function OthersAvailableTab() {
 
   // Filter items by search query
   const filteredItems = items.filter(item => {
+    const searchLower = searchQuery.toLowerCase()
     return (
-      (item.item_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.description?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (item.qr_code?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (item.location?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+      (item.item_name?.toLowerCase() || '').includes(searchLower) ||
+      (item.description?.toLowerCase() || '').includes(searchLower) ||
+      (item.qr_code?.toLowerCase() || '').includes(searchLower) ||
+      (item.location?.toLowerCase() || '').includes(searchLower) ||
+      (item.category?.toLowerCase() || '').includes(searchLower)
     )
   })
 
   return (
-    <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Available Items</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Select
-              value={categoryFilter}
-              onValueChange={setCategoryFilter}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="spareparts">Spare Parts</SelectItem>
-                <SelectItem value="stationery">Office Stationery</SelectItem>
-                <SelectItem value="miscellaneous">Miscellaneous</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Search items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-64"
-            />
-            <Button variant="outline" size="icon" onClick={() => setSearchQuery("")}>
-              <Search className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" onClick={fetchItems}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            <Button onClick={() => setIsAddFormOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
-            </Button>
+    <div className="space-y-4">
+      <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Available Items</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Select
+                value={categoryFilter}
+                onValueChange={setCategoryFilter}
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="spareparts">Spare Parts</SelectItem>
+                  <SelectItem value="stationery">Office Stationery</SelectItem>
+                  <SelectItem value="miscellaneous">Miscellaneous</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-64"
+              />
+              <Button variant="outline" size="icon" onClick={() => setSearchQuery("")}>
+                <Search className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" onClick={fetchItems}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button onClick={() => setIsAddFormOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID/QR Code</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Unit</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Added Date</TableHead>
-              <TableHead>Added By</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-6">
-                  <div className="flex justify-center items-center space-x-2">
-                    <Skeleton className="h-4 w-4 rounded-full" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                </TableCell>
+                <TableHead>ID/QR Code</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Unit</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Added Date</TableHead>
+                <TableHead>Added By</TableHead>
+                <TableHead className="sticky right-0 bg-muted/50 whitespace-nowrap">Actions</TableHead>
               </TableRow>
-            ) : filteredItems.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center py-10 text-muted-foreground">
-                  No available items found. Items will appear here once they are added to inventory.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredItems.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.qr_code || item.id.substring(0, 8)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {item.category.toLowerCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{item.item_name}</TableCell>
-                  <TableCell>{item.description || "—"}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
-                  <TableCell>{item.unit}</TableCell>
-                  <TableCell>{item.location || "—"}</TableCell>
-                  <TableCell>{formatDate(item.created_at)}</TableCell>
-                  <TableCell>{item.user?.name || "—"}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleMarkAsUsed(item.id)}>
-                          Mark as Used
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center py-6">
+                    <div className="flex justify-center items-center space-x-2">
+                      <Skeleton className="h-4 w-4 rounded-full" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
+              ) : filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center py-10 text-muted-foreground">
+                    No available items found. Items will appear here once they are added to inventory.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.qr_code || item.id.substring(0, 8)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {item.category.toLowerCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{item.item_name}</TableCell>
+                    <TableCell>{item.description || "—"}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{item.unit}</TableCell>
+                    <TableCell>{item.location || "—"}</TableCell>
+                    <TableCell>{formatDate(item.created_at)}</TableCell>
+                    <TableCell>{item.user?.name || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditItem(item)}
+                          title="Edit Item"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRequestItem(item)}
+                          title="Request Item"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Add Item Dialog */}
       <AddOthersForm
@@ -266,6 +304,26 @@ export function OthersAvailableTab() {
         onOpenChange={setIsAddFormOpen}
         onSuccess={handleItemAdded}
       />
-    </Card>
+
+      {/* Edit Item Dialog */}
+      {selectedItem && (
+        <AddOthersForm
+          open={isEditFormOpen}
+          onOpenChange={setIsEditFormOpen}
+          onSuccess={handleItemEdited}
+          initialData={selectedItem}
+        />
+      )}
+
+      {/* Request Item Dialog */}
+      {selectedItem && (
+        <RequestOthersForm
+          open={isRequestFormOpen}
+          onOpenChange={setIsRequestFormOpen}
+          onSuccess={handleRequestApproved}
+          initialData={selectedItem}
+        />
+      )}
+    </div>
   )
 }

@@ -20,6 +20,29 @@ import { format } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ApproveOthersRequestForm } from "./approve-others-request-form"
 import { RejectOthersRequestForm } from "./reject-others-request-form"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  DialogFooter,
+  DialogDescription as UiDialogDescription,
+} from "@/components/ui/dialog"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 
 interface OthersRequest {
   id: string
@@ -37,6 +60,17 @@ interface OthersRequest {
   updated_at: string
 }
 
+const approveSchema = z.object({
+  approver_notes: z.string().optional(),
+})
+
+const rejectSchema = z.object({
+  rejection_reason: z.string().min(1, "Rejection reason is required"),
+})
+
+type ApproveFormData = z.infer<typeof approveSchema>
+type RejectFormData = z.infer<typeof rejectSchema>
+
 export function OthersRequestsTab() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("ALL")
@@ -53,6 +87,16 @@ export function OthersRequestsTab() {
   // Rejection dialog state
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const approveForm = useForm<ApproveFormData>({
+    resolver: zodResolver(approveSchema),
+  })
+
+  const rejectForm = useForm<RejectFormData>({
+    resolver: zodResolver(rejectSchema),
+  })
+
   // Fetch others requests
   const fetchRequests = async () => {
     setIsLoading(true)
@@ -135,6 +179,7 @@ export function OthersRequestsTab() {
   // Open reject dialog with selected request
   const openRejectDialog = (request: OthersRequest) => {
     setSelectedRequestId(request.id)
+    setSelectedRequest(request)
     setIsRejectDialogOpen(true)
   }
   
@@ -148,170 +193,233 @@ export function OthersRequestsTab() {
     )
   })
 
+  const handleApprove = async (data: ApproveFormData) => {
+    if (!selectedRequestId) return
+    
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/inventory/others/requests/${selectedRequestId}/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to approve request")
+      }
+
+      setIsApproveDialogOpen(false)
+      fetchRequests()
+    } catch (error) {
+      console.error("Error approving request:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleReject = async (data: RejectFormData) => {
+    if (!selectedRequestId) return
+    
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/inventory/others/requests/${selectedRequestId}/reject`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to reject request")
+      }
+
+      setIsRejectDialogOpen(false)
+      fetchRequests()
+    } catch (error) {
+      console.error("Error rejecting request:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Item Requests</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Select
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Status</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={categoryFilter}
-              onValueChange={setCategoryFilter}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="spareparts">Spare Parts</SelectItem>
-                <SelectItem value="stationery">Office Stationery</SelectItem>
-                <SelectItem value="miscellaneous">Miscellaneous</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Search requests..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-64"
-            />
-            <Button variant="outline" size="icon" onClick={() => setSearchQuery("")}>
-              <Search className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" onClick={fetchRequests}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+    <div className="space-y-4">
+      <Card className="bg-transparent backdrop-blur-md backdrop-saturate-150 border border-border/30 rounded-lg shadow-sm">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Item Requests</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Status</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={categoryFilter}
+                onValueChange={setCategoryFilter}
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="spareparts">Spare Parts</SelectItem>
+                  <SelectItem value="stationery">Office Stationery</SelectItem>
+                  <SelectItem value="miscellaneous">Miscellaneous</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Search requests..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-64"
+              />
+              <Button variant="outline" size="icon" onClick={() => setSearchQuery("")}>
+                <Search className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" onClick={fetchRequests}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Status</TableHead>
-              <TableHead>Requested By</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Item Name</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Request Date</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6">
-                  <div className="flex justify-center items-center space-x-2">
-                    <Skeleton className="h-4 w-4 rounded-full" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                </TableCell>
+                <TableHead>Status</TableHead>
+                <TableHead>Requested By</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Item Name</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Request Date</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="sticky right-0 bg-muted/50 whitespace-nowrap">Actions</TableHead>
               </TableRow>
-            ) : filteredRequests.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
-                  No requests found. {statusFilter === "ALL" ? "Create a new request using the sidebar." : `No ${statusFilter.toLowerCase()} requests.`}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredRequests.map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell>
-                    <Badge variant="outline" className={
-                      request.status === "APPROVED" 
-                        ? "bg-green-50 text-green-700 border-green-200"
-                        : request.status === "REJECTED"
-                          ? "bg-red-50 text-red-700 border-red-200"
-                          : "bg-yellow-50 text-yellow-700 border-yellow-200"
-                    }>
-                      {request.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{request.requester_name || "Unknown"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {request.category.toLowerCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{request.item_name}</TableCell>
-                  <TableCell>{request.quantity} {request.unit}</TableCell>
-                  <TableCell>{formatDate(request.created_at)}</TableCell>
-                  <TableCell className="max-w-xs truncate">{request.user_notes || "—"}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      {request.status === "PENDING" && (
-                        <>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
-                            onClick={() => openApproveDialog(request)}
-                          >
-                            <Check className="h-3.5 w-3.5 mr-1" />
-                            Approve
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                            onClick={() => openRejectDialog(request)}
-                          >
-                            <X className="h-3.5 w-3.5 mr-1" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                      {request.status !== "PENDING" && (
-                        <span className="text-xs text-muted-foreground">
-                          {request.status === "APPROVED" 
-                            ? (request.approver_notes || "Approved")
-                            : (request.rejection_reason || "Rejected")}
-                        </span>
-                      )}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-6">
+                    <div className="flex justify-center items-center space-x-2">
+                      <Skeleton className="h-4 w-4 rounded-full" />
+                      <Skeleton className="h-4 w-32" />
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-      
+              ) : filteredRequests.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                    No requests found. {statusFilter === "ALL" ? "Create a new request using the sidebar." : `No ${statusFilter.toLowerCase()} requests.`}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>
+                      <Badge variant="outline" className={
+                        request.status === "APPROVED" 
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : request.status === "REJECTED"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                      }>
+                        {request.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{request.requester_name || "Unknown"}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {request.category.toLowerCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{request.item_name}</TableCell>
+                    <TableCell>{request.quantity} {request.unit}</TableCell>
+                    <TableCell>{formatDate(request.created_at)}</TableCell>
+                    <TableCell className="max-w-xs truncate">{request.user_notes || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        {request.status === "PENDING" && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                              onClick={() => openApproveDialog(request)}
+                            >
+                              <Check className="h-3.5 w-3.5 mr-1" />
+                              Approve
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                              onClick={() => openRejectDialog(request)}
+                            >
+                              <X className="h-3.5 w-3.5 mr-1" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        {request.status !== "PENDING" && (
+                          <span className="text-xs text-muted-foreground">
+                            {request.status === "APPROVED" 
+                              ? (request.approver_notes || "Approved")
+                              : (request.rejection_reason || "Rejected")}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
       {/* Approve Dialog */}
-      <ApproveOthersRequestForm
-        open={isApproveDialogOpen}
-        onOpenChange={setIsApproveDialogOpen}
-        requestId={selectedRequestId || ""}
-        onSuccess={fetchRequests}
-        requestDetails={selectedRequest ? {
-          item_name: selectedRequest.item_name,
-          quantity: selectedRequest.quantity,
-          category: selectedRequest.category
-        } : null}
-      />
+      {isApproveDialogOpen && (
+        <ApproveOthersRequestForm
+          open={isApproveDialogOpen}
+          onOpenChange={setIsApproveDialogOpen}
+          requestId={selectedRequestId || ""}
+          onSuccess={fetchRequests}
+          requestDetails={selectedRequest ? {
+            item_name: selectedRequest.item_name,
+            quantity: selectedRequest.quantity,
+            category: selectedRequest.category
+          } : undefined}
+        />
+      )}
       
       {/* Reject Dialog */}
-      <RejectOthersRequestForm
-        open={isRejectDialogOpen}
-        onOpenChange={setIsRejectDialogOpen}
-        requestId={selectedRequestId || ""}
-        onSuccess={fetchRequests}
-      />
-    </Card>
+      {isRejectDialogOpen && (
+        <RejectOthersRequestForm
+          open={isRejectDialogOpen}
+          onOpenChange={setIsRejectDialogOpen}
+          requestId={selectedRequestId || ""}
+          onSuccess={fetchRequests}
+          requestDetails={selectedRequest ? {
+            item_name: selectedRequest.item_name,
+            quantity: selectedRequest.quantity,
+            category: selectedRequest.category
+          } : undefined}
+        />
+      )}
+    </div>
   )
 }

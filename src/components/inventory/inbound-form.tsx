@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, UseFormReturn } from "react-hook-form"
+import { useForm, UseFormReturn, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { toast } from "sonner"
 import { Calendar as CalendarIcon, ChevronsUpDown, X, Camera, Plus } from "lucide-react"
@@ -36,6 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Card, CardContent } from "@/components/ui/card"
 
 // Define the form schema with validation
 const formSchema = z.object({
@@ -100,6 +101,23 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
       keterangan: "",
     },
   })
+
+  // Watch the weight field to calculate estimated length
+  const beratBahan = useWatch({
+    control: form.control,
+    name: "berat_bahan",
+  })
+
+  // Update estimated length when weight changes
+  useEffect(() => {
+    if (beratBahan) {
+      const weight = parseFloat(beratBahan)
+      if (!isNaN(weight)) {
+        const estimatedLength = (weight * 3).toString()
+        form.setValue("est_pjg_bahan", estimatedLength)
+      }
+    }
+  }, [beratBahan, form])
 
   // Update form values when initialData changes
   useEffect(() => {
@@ -231,8 +249,8 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
       />
 
       {/* Modal */}
-      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 overflow-auto">
-        <div className="flex justify-between items-center p-6 border-b border-border/40">
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
           <div>
             <h2 className="text-lg font-semibold">{formTitle}</h2>
             <p className="text-sm text-muted-foreground">
@@ -248,9 +266,9 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
           </Button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 space-y-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="nama_bahan"
@@ -580,11 +598,6 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
                           }}
                         />
                       </FormControl>
-                      {totalLength && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Total Length: {totalLength} Meter
-                        </p>
-                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -624,6 +637,19 @@ export function InboundForm({ open, onOpenChange, customers: initialCustomers, o
                   )}
                 />
               </div>
+
+              {/* Total Length Card */}
+              {totalLength && (
+                <div>
+                  <Card className="bg-muted/50 p-2">
+                    <CardContent>
+                        <div className="flex justify-center items-center">
+                          <p className="text-xs font-medium">Total Length: {totalLength} Meter</p>
+                        </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
               
               <FormField
                 control={form.control}

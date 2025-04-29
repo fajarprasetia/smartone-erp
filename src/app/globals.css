@@ -519,7 +519,7 @@ body > * {
   /* Popover and overlay fix for positioning */
   .radix-popover-content-wrapper {
     z-index: 1000 !important;
-    position: absolute !important;
+    position: fixed !important;
   }
   
   /* Ensure popovers can be interacted with */

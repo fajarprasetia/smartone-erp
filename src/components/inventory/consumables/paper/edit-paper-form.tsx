@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { toast } from "sonner"
 import { X } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -63,7 +64,9 @@ interface PaperStock {
   remaining_length: string
   remainingLength?: string | number | null
   added_by: string
-  addedByUserId?: string
+  addedByUserId: {
+    name: string
+  }
   taken_by: string | null
   notes: string | null
   availability: "YES" | "NO"
@@ -81,25 +84,36 @@ interface PaperStock {
 interface EditPaperFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: EditPaperFormValues & { remaining_length: string }) => Promise<void>
+  onSubmit: (data: {
+    barcode_id?: string
+    supplier?: string
+    paper_type: string
+    gsm: number
+    width: number
+    length: number
+    remaining_length: number
+    notes?: string
+  }) => Promise<void>
   stock: PaperStock
 }
 
 export function EditPaperForm({ open, onOpenChange, onSubmit, stock }: EditPaperFormProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [remainingLength, setRemainingLength] = useState<string>(stock.remaining_length)
+  const { data: session } = useSession()
+  const userId = session?.user?.id
+  const [remainingLength, setRemainingLength] = useState<string>(stock.remaining_length || stock.remainingLength?.toString() || "")
 
   // Initialize form with stock values
   const form = useForm<EditPaperFormValues>({
     resolver: zodResolver(editPaperSchema),
     defaultValues: {
-      barcode_id: stock.barcode_id || "",
-      supplier: stock.supplier || "",
-      paper_type: stock.paperType || stock.paper_type || "Sublimation Paper",
+      barcode_id: stock.barcode_id || stock.qrCode || "",
+      supplier: stock.supplier || stock.manufacturer || "",
+      paper_type: stock.paperType || stock.paper_type || stock.type || "Sublimation Paper",
       gsm: String(stock.gsm),
       width: String(stock.width),
       length: stock.length ? String(stock.length) : "",
-      remaining_length: stock.remaining_length,
+      remaining_length: stock.remaining_length || stock.remainingLength?.toString() || "",
       notes: stock.notes || "",
     },
   })
@@ -108,16 +122,16 @@ export function EditPaperForm({ open, onOpenChange, onSubmit, stock }: EditPaper
   useEffect(() => {
     if (stock) {
       form.reset({
-        barcode_id: stock.barcode_id || "",
-        supplier: stock.supplier || "",
-        paper_type: stock.paperType || stock.paper_type || "Sublimation Paper",
+        barcode_id: stock.barcode_id || stock.qrCode || "",
+        supplier: stock.supplier || stock.manufacturer || "",
+        paper_type: stock.paperType || stock.paper_type || stock.type || "Sublimation Paper",
         gsm: String(stock.gsm),
         width: String(stock.width),
         length: stock.length ? String(stock.length) : "",
-        remaining_length: stock.remaining_length,
+        remaining_length: stock.remaining_length || stock.remainingLength?.toString() || "",
         notes: stock.notes || "",
       });
-      setRemainingLength(stock.remaining_length);
+      setRemainingLength(stock.remaining_length || stock.remainingLength?.toString() || "");
     }
   }, [stock, form]);
 
@@ -138,12 +152,24 @@ export function EditPaperForm({ open, onOpenChange, onSubmit, stock }: EditPaper
     try {
       setIsLoading(true)
       
-      // Validate remaining length
+      // Add remaining_length to the data if not already set
       if (!data.remaining_length) {
-        data.remaining_length = remainingLength;
+        data.remaining_length = data.length
       }
       
-      await onSubmit(data as EditPaperFormValues & { remaining_length: string })
+      // Format data to match the API expectations
+      const formattedData = {
+        barcode_id: data.barcode_id,
+        supplier: data.supplier,
+        paper_type: data.paper_type,
+        gsm: parseInt(data.gsm),
+        width: parseFloat(data.width),
+        length: parseFloat(data.length),
+        remaining_length: parseFloat(data.remaining_length),
+        notes: data.notes,
+      }
+      
+      await onSubmit(formattedData)
       
       // Reset form state
       setIsLoading(false)
@@ -166,8 +192,8 @@ export function EditPaperForm({ open, onOpenChange, onSubmit, stock }: EditPaper
       />
 
       {/* Modal */}
-      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 overflow-auto max-h-[90vh]">
-        <div className="flex justify-between items-center p-6 border-b border-border/40">
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
           <div>
             <h2 className="text-lg font-semibold">Edit Paper Stock</h2>
             <p className="text-sm text-muted-foreground">
@@ -183,9 +209,9 @@ export function EditPaperForm({ open, onOpenChange, onSubmit, stock }: EditPaper
           </Button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 space-y-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="barcode_id"

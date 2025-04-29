@@ -704,8 +704,8 @@ model OtherConsumable {
 }
 
 model OthersItem {
-  id               String      @id @default(cuid())
-  qr_code          String?     @unique
+  id               String           @id @default(cuid())
+  qr_code          String?          @unique
   category         String
   item_name        String
   description      String?
@@ -713,15 +713,16 @@ model OthersItem {
   unit             String
   location         String?
   notes            String?
-  availability     Boolean     @default(true)
+  availability     Boolean          @default(true)
   user_id          String
   taken_by_user_id String?
   taken_at         DateTime?
-  created_at       DateTime    @default(now())
-  updated_at       DateTime    @updatedAt
-  taken_by_user    User?       @relation("UserTookOthersItem", fields: [taken_by_user_id], references: [id])
-  user             User        @relation("UserAddedOthersItem", fields: [user_id], references: [id])
-  logs             OthersLog[] @relation("OthersItemLogs")
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  taken_by_user    User?            @relation("UserTookOthersItem", fields: [taken_by_user_id], references: [id])
+  user             User             @relation("UserAddedOthersItem", fields: [user_id], references: [id])
+  logs             OthersLog[]      @relation("OthersItemLogs")
+  requests         OthersRequest[]  @relation("ItemRequests")
 
   @@map("others_item")
 }
@@ -747,6 +748,8 @@ model OthersRequest {
   approver         User?       @relation("UserApprovedOthers", fields: [approver_id], references: [id])
   rejector         User?       @relation("UserRejectedOthers", fields: [rejector_id], references: [id])
   user             User        @relation("UserRequestedOthers", fields: [user_id], references: [id])
+  item_id          String
+  item             OthersItem  @relation("ItemRequests", fields: [item_id], references: [id])
 
   @@map("others_requests")
 }

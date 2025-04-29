@@ -104,69 +104,71 @@ export function RejectPaperRequestForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="sticky top-0 bg-background/90 backdrop-blur-sm z-10">
           <DialogTitle>Reject Paper Request</DialogTitle>
           <DialogDescription>
             Are you sure you want to reject this paper request?
           </DialogDescription>
         </DialogHeader>
 
-        {/* Request details */}
-        <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border/40">
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <p><span className="font-medium">Requested by:</span> {paperRequest.user_name || "N/A"}</p>
-            <p><span className="font-medium">Paper type:</span> {paperRequest.paper_type}</p>
-            <p><span className="font-medium">GSM:</span> {paperRequest.gsm}</p>
-            <p><span className="font-medium">Dimensions:</span> {paperRequest.width}x{paperRequest.length}cm</p>
-          </div>
-          {paperRequest.user_notes && (
-            <div className="mt-2 pt-2 border-t border-border/40">
-              <p className="font-medium">Notes:</p>
-              <p className="text-sm mt-1">{paperRequest.user_notes}</p>
+        <div className="space-y-6">
+          {/* Request details */}
+          <div className="p-4 bg-muted/30 rounded-lg border border-border/40">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <p><span className="font-medium">Requested by:</span> {paperRequest.user_name || "N/A"}</p>
+              <p><span className="font-medium">Paper type:</span> {paperRequest.paper_type}</p>
+              <p><span className="font-medium">GSM:</span> {paperRequest.gsm}</p>
+              <p><span className="font-medium">Dimensions:</span> {paperRequest.width}x{paperRequest.length}cm</p>
             </div>
-          )}
-        </div>
+            {paperRequest.user_notes && (
+              <div className="mt-2 pt-2 border-t border-border/40">
+                <p className="font-medium">Notes:</p>
+                <p className="text-sm mt-1">{paperRequest.user_notes}</p>
+              </div>
+            )}
+          </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="rejection_reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reason for Rejection (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Enter reason for rejection..."
-                      className="bg-background/50 resize-none min-h-[100px]"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                variant="destructive" 
-                disabled={isLoading}
-              >
-                {isLoading ? "Rejecting..." : "Reject Request"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="rejection_reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason for Rejection (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Enter reason for rejection..."
+                        className="bg-background/50 resize-none min-h-[100px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter className="sticky bottom-0 bg-background/90 backdrop-blur-sm pt-4 border-t border-border/40">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="destructive" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Rejecting..." : "Reject Request"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { toast } from "sonner"
 import { Calendar as CalendarIcon, ChevronsUpDown, Loader2, X } from "lucide-react"
@@ -85,6 +85,23 @@ export default function AddInventoryItemPage() {
       keterangan: "",
     },
   })
+
+  // Watch the weight field to calculate estimated length
+  const beratBahan = useWatch({
+    control: form.control,
+    name: "berat_bahan",
+  })
+
+  // Update estimated length when weight changes
+  useEffect(() => {
+    if (beratBahan) {
+      const weight = parseFloat(beratBahan)
+      if (!isNaN(weight)) {
+        const estimatedLength = (weight * 3).toString()
+        form.setValue("est_pjg_bahan", estimatedLength)
+      }
+    }
+  }, [beratBahan, form])
   
   // Fetch customers for the source dropdown
   useEffect(() => {

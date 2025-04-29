@@ -34,7 +34,14 @@ export async function GET(req: Request) {
         orderBy: [
           { gsm: 'asc' },
           { width: 'asc' }
-        ]
+        ],
+        include: {
+          addedByUser: {
+            select: {
+              name: true
+            }
+          }
+        }
       });
 
       return NextResponse.json(paperStocks);

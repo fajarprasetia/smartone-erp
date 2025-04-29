@@ -180,7 +180,7 @@ export function PaperRequestsTab() {
               <TableHead>User Notes</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="sticky right-0 bg-muted/50 whitespace-nowrap">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

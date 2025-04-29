@@ -9,6 +9,7 @@ import { Camera, X, Barcode, Plus } from "lucide-react"
 import { format } from "date-fns"
 import { BrowserMultiFormatReader, NotFoundException } from "@zxing/library"
 import { Progress } from "@/components/ui/progress"
+import { useSession } from "next-auth/react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,6 +69,8 @@ export function AddPaperForm({ open, onOpenChange, onSubmit }: AddPaperFormProps
   const [scanProgress, setScanProgress] = useState(0)
   const scanProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [selectedVideoInput, setSelectedVideoInput] = useState<MediaDeviceInfo | null>(null)
+  const { data: session } = useSession()
+  const userId = session?.user?.id
 
   // Initialize form
   const form = useForm<AddPaperFormValues>({
@@ -277,6 +280,7 @@ export function AddPaperForm({ open, onOpenChange, onSubmit }: AddPaperFormProps
         manufacturer: data.supplier, // Map supplier to manufacturer
         availability: "YES",
         dateAdded: data.created_at, // Map created_at to dateAdded
+        addedByUserId: userId, // Add the user's ID
       }
       
       await onSubmit(data as AddPaperFormValues & { remaining_length: string })
@@ -320,123 +324,123 @@ export function AddPaperForm({ open, onOpenChange, onSubmit }: AddPaperFormProps
       />
 
       {/* Modal */}
-      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 overflow-auto max-h-[90vh]">
-        {showBarcodeScanner ? (
-          <div className="p-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Scan Barcode</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={stopBarcodeScanner}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {scannerError ? (
-              <div className="space-y-4">
-                <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-md text-sm">
-                  {scannerError}
-                </div>
-                
-                <div className="space-y-3">
-                  <p className="text-sm">Enter your barcode manually instead:</p>
-                  <div className="flex space-x-2">
-                    <Input 
-                      placeholder="Type barcode number"
-                      className="bg-background"
-                      value={form.getValues("barcode_id") || ""}
-                      onChange={(e) => form.setValue("barcode_id", e.target.value)}
-                    />
-                    <Button onClick={stopBarcodeScanner}>Done</Button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setScannerError(null);
-                      startBarcodeScanner();
-                    }}
-                  >
-                    Try Again
-                  </Button>
-                  <Button 
-                    variant="secondary"
-                    onClick={generateMockBarcode}
-                  >
-                    Generate Test Barcode
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Note: The test barcode option is available for development purposes
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="relative overflow-hidden rounded-lg border border-border h-64 bg-black">
-                  <video 
-                    ref={videoRef} 
-                    className="absolute inset-0 h-full w-full object-cover"
-                    autoPlay
-                    playsInline
-                    muted
-                    id="barcode-scanner-view"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-4/5 h-3/5 border-2 border-yellow-400/50 rounded-lg"></div>
-                  </div>
-                  {scanActive && (
-                    <div className="absolute bottom-2 left-2 bg-yellow-500 h-2 w-2 rounded-full animate-pulse"></div>
-                  )}
-                </div>
-                
-                {scanActive && (
-                  <div className="space-y-1 mt-2">
-                    <Progress 
-                      value={scanProgress} 
-                      className="h-1" 
-                      role="progressbar"
-                      aria-label="Barcode scanning progress"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={scanProgress}
-                    />
-                    <p className="text-xs text-center text-muted-foreground">Scanning...</p>
-                  </div>
-                )}
-                
-                <Button onClick={() => stopBarcodeScanner()} variant="outline" className="w-full">
-                  <X className="h-4 w-4 mr-2" /> Cancel
-                </Button>
-                
-                <p className="text-sm text-muted-foreground text-center">
-                  Position the barcode within the highlighted area. Scanning automatically...
-                </p>
-              </>
-            )}
+      <div className="bg-background/90 backdrop-blur-xl backdrop-saturate-150 z-50 rounded-lg border border-border/40 shadow-lg shadow-primary/10 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-border/40 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
+          <div>
+            <h2 className="text-lg font-semibold">Add Paper Stock</h2>
+            <p className="text-sm text-muted-foreground">
+              Add new paper to the inventory
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center p-6 border-b border-border/40">
-              <div>
-                <h2 className="text-lg font-semibold">Add Paper Stock</h2>
-                <p className="text-sm text-muted-foreground">
-                  Add new paper to the inventory
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
-            <div className="p-6">
+        <div className="p-6 space-y-6">
+          {showBarcodeScanner ? (
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Scan Barcode</h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={stopBarcodeScanner}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {scannerError ? (
+                <div className="space-y-4">
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-md text-sm">
+                    {scannerError}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <p className="text-sm">Enter your barcode manually instead:</p>
+                    <div className="flex space-x-2">
+                      <Input 
+                        placeholder="Type barcode number"
+                        className="bg-background"
+                        value={form.getValues("barcode_id") || ""}
+                        onChange={(e) => form.setValue("barcode_id", e.target.value)}
+                      />
+                      <Button onClick={stopBarcodeScanner}>Done</Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setScannerError(null);
+                        startBarcodeScanner();
+                      }}
+                    >
+                      Try Again
+                    </Button>
+                    <Button 
+                      variant="secondary"
+                      onClick={generateMockBarcode}
+                    >
+                      Generate Test Barcode
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Note: The test barcode option is available for development purposes
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="relative overflow-hidden rounded-lg border border-border h-64 bg-black">
+                    <video 
+                      ref={videoRef} 
+                      className="absolute inset-0 h-full w-full object-cover"
+                      autoPlay
+                      playsInline
+                      muted
+                      id="barcode-scanner-view"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-4/5 h-3/5 border-2 border-yellow-400/50 rounded-lg"></div>
+                    </div>
+                    {scanActive && (
+                      <div className="absolute bottom-2 left-2 bg-yellow-500 h-2 w-2 rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                  
+                  {scanActive && (
+                    <div className="space-y-1 mt-2">
+                      <Progress 
+                        value={scanProgress} 
+                        className="h-1" 
+                        role="progressbar"
+                        aria-label="Barcode scanning progress"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={scanProgress}
+                      />
+                      <p className="text-xs text-center text-muted-foreground">Scanning...</p>
+                    </div>
+                  )}
+                  
+                  <Button onClick={() => stopBarcodeScanner()} variant="outline" className="w-full">
+                    <X className="h-4 w-4 mr-2" /> Cancel
+                  </Button>
+                  
+                  <p className="text-sm text-muted-foreground text-center">
+                    Position the barcode within the highlighted area. Scanning automatically...
+                  </p>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                   <div className="flex space-x-2 items-end">
@@ -632,9 +636,9 @@ export function AddPaperForm({ open, onOpenChange, onSubmit }: AddPaperFormProps
                   </div>
                 </form>
               </Form>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

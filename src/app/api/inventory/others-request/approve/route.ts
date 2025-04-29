@@ -3,19 +3,14 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session || !session.user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    )
-  }
-
+export async function POST(req: Request) {
   try {
-    const body = await request.json()
-    const { request_id } = body
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { request_id, approver_notes } = await req.json()
 
     if (!request_id) {
       return NextResponse.json(
@@ -24,56 +19,69 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if the request exists and is not already processed
-    const othersRequest = await prisma.othersRequest.findUnique({
+    const request = await prisma.othersRequest.findUnique({
       where: { id: request_id },
+      include: {
+        item: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
     })
 
-    if (!othersRequest) {
+    if (!request) {
       return NextResponse.json(
         { error: "Request not found" },
         { status: 404 }
       )
     }
 
-    if (othersRequest.status === "APPROVED") {
+    if (request.status !== "PENDING") {
       return NextResponse.json(
-        { error: "Request already approved" },
+        { error: "Request is not in pending status" },
         { status: 400 }
       )
     }
 
-    if (othersRequest.status === "REJECTED") {
-      return NextResponse.json(
-        { error: "Cannot approve a rejected request" },
-        { status: 400 }
-      )
-    }
+    const result = await prisma.$transaction(async (tx) => {
+      // Update request status
+      const updatedRequest = await tx.othersRequest.update({
+        where: { id: request_id },
+        data: {
+          status: "APPROVED",
+          approver_id: session.user.id,
+          approved_at: new Date(),
+          approver_notes: approver_notes,
+        },
+      })
 
-    // Update the request status to approved
-    const updatedRequest = await prisma.othersRequest.update({
-      where: { id: request_id },
-      data: {
-        status: "APPROVED",
-        approver_id: session.user.id,
-        approved_at: new Date(),
-      },
-    })
-    
-    // Log the approval
-    await prisma.othersLog.create({
-      data: {
-        action: "APPROVED",
-        user_id: session.user.id,
-        others_request_id: request_id,
-        notes: `Request approved`,
-      },
+      // Update item quantity
+      await tx.othersItem.update({
+        where: { id: request.item_id },
+        data: {
+          quantity: {
+            decrement: request.quantity,
+          },
+        },
+      })
+
+      // Create log entry
+      await tx.othersLog.create({
+        data: {
+          others_request_id: request_id,
+          action: "APPROVED",
+          user_id: session.user.id,
+          notes: approver_notes || "Request approved",
+        },
+      })
+
+      return updatedRequest
     })
 
-    return NextResponse.json(
-      { message: "Request approved successfully", request: updatedRequest },
-      { status: 200 }
-    )
+    return NextResponse.json(result)
   } catch (error) {
     console.error("Error approving request:", error)
     return NextResponse.json(
