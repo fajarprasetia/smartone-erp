@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "@/lib/db";
 
 // Helper function to handle BigInt serialization in JSON responses

@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -207,7 +208,7 @@ export function TrialBalance() {
     const typeOrder = ["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]
     
     // Create rows for each account type
-    const rows: JSX.Element[] = []
+    const rows: React.JSX.Element[] = []
     
     typeOrder.forEach(type => {
       if (groupedAccounts[type] && groupedAccounts[type].length > 0) {
@@ -323,7 +324,11 @@ export function TrialBalance() {
                   <Calendar
                     mode="single"
                     selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
+                    onSelect={(date) => {
+                      if (date instanceof Date) {
+                        setSelectedDate(date)
+                      }
+                    }}
                     initialFocus
                   />
                 </PopoverContent>

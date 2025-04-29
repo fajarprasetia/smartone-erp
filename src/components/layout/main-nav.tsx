@@ -232,17 +232,12 @@ const navItems: NavItem[] = [
       {
         title: "Users",
         href: "/settings/users",
-        icon: <User className="h-4 w-4" />,
+        icon: <Users className="h-4 w-4" />,
       },
       {
         title: "Roles",
         href: "/settings/roles",
         icon: <Shield className="h-4 w-4" />,
-      },
-      {
-        title: "WhatsApp",
-        href: "/settings/whatsapp",
-        icon: <MessageSquareReply className="h-4 w-4" />,
       },
     ],
   },

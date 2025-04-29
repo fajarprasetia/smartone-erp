@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Customer } from '@prisma/client'
+import { customer } from '@prisma/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -36,7 +36,7 @@ type TemplateParameter = {
 }
 
 export function WhatsAppBlast() {
-  const [customers, setCustomers] = useState<Customer[]>([])
+  const [customers, setCustomers] = useState<customer[]>([])
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([])
   const [templates, setTemplates] = useState<TemplateMessage[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
@@ -69,8 +69,8 @@ export function WhatsAppBlast() {
             
             // Initialize template parameters
             const params: Record<string, string> = {}
-            templatesData[0].components.forEach(component => {
-              component.parameters?.forEach((param, index) => {
+            templatesData[0].components.forEach((component: TemplateComponent) => {
+              component.parameters?.forEach((param: TemplateParameter, index: number) => {
                 if (param.type === 'text') {
                   params[`${component.type.toLowerCase()}_${index}`] = ''
                 }
@@ -127,7 +127,7 @@ export function WhatsAppBlast() {
     if (selectedCustomers.length === customers.length) {
       setSelectedCustomers([])
     } else {
-      setSelectedCustomers(customers.map(c => c.id))
+      setSelectedCustomers(customers.map(c => c.id.toString()))
     }
   }
   
@@ -353,14 +353,14 @@ export function WhatsAppBlast() {
                       <div key={customer.id} className="flex items-center space-x-2">
                         <Checkbox 
                           id={`customer-${customer.id}`} 
-                          checked={selectedCustomers.includes(customer.id)}
-                          onCheckedChange={() => handleCustomerSelect(customer.id)}
+                          checked={selectedCustomers.includes(customer.id.toString())}
+                          onCheckedChange={() => handleCustomerSelect(customer.id.toString())}
                         />
                         <Label htmlFor={`customer-${customer.id}`} className="flex-1">
                           <div className="flex justify-between">
-                            <span>{customer.name}</span>
+                            <span>{customer.nama}</span>
                             <span className="text-muted-foreground">
-                              {customer.phone ? `62${customer.phone}` : 'No phone'}
+                              {customer.telp ? `62${customer.telp}` : 'No phone'}
                             </span>
                           </div>
                         </Label>

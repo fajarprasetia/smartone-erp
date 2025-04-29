@@ -26,9 +26,10 @@ interface RoleTableProps {
     }
   })[]
   permissions: Permission[]
+  onEditRole: (role: Role) => void
 }
 
-export function RoleTable({ roles, permissions }: RoleTableProps) {
+export function RoleTable({ roles, permissions, onEditRole }: RoleTableProps) {
   const router = useRouter()
   const [selectedRole, setSelectedRole] = useState<(Role & { permissions: Permission[] }) | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)

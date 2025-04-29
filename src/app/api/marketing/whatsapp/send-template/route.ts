@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Convert customerId to BigInt safely
-    const customerBigInt = safeBigInt(customerId);
+    const customerBigInt = BigInt(customerId);
     
     if (!customerBigInt) {
       return NextResponse.json(
@@ -36,14 +36,14 @@ export async function POST(req: NextRequest) {
     
     // Verify customer exists
     const customer = await prisma.customer.findUnique({
-      where: { id: customerBigInt }
-    })
+      where: { id: Number(customerBigInt) }
+    });
     
     if (!customer) {
       return NextResponse.json(
         { error: 'Customer not found' },
         { status: 404 }
-      )
+      );
     }
     
     // In a real implementation, you would fetch the template from WhatsApp Business API
@@ -61,11 +61,11 @@ export async function POST(req: NextRequest) {
         timestamp: new Date(),
         status: 'sent',
         messageType: 'template',
-        metadata: JSON.stringify({ 
-          templateName, 
+        metadata: JSON.stringify({
+          templateName,
           parameters
         }),
-        customerId: customerBigInt,
+        customerId: Number(customerBigInt),
       }
     });
     

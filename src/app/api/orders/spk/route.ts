@@ -31,7 +31,34 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const spk = searchParams.get("spk");
     const numericOnly = searchParams.get("numericOnly") === "true";
+    const getAll = searchParams.get("getAll") === "true";
 
+    // If getAll is specified, return all SPK numbers
+    if (getAll) {
+      // Get all SPK numbers from orders
+      const orders = await db.order.findMany({
+        select: {
+          spk: true,
+        },
+        where: {
+          spk: {
+            not: null,
+          },
+        },
+        orderBy: {
+          tanggal: 'desc',
+        },
+      });
+
+      // Extract SPK numbers and filter out nulls
+      const spkNumbers = orders
+        .map(order => order.spk)
+        .filter(spk => spk !== null && spk !== '');
+
+      return NextResponse.json(serializeData(spkNumbers));
+    }
+
+    // If looking up by SPK, require an SPK parameter
     if (!spk) {
       return NextResponse.json(
         { error: "SPK parameter is required" },
@@ -149,38 +176,6 @@ export async function GET(req: NextRequest) {
         error: "Failed to fetch order",
         details: error.message || "Unknown error occurred"
       },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GETAll(request: NextRequest) {
-  try {
-    // Get all SPK numbers from orders
-    const orders = await db.order.findMany({
-      select: {
-        spk: true,
-      },
-      where: {
-        spk: {
-          not: null,
-        },
-      },
-      orderBy: {
-        tanggal: 'desc',
-      },
-    });
-
-    // Extract SPK numbers and filter out nulls
-    const spkNumbers = orders
-      .map(order => order.spk)
-      .filter(spk => spk !== null && spk !== '');
-
-    return NextResponse.json(serializeData(spkNumbers));
-  } catch (error) {
-    console.error('Error fetching SPK numbers:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch SPK numbers' },
       { status: 500 }
     );
   }

@@ -36,25 +36,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Plus, Search, FileEdit, Trash2, ClipboardList } from "lucide-react"
-import { formatDate, getStatusColor } from "@/app/(dashboard)/inventory/assets/page"
+import { formatDate, getStatusColor } from "@/lib/utils/asset-utils"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 
 interface Asset {
   id: string
   name: string
-  type: string
+  type: string | null
   model?: string | null
-  serialNumber?: string | null
-  purchaseDate?: Date | null
-  purchasePrice?: string | null
-  warrantyExpiry?: Date | null
+  serial_number?: string | null
+  purchase_date?: Date | null
+  purchase_price?: string | null
+  warranty_expiry?: Date | null
   manufacturer?: string | null
   supplier?: string | null
   location?: string | null
-  status: string
-  lastMaintenanceDate?: Date | null
-  nextMaintenanceDate?: Date | null
+  status: string | null
+  last_maintenance_date?: Date | null
+  next_maintenance_date?: Date | null
   notes?: string | null
   createdAt: Date
   updatedAt: Date
@@ -235,11 +235,11 @@ export function AssetsList({
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Serial Number</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Last Maintenance</TableHead>
-                <TableHead>Next Maintenance</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -252,17 +252,17 @@ export function AssetsList({
               ) : (
                 assets.map((asset) => (
                   <TableRow key={asset.id}>
-                    <TableCell className="font-medium">{asset.name}</TableCell>
-                    <TableCell>{asset.type}</TableCell>
+                    <TableCell>{asset.name}</TableCell>
+                    <TableCell>{asset.type || '-'}</TableCell>
+                    <TableCell>{asset.serial_number}</TableCell>
+                    <TableCell>{asset.location || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${getStatusColor(asset.status)} text-white`}>
-                        {asset.status}
+                      <Badge variant={getStatusColor(asset.status)}>
+                        {asset.status || '-'}
                       </Badge>
                     </TableCell>
-                    <TableCell>{asset.location || '-'}</TableCell>
-                    <TableCell>{formatDate(asset.lastMaintenanceDate)}</TableCell>
-                    <TableCell>{formatDate(asset.nextMaintenanceDate)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>{asset.last_maintenance_date ? formatDate(asset.last_maintenance_date) : 'N/A'}</TableCell>
+                    <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -272,31 +272,31 @@ export function AssetsList({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/inventory/assets/${asset.id}`}>
+                          <DropdownMenuItem>
+                            <Link href={`/inventory/assets/${asset.id}`} className="flex items-center">
                               <FileEdit className="mr-2 h-4 w-4" />
                               View Details
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/inventory/assets/${asset.id}/edit`}>
+                          <DropdownMenuItem>
+                            <Link href={`/inventory/assets/${asset.id}/edit`} className="flex items-center">
                               <Pencil className="mr-2 h-4 w-4" />
                               Edit
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/inventory/assets/${asset.id}/maintenance`}>
+                          <DropdownMenuItem>
+                            <Link href={`/inventory/assets/${asset.id}/maintenance`} className="flex items-center">
                               <ClipboardList className="mr-2 h-4 w-4" />
                               Maintenance
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
+                            className="text-destructive"
                             onClick={() => {
                               setSelectedAsset(asset)
                               setIsDeleteDialogOpen(true)
                             }}
-                            className="text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete

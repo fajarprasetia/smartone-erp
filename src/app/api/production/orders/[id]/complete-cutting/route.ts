@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { z } from "zod";
 
 // Schema for validating the cutting completion data
@@ -31,8 +31,8 @@ function serializeData(data: any): any {
 }
 
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: any
 ) {
   try {
     // Get the authenticated user session
@@ -68,7 +68,7 @@ export async function PATCH(
     const data = validatedData.data;
 
     // Find the order to update
-    const order = await prisma.order.findUnique({
+    const order = await db.order.findUnique({
       where: { id: orderId },
     });
 
@@ -79,38 +79,34 @@ export async function PATCH(
       );
     }
 
-    // Prepare the data to update
-    const updateData = {
-      // Cutting process completion fields
-      cutting_bagus: data.cutting_bagus,
-      cutting_reject: data.cutting_reject,
-      catatan_cutting: data.catatan_cutting,
-      
-      // Machine settings fields
-      cutting_mesin: data.cutting_mesin,
-      cutting_speed: data.cutting_speed,
-      acc: data.acc,
-      power: data.power,
-      
-      // Completion date fields - only use existing fields from the schema
-      cutting_done: data.cutting_done || new Date().toISOString(),
-      
-      // Status field
-      status: data.status || "COMPLETED",
-      
-      // Update the updated_at timestamp
-      updated_at: new Date(),
-    };
-
-    console.log("Updating order with data:", updateData);
-
-    // Update the order with the completed cutting data
-    const updatedOrder = await prisma.order.update({
+    // Update the order
+    const updatedOrder = await db.order.update({
       where: { id: orderId },
-      data: updateData,
+      data: {
+        cutting_done: new Date(),
+        statusprod: 'CUTTING_COMPLETED',
+        catatan_cutting: data.catatan_cutting || null,
+        cutting_bagus: data.cutting_bagus || null,
+        cutting_reject: data.cutting_reject || null,
+        cutting_mesin: data.cutting_mesin || null,
+        cutting_speed: data.cutting_speed || null,
+        acc: data.acc || null,
+        power: data.power || null
+      },
+      include: {
+        cutting: true
+      }
     });
 
-    console.log("Order updated successfully:", updatedOrder.id);
+    // Create order log
+    await db.orderLog.create({
+      data: {
+        orderId: orderId,
+        userId: session.user.id,
+        action: 'CUTTING_COMPLETED',
+        notes: `Cutting completed. Good: ${data.cutting_bagus}, Reject: ${data.cutting_reject}${data.catatan_cutting ? ` - Notes: ${data.catatan_cutting}` : ''}`
+      }
+    });
 
     // Serialize the response to handle BigInt values
     const serializedOrder = serializeData(updatedOrder);

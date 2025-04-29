@@ -390,7 +390,11 @@ function PaymentForm({
               <CalendarComponent
                 mode="single"
                 selected={paymentDate}
-                onSelect={(date) => date && setPaymentDate(date)}
+                onSelect={(date) => {
+                  if (date instanceof Date) {
+                    setPaymentDate(date)
+                  }
+                }}
                 initialFocus
               />
             </PopoverContent>

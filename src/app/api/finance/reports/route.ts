@@ -1,37 +1,84 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Aggregate total sales (sum of nominal_total) from orders
-    const totalSales = await db.order.aggregate({
-      _sum: { nominal_total: true }
+    const { searchParams } = new URL(request.url);
+    const from = new Date(searchParams.get("from") || "");
+    const to = new Date(searchParams.get("to") || "");
+
+    // Financial summary data
+    const summary = {
+      income: 0,
+      expenses: 0,
+      pendingPayables: 0,
+      pendingReceivables: 0,
+    };
+
+    // Fetch accounts receivable data
+    const invoices = await prisma.invoice.findMany({
+      where: {
+        invoiceDate: {
+          gte: from,
+          lte: to,
+        },
+      },
     });
 
-    // Aggregate total receivables (sum of sisa) from orders
-    const totalReceivables = await db.order.aggregate({
-      _sum: { sisa: true }
+    // Calculate pending receivables
+    invoices.forEach((invoice) => {
+      if (invoice.status !== "PAID") {
+        summary.pendingReceivables += invoice.balance;
+      }
+      summary.income += invoice.amountPaid;
     });
 
-    // Aggregate total payments (sum of amount) from FinancialTransaction
-    const totalPayments = await db.financialTransaction.aggregate({
-      _sum: { amount: true }
+    // Fetch accounts payable data
+    const bills = await prisma.bill.findMany({
+      where: {
+        issueDate: {
+          gte: from,
+          lte: to,
+        },
+      },
     });
 
-    // Count total orders
-    const totalOrders = await db.order.count();
+    // Calculate pending payables and expenses
+    bills.forEach((bill) => {
+      if (bill.status !== "PAID") {
+        summary.pendingPayables += (bill.totalAmount - bill.paidAmount);
+      }
+      summary.expenses += bill.paidAmount;
+    });
 
-    // Count total financial transactions
-    const totalTransactions = await db.financialTransaction.count();
+    // Fetch tax data
+    const taxFilings = await prisma.taxFiling.findMany({
+      where: {
+        createdAt: {
+          gte: from,
+          lte: to,
+        },
+      },
+    });
 
+    // Calculate additional data
+    const cashFlow = summary.income - summary.expenses;
+    
     return NextResponse.json({
-      totalSales: totalSales._sum.nominal_total || 0,
-      totalReceivables: totalReceivables._sum.sisa || 0,
-      totalPayments: totalPayments._sum.amount || 0,
-      totalOrders,
-      totalTransactions
+      summary,
+      cashFlow,
+      data: {
+        invoices,
+        bills,
+        taxFilings,
+      },
     });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to aggregate finance reports", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+    console.error("Error generating finance report:", error);
+    return NextResponse.json(
+      { error: "Failed to generate finance report" },
+      { status: 500 }
+    );
   }
 }

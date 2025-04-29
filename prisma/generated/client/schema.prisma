@@ -9,45 +9,47 @@ datasource db {
 }
 
 model User {
-  id                 String                 @id @default(cuid())
-  name               String
-  email              String                 @unique
-  password           String
-  roleId             String
-  isActive           Boolean                @default(true)
-  transactions       FinancialTransaction[]
-  otherConsumables   OtherConsumable[]      @relation("UserAddedConsumable")
-  role               Role                   @relation(fields: [roleId], references: [id])
-  inkLogs            InkLog[]               @relation("UserInkLogs")
-  inkApprovals       InkRequest[]           @relation("UserApprovedInk")
-  inkRejections      InkRequest[]           @relation("UserRejectedInk")
-  inkRequests        InkRequest[]           @relation("UserRequestedInk")
-  inkStocksAdded     InkStock[]             @relation("UserAddedInk")
-  inkStocksTaken     InkStock[]             @relation("UserTookInk")
-  inkStocksUpdated   InkStock[]             @relation("UserUpdatedInk")
-  orderLogs          OrderLog[]
-  ordersCutting      Order[]                @relation("OrderCutting")
-  ordersDesigned     Order[]                @relation("OrderDesigner")
-  ordersDTF          Order[]                @relation("OrderDTF")
-  ordersManaged      Order[]                @relation("OrderManager")
-  ordersOperated     Order[]                @relation("OrderOperator")
-  ordersHandled      Order[]                @relation("OrderPenyerahan")
-  ordersPress        Order[]                @relation("OrderPress")
-  ordersPrint        Order[]                @relation("OrderPrint")
-  ordersCreated      Order[]                @relation("UserCreatedOrders")
-  othersItemsTaken   OthersItem[]           @relation("UserTookOthersItem")
-  othersItemsAdded   OthersItem[]           @relation("UserAddedOthersItem")
-  othersLogs         OthersLog[]            @relation("UserOthersLogs")
-  othersApprovals    OthersRequest[]        @relation("UserApprovedOthers")
-  othersRejections   OthersRequest[]        @relation("UserRejectedOthers")
-  othersRequests     OthersRequest[]        @relation("UserRequestedOthers")
-  paperLogs          PaperLog[]
-  paperApprovals     PaperRequest[]         @relation("UserApprovedPaper")
-  paperRejections    PaperRequest[]         @relation("UserRejectedPaper")
-  paperRequests      PaperRequest[]         @relation("UserRequestedPaper")
-  paperStocksAdded   PaperStock[]           @relation("UserAddedPaper")
-  paperStocksTaken   PaperStock[]           @relation("UserTookPaper")
-  paperStocksUpdated PaperStock[]           @relation("UserUpdatedPaper")
+  id                   String                 @id @default(cuid())
+  name                 String
+  email                String                 @unique
+  password             String
+  roleId               String
+  isActive             Boolean                @default(true)
+  transactions         FinancialTransaction[]
+  otherConsumables     OtherConsumable[]      @relation("UserAddedConsumable")
+  role                 Role                   @relation(fields: [roleId], references: [id])
+  inkLogs              InkLog[]               @relation("UserInkLogs")
+  inkApprovals         InkRequest[]           @relation("UserApprovedInk")
+  inkRejections        InkRequest[]           @relation("UserRejectedInk")
+  inkRequests          InkRequest[]           @relation("UserRequestedInk")
+  inkStocksAdded       InkStock[]             @relation("UserAddedInk")
+  inkStocksTaken       InkStock[]             @relation("UserTookInk")
+  inkStocksUpdated     InkStock[]             @relation("UserUpdatedInk")
+  orderLogs            OrderLog[]
+  ordersCutting        Order[]                @relation("OrderCutting")
+  ordersDesigned       Order[]                @relation("OrderDesigner")
+  ordersDTF            Order[]                @relation("OrderDTF")
+  ordersManaged        Order[]                @relation("OrderManager")
+  ordersOperated       Order[]                @relation("OrderOperator")
+  ordersHandled        Order[]                @relation("OrderPenyerahan")
+  ordersPress          Order[]                @relation("OrderPress")
+  ordersPrint          Order[]                @relation("OrderPrint")
+  ordersCreated        Order[]                @relation("UserCreatedOrders")
+  othersItemsTaken     OthersItem[]           @relation("UserTookOthersItem")
+  othersItemsAdded     OthersItem[]           @relation("UserAddedOthersItem")
+  othersLogs           OthersLog[]            @relation("UserOthersLogs")
+  othersApprovals      OthersRequest[]        @relation("UserApprovedOthers")
+  othersRejections     OthersRequest[]        @relation("UserRejectedOthers")
+  othersRequests       OthersRequest[]        @relation("UserRequestedOthers")
+  paperLogs            PaperLog[]
+  paperApprovals       PaperRequest[]         @relation("UserApprovedPaper")
+  paperRejections      PaperRequest[]         @relation("UserRejectedPaper")
+  paperRequests        PaperRequest[]         @relation("UserRequestedPaper")
+  paperStocksAdded     PaperStock[]           @relation("UserAddedPaper")
+  paperStocksTaken     PaperStock[]           @relation("UserTookPaper")
+  paperStocksUpdated   PaperStock[]           @relation("UserUpdatedPaper")
+  financialPeriods     FinancialPeriod[]      @relation("UserCreatedPeriods")
+  postedJournalEntries JournalEntry[]         @relation("PostedJournalEntries")
 }
 
 model Role {
@@ -300,6 +302,7 @@ model ChartOfAccount {
   type              String
   subtype           String?
   description       String?
+  balance           Float              @default(0)
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -312,11 +315,21 @@ model FinancialPeriod {
   name           String
   startDate      DateTime
   endDate        DateTime
-  isClosed       Boolean        @default(false)
-  closedAt       DateTime?
+  type           String // ANNUAL, QUARTERLY, MONTHLY, CUSTOM
+  year           Int
+  quarter        Int? // 1-4
+  month          Int? // 1-12
+  status         String // OPEN, CLOSED
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  createdBy      String
+  user           User           @relation("UserCreatedPeriods", fields: [createdBy], references: [id], onDelete: Cascade)
   journalEntries JournalEntry[]
+
+  @@index([year])
+  @@index([type])
+  @@index([status])
+  @@index([createdBy])
 }
 
 model JournalEntry {
@@ -329,6 +342,9 @@ model JournalEntry {
   periodId    String
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  postedAt    DateTime?
+  postedById  String?
+  postedBy    User?              @relation("PostedJournalEntries", fields: [postedById], references: [id])
   period      FinancialPeriod    @relation(fields: [periodId], references: [id])
   items       JournalEntryItem[]
 }

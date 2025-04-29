@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Get a single vendor by ID
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: any
 ) {
   try {
     const id = params.id;
@@ -32,8 +32,8 @@ export async function GET(
 
 // Update a vendor
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: any
 ) {
   try {
     const id = params.id;
@@ -64,11 +64,13 @@ export async function PUT(
       where: { id },
       data: {
         name,
+        contactName: contactPerson,
         email,
         phone,
         address,
-        contactPerson,
+        taxId: null,
         notes,
+        status: "ACTIVE",
       },
     });
 
@@ -84,8 +86,8 @@ export async function PUT(
 
 // Delete a vendor
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: any
 ) {
   try {
     const id = params.id;

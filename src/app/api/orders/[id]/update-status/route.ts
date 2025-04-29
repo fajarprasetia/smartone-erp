@@ -10,7 +10,7 @@ import { bigIntSerializer } from "@/lib/utils";
  */
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  params: any
 ) {
   try {
     // Check authentication
@@ -23,7 +23,7 @@ export async function POST(
     }
 
     // Get order ID from params
-    const orderId = params.id;
+    const orderId = params.params.id;
     if (!orderId) {
       return NextResponse.json(
         { error: "Order ID is required" },

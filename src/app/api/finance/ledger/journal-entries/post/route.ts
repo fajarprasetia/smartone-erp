@@ -50,7 +50,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Check if period is closed
-    if (existingEntry.period.isClosed) {
+    if (existingEntry.period.status === "CLOSED") {
       return NextResponse.json(
         { error: "Cannot post to a closed period" },
         { status: 400 }
@@ -68,25 +68,35 @@ export async function PUT(req: NextRequest) {
       );
     }
     
-    // Post the journal entry
+    // Update the journal entry
     const postedEntry = await db.journalEntry.update({
       where: { id },
       data: {
-        status: "POSTED",
-        postedAt: new Date(),
-        postedById: session.userId
+        status: "POSTED"
       },
       include: {
-        items: true
+        items: true,
+        period: true
       }
     });
     
-    // Update account balances (this could be done in a transaction but kept simple for this example)
-    // In a real application, you might use a more sophisticated ledger system
+    // Map the response
+    const mappedEntry = {
+      ...postedEntry,
+      period: postedEntry.periodId,
+      items: postedEntry.items.map((item) => ({
+        id: item.id,
+        journalEntryId: item.journalEntryId,
+        accountId: item.accountId,
+        description: item.description,
+        debit: item.debit,
+        credit: item.credit
+      }))
+    };
     
     return NextResponse.json({
       message: "Journal entry posted successfully",
-      entry: postedEntry
+      entry: mappedEntry
     });
   } catch (error) {
     console.error("Error posting journal entry:", error);
@@ -172,44 +182,29 @@ export async function POST(req: NextRequest) {
     const updatedEntry = await db.journalEntry.update({
       where: { id: data.journalEntryId },
       data: {
-        status: "POSTED",
-        postedAt: new Date(),
-        postedById: session.userId,
+        status: "POSTED"
       },
       include: {
-        items: {
-          include: { 
-            account: true 
-          }
-        },
-        period: true,
-      },
+        items: true,
+        period: true
+      }
     });
     
     // Format the response
-    const formattedEntry = {
-      id: updatedEntry.id,
-      entryNumber: updatedEntry.entryNumber,
-      date: updatedEntry.date.toISOString(),
-      periodId: updatedEntry.periodId,
-      periodName: updatedEntry.period.name,
-      description: updatedEntry.description,
-      reference: updatedEntry.reference,
-      status: updatedEntry.status,
-      postedAt: updatedEntry.postedAt?.toISOString(),
-      items: updatedEntry.items.map(item => ({
+    const mappedEntry = {
+      ...updatedEntry,
+      period: updatedEntry.periodId,
+      items: updatedEntry.items.map((item) => ({
         id: item.id,
         journalEntryId: item.journalEntryId,
         accountId: item.accountId,
-        accountCode: item.account.code,
-        accountName: item.account.name,
         description: item.description,
         debit: item.debit,
-        credit: item.credit,
-      })),
+        credit: item.credit
+      }))
     };
     
-    return NextResponse.json(formattedEntry);
+    return NextResponse.json(mappedEntry);
   } catch (error) {
     console.error("Error posting journal entry:", error);
     return NextResponse.json(

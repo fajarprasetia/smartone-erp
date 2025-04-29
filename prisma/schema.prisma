@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/client"
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -9,46 +10,47 @@ datasource db {
 }
 
 model User {
-  id                 String                 @id @default(cuid())
-  name               String
-  email              String                 @unique
-  password           String
-  roleId             String
-  isActive           Boolean                @default(true)
-  transactions       FinancialTransaction[]
-  otherConsumables   OtherConsumable[]      @relation("UserAddedConsumable")
-  role               Role                   @relation(fields: [roleId], references: [id])
-  inkLogs            InkLog[]               @relation("UserInkLogs")
-  inkApprovals       InkRequest[]           @relation("UserApprovedInk")
-  inkRejections      InkRequest[]           @relation("UserRejectedInk")
-  inkRequests        InkRequest[]           @relation("UserRequestedInk")
-  inkStocksAdded     InkStock[]             @relation("UserAddedInk")
-  inkStocksTaken     InkStock[]             @relation("UserTookInk")
-  inkStocksUpdated   InkStock[]             @relation("UserUpdatedInk")
-  orderLogs          OrderLog[]
-  ordersCutting      Order[]                @relation("OrderCutting")
-  ordersDesigned     Order[]                @relation("OrderDesigner")
-  ordersDTF          Order[]                @relation("OrderDTF")
-  ordersManaged      Order[]                @relation("OrderManager")
-  ordersOperated     Order[]                @relation("OrderOperator")
-  ordersHandled      Order[]                @relation("OrderPenyerahan")
-  ordersPress        Order[]                @relation("OrderPress")
-  ordersPrint        Order[]                @relation("OrderPrint")
-  ordersCreated      Order[]                @relation("UserCreatedOrders")
-  othersItemsTaken   OthersItem[]           @relation("UserTookOthersItem")
-  othersItemsAdded   OthersItem[]           @relation("UserAddedOthersItem")
-  othersLogs         OthersLog[]            @relation("UserOthersLogs")
-  othersApprovals    OthersRequest[]        @relation("UserApprovedOthers")
-  othersRejections   OthersRequest[]        @relation("UserRejectedOthers")
-  othersRequests     OthersRequest[]        @relation("UserRequestedOthers")
-  paperLogs          PaperLog[]
-  paperApprovals     PaperRequest[]         @relation("UserApprovedPaper")
-  paperRejections    PaperRequest[]         @relation("UserRejectedPaper")
-  paperRequests      PaperRequest[]         @relation("UserRequestedPaper")
-  paperStocksAdded   PaperStock[]           @relation("UserAddedPaper")
-  paperStocksTaken   PaperStock[]           @relation("UserTookPaper")
-  paperStocksUpdated PaperStock[]           @relation("UserUpdatedPaper")
-  financialPeriods   FinancialPeriod[]      @relation("UserCreatedPeriods")
+  id                   String                 @id @default(cuid())
+  name                 String
+  email                String                 @unique
+  password             String
+  roleId               String
+  isActive             Boolean                @default(true)
+  financialPeriods     FinancialPeriod[]      @relation("UserCreatedPeriods")
+  transactions         FinancialTransaction[]
+  postedJournalEntries JournalEntry[]         @relation("PostedJournalEntries")
+  otherConsumables     OtherConsumable[]      @relation("UserAddedConsumable")
+  role                 Role                   @relation(fields: [roleId], references: [id])
+  inkLogs              InkLog[]               @relation("UserInkLogs")
+  inkApprovals         InkRequest[]           @relation("UserApprovedInk")
+  inkRejections        InkRequest[]           @relation("UserRejectedInk")
+  inkRequests          InkRequest[]           @relation("UserRequestedInk")
+  inkStocksAdded       InkStock[]             @relation("UserAddedInk")
+  inkStocksTaken       InkStock[]             @relation("UserTookInk")
+  inkStocksUpdated     InkStock[]             @relation("UserUpdatedInk")
+  orderLogs            OrderLog[]
+  ordersCutting        Order[]                @relation("OrderCutting")
+  ordersDesigned       Order[]                @relation("OrderDesigner")
+  ordersDTF            Order[]                @relation("OrderDTF")
+  ordersManaged        Order[]                @relation("OrderManager")
+  ordersOperated       Order[]                @relation("OrderOperator")
+  ordersHandled        Order[]                @relation("OrderPenyerahan")
+  ordersPress          Order[]                @relation("OrderPress")
+  ordersPrint          Order[]                @relation("OrderPrint")
+  ordersCreated        Order[]                @relation("UserCreatedOrders")
+  othersItemsTaken     OthersItem[]           @relation("UserTookOthersItem")
+  othersItemsAdded     OthersItem[]           @relation("UserAddedOthersItem")
+  othersLogs           OthersLog[]            @relation("UserOthersLogs")
+  othersApprovals      OthersRequest[]        @relation("UserApprovedOthers")
+  othersRejections     OthersRequest[]        @relation("UserRejectedOthers")
+  othersRequests       OthersRequest[]        @relation("UserRequestedOthers")
+  paperLogs            PaperLog[]
+  paperApprovals       PaperRequest[]         @relation("UserApprovedPaper")
+  paperRejections      PaperRequest[]         @relation("UserRejectedPaper")
+  paperRequests        PaperRequest[]         @relation("UserRequestedPaper")
+  paperStocksAdded     PaperStock[]           @relation("UserAddedPaper")
+  paperStocksTaken     PaperStock[]           @relation("UserTookPaper")
+  paperStocksUpdated   PaperStock[]           @relation("UserUpdatedPaper")
 }
 
 model Role {
@@ -304,24 +306,25 @@ model ChartOfAccount {
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  balance           Float              @default(0)
   billItems         BillItem[]
   journalEntryItems JournalEntryItem[]
 }
 
 model FinancialPeriod {
-  id           String         @id @default(cuid())
-  name         String
-  startDate    DateTime
-  endDate      DateTime
-  type         String   // ANNUAL, QUARTERLY, MONTHLY, CUSTOM
-  year         Int
-  quarter      Int?     // 1-4
-  month        Int?     // 1-12
-  status       String   // OPEN, CLOSED
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  createdBy    String
-  user         User          @relation("UserCreatedPeriods", fields: [createdBy], references: [id], onDelete: Cascade)
+  id             String         @id @default(cuid())
+  name           String
+  startDate      DateTime
+  endDate        DateTime
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  createdBy      String
+  month          Int?
+  quarter        Int?
+  status         String         @default("OPEN")
+  type           String
+  year           Int
+  user           User           @relation("UserCreatedPeriods", fields: [createdBy], references: [id], onDelete: Cascade)
   journalEntries JournalEntry[]
 
   @@index([year])
@@ -340,7 +343,10 @@ model JournalEntry {
   periodId    String
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  postedAt    DateTime?
+  postedById  String?
   period      FinancialPeriod    @relation(fields: [periodId], references: [id])
+  postedBy    User?              @relation("PostedJournalEntries", fields: [postedById], references: [id])
   items       JournalEntryItem[]
 }
 
@@ -761,39 +767,58 @@ model OthersLog {
 }
 
 model Asset {
-  id                     String                   @id
-  name                   String
-  type                   String
-  supplier               String?
-  status                 String
-  location               String?
-  notes                  String?
-  createdAt              DateTime                 @default(now())
-  lastMaintenanceDate    DateTime?
-  manufacturer           String?
-  model                  String?
-  nextMaintenanceDate    DateTime?
-  purchaseDate           DateTime?
-  purchasePrice          String?
-  serialNumber           String?
-  updatedAt              DateTime
-  warrantyExpiry         DateTime?
-  AssetMaintenanceRecord AssetMaintenanceRecord[]
+  id                  String                   @id
+  name                String
+  type                String
+  supplier            String?
+  status              String
+  location            String?
+  notes               String?
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  lastMaintenanceDate DateTime?                @map("last_maintenance_date")
+  manufacturer        String?
+  model               String?
+  nextMaintenanceDate DateTime?                @map("next_maintenance_date")
+  purchaseDate        DateTime?                @map("purchase_date")
+  purchasePrice       String?                  @map("purchase_price")
+  serialNumber        String?                  @map("serial_number")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
+  warrantyExpiry      DateTime?                @map("warranty_expiry")
+  maintenanceRecords  AssetMaintenanceRecord[]
+
+  @@map("assets")
 }
 
 model AssetMaintenanceRecord {
   id                  String    @id
-  assetId             String
+  assetId             String    @map("asset_id")
   date                DateTime
-  maintenanceType     String
+  maintenanceType     String    @map("maintenance_type")
   description         String
-  performedBy         String
+  performedBy         String    @map("performed_by")
   cost                Float?
-  nextMaintenanceDate DateTime?
+  nextMaintenanceDate DateTime? @map("next_maintenance_date")
   notes               String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime
-  Asset               Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  asset               Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("asset_maintenance_records")
+}
+
+model TaxFiling {
+  id              String    @id @default(cuid())
+  type            String
+  period          String
+  amount          Float
+  dueDate         DateTime
+  status          String    @default("PENDING")
+  description     String?
+  filingDate      DateTime?
+  paymentDate     DateTime?
+  referenceNumber String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 enum PaperRequestStatus {
@@ -805,4 +830,62 @@ enum PaperRequestStatus {
 enum InventoryAvailability {
   YES
   NO
+}
+
+model Budget {
+  id            String       @id @default(cuid())
+  name          String
+  year          Int
+  description   String?
+  totalAmount   Float        @default(0)
+  departmentId  String?
+  periodId      String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  department    Department?  @relation(fields: [departmentId], references: [id])
+  period        Period?      @relation(fields: [periodId], references: [id])
+  items         BudgetItem[]
+}
+
+model BudgetItem {
+  id          String       @id @default(cuid())
+  budgetId    String
+  accountId   String
+  description String?
+  amount      Float
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  budget      Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  account     Account      @relation(fields: [accountId], references: [id])
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  budgets     Budget[]
+}
+
+model Period {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  budgets     Budget[]
+}
+
+model Account {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  type        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  budgetItems BudgetItem[]
 }

@@ -117,19 +117,26 @@ const accountTypeOptions = [
 ]
 
 const formSchema = z.object({
-  code: z.string().min(1, "Account code is required"),
-  name: z.string().min(1, "Account name is required"),
-  type: z.string().min(1, "Account type is required"),
-  subtype: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  type: z.string().min(1, "Type is required"),
+  code: z.string().min(1, "Code is required"),
+  isActive: z.boolean(),
   description: z.string().optional(),
-  isActive: z.boolean().default(true),
-  balance: z.preprocess(
-    (val) => (val === "" ? 0 : Number(val)),
-    z.number().default(0)
-  ),
-})
+  balance: z.number(),
+  subtype: z.string().optional(),
+}).required();
 
 type FormValues = z.infer<typeof formSchema>
+
+const defaultValues: FormValues = {
+  name: "",
+  type: "",
+  code: "",
+  isActive: true,
+  description: "",
+  balance: 0,
+  subtype: "",
+};
 
 export function ChartOfAccounts() {
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
@@ -152,15 +159,7 @@ export function ChartOfAccounts() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      code: "",
-      name: "",
-      type: "",
-      subtype: "",
-      description: "",
-      isActive: true,
-      balance: 0,
-    },
+    defaultValues,
   })
 
   useEffect(() => {

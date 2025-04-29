@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         address,
-        contactPerson,
+        contactName: contactPerson,
         notes,
       },
     });

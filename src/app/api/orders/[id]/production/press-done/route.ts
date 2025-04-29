@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -22,8 +22,8 @@ const pressDoneSchema = z.object({
 });
 
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  params: any
 ) {
   try {
     // Get the authenticated session
@@ -33,7 +33,7 @@ export async function PATCH(
     }
 
     // Get the order ID from params
-    const { id } = params;
+    const { id } = params.params;
     if (!id) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }

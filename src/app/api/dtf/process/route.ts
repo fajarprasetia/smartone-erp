@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Try to find order first to confirm it exists
-    const orderExists = await db.orders.findUnique({
+    const orderExists = await db.order.findUnique({
       where: { id },
       select: { id: true, status: true }
     });
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     console.log(`Found order ${id} with status: ${orderExists.status}`);
 
     // Update the order status to "DTF PROCESS"
-    const updatedOrder = await db.orders.update({
+    const updatedOrder = await db.order.update({
       where: { id },
       data: {
         status: "DTF PROCESS",

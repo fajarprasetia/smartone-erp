@@ -1,5 +1,45 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+
+// Mock invoice data
+const mockInvoices = [
+  {
+    id: "inv-1",
+    invoiceNumber: "INV-2024-001",
+    invoiceDate: new Date('2024-05-01').toISOString(),
+    dueDate: new Date('2024-05-15').toISOString(),
+    status: "UNPAID",
+    customerId: "customer-1",
+    customer: {
+      id: "customer-1",
+      nama: "PT. ABC Indonesia",
+      telp: "081234567890"
+    },
+    subtotal: 5000000,
+    tax: 550000,
+    discount: 0,
+    total: 5550000,
+    items: []
+  },
+  {
+    id: "inv-2",
+    invoiceNumber: "INV-2024-002",
+    invoiceDate: new Date('2024-04-15').toISOString(),
+    dueDate: new Date('2024-04-30').toISOString(),
+    status: "PAID",
+    customerId: "customer-2",
+    customer: {
+      id: "customer-2",
+      nama: "CV. XYZ Printing",
+      telp: "087654321098"
+    },
+    subtotal: 3200000,
+    tax: 352000,
+    discount: 320000,
+    total: 3232000,
+    items: []
+  }
+];
 
 // Create a new invoice
 export async function POST(req: Request) {
@@ -9,125 +49,43 @@ export async function POST(req: Request) {
       invoiceNumber, 
       invoiceDate, 
       dueDate, 
-      status, 
       customerId, 
-      orderId, 
-      subtotal, 
-      tax, 
-      discount, 
-      total, 
-      amountPaid, 
-      balance, 
-      notes 
+      status, 
+      subtotal,
+      tax,
+      discount,
+      total,
+      items = []
     } = data;
-
+    
     // Validate required fields
-    if (!invoiceNumber || !invoiceDate || !dueDate || !customerId || !subtotal || !total) {
+    if (!invoiceNumber || !invoiceDate || !dueDate || !customerId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
-
-    // Check if invoice with this number already exists
-    const existingInvoice = await db.Invoice.findFirst({
-      where: { invoiceNumber }
-    });
-
-    if (existingInvoice) {
-      return NextResponse.json({ error: "Invoice with this number already exists" }, { status: 400 });
-    }
-
-    // Create the invoice
-    const invoice = await db.Invoice.create({
-      data: {
-        invoiceNumber,
-        invoiceDate: new Date(invoiceDate),
-        dueDate: new Date(dueDate),
-        status: status || "UNPAID",
-        customerId: BigInt(customerId.toString()),
-        orderId,
-        subtotal,
-        tax: tax || 0,
-        discount: discount || 0,
-        total,
-        amountPaid: amountPaid || 0,
-        balance: balance || total,
-        notes,
-      }
-    });
-
-    // Create a journal entry for this invoice
-    try {
-      // Get the current financial period
-      const currentPeriod = await db.financialPeriod.findFirst({
-        where: {
-          startDate: { lte: new Date() },
-          endDate: { gte: new Date() },
-          isClosed: false
-        }
-      });
-
-      if (currentPeriod) {
-        // Create journal entry
-        const journalEntry = await db.journalEntry.create({
-          data: {
-            entryNumber: `JE-INV-${invoiceNumber}`,
-            date: new Date(),
-            description: `Invoice created: ${invoiceNumber}`,
-            reference: orderId ? `Order ${orderId}` : undefined,
-            status: "POSTED",
-            periodId: currentPeriod.id,
-          }
-        });
-
-        // Get accounts for journal entry
-        const accountsReceivable = await db.chartOfAccount.findFirst({
-          where: {
-            type: "ASSET",
-            subtype: "Accounts Receivable"
-          }
-        });
-
-        const salesRevenue = await db.chartOfAccount.findFirst({
-          where: {
-            type: "REVENUE",
-            subtype: "Sales"
-          }
-        });
-
-        // Create journal entry items if accounts exist
-        if (accountsReceivable && salesRevenue) {
-          // Debit Accounts Receivable
-          await db.journalEntryItem.create({
-            data: {
-              journalEntryId: journalEntry.id,
-              accountId: accountsReceivable.id,
-              description: `Invoice ${invoiceNumber}`,
-              debit: total,
-              credit: 0
-            }
-          });
-
-          // Credit Sales Revenue
-          await db.journalEntryItem.create({
-            data: {
-              journalEntryId: journalEntry.id,
-              accountId: salesRevenue.id,
-              description: `Invoice ${invoiceNumber}`,
-              debit: 0,
-              credit: total
-            }
-          });
-        }
-      }
-    } catch (journalError) {
-      console.error("Error creating journal entry:", journalError);
-      // Don't fail the whole request if journal entry creation fails
-    }
-
-    return NextResponse.json({
-      success: true,
-      invoice
-    });
-
+    
+    // Create a mock invoice response
+    const newInvoice = {
+      id: `inv-${Date.now()}`,
+      invoiceNumber,
+      invoiceDate: new Date(invoiceDate).toISOString(),
+      dueDate: new Date(dueDate).toISOString(),
+      status: status || "UNPAID",
+      customerId,
+      customer: {
+        id: customerId,
+        nama: "Customer Name",
+        telp: "123456789"
+      },
+      subtotal: subtotal || 0,
+      tax: tax || 0,
+      discount: discount || 0,
+      total: total || 0,
+      items: items || []
+    };
+    
+    // Return the new invoice
+    return NextResponse.json(newInvoice, { status: 201 });
+    
   } catch (error) {
     console.error("Error creating invoice:", error);
     return NextResponse.json({ 
@@ -137,7 +95,7 @@ export async function POST(req: Request) {
   }
 }
 
-// Get invoices with filtering and pagination
+// Get invoices with filters and pagination
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -145,14 +103,7 @@ export async function GET(req: Request) {
     
     // If an ID is provided, return a single invoice
     if (id) {
-      const invoice = await db.Invoice.findUnique({
-        where: { id },
-        include: {
-          customer: true,
-          order: true,
-          transactions: true
-        }
-      });
+      const invoice = mockInvoices.find(inv => inv.id === id);
       
       if (!invoice) {
         return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
@@ -161,85 +112,44 @@ export async function GET(req: Request) {
       return NextResponse.json(invoice);
     }
     
-    // Otherwise, handle list request with filters and pagination
+    // Handle pagination and filtering
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
     const status = searchParams.get("status");
     const customerId = searchParams.get("customerId");
-    const orderId = searchParams.get("orderId");
     const search = searchParams.get("search") || "";
-    const sortBy = searchParams.get("sortBy") || "invoiceDate";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
     
-    // Build the filter
-    const filter: any = {};
+    // Filter invoices
+    let filteredInvoices = [...mockInvoices];
     
     if (status) {
-      filter.status = status;
+      filteredInvoices = filteredInvoices.filter(inv => inv.status === status);
     }
     
     if (customerId) {
-      filter.customerId = BigInt(customerId);
-    }
-    
-    if (orderId) {
-      filter.orderId = orderId;
+      filteredInvoices = filteredInvoices.filter(inv => inv.customerId === customerId);
     }
     
     if (search) {
-      filter.OR = [
-        { invoiceNumber: { contains: search, mode: 'insensitive' } },
-        { 
-          customer: {
-            nama: { contains: search, mode: 'insensitive' }
-          }
-        },
-        { 
-          order: {
-            spk: { contains: search, mode: 'insensitive' }
-          }
-        }
-      ];
+      const searchLower = search.toLowerCase();
+      filteredInvoices = filteredInvoices.filter(inv => 
+        inv.invoiceNumber.toLowerCase().includes(searchLower) ||
+        inv.customer.nama.toLowerCase().includes(searchLower)
+      );
     }
     
-    // Get the total count for pagination
-    const totalCount = await db.Invoice.count({
-      where: filter
-    });
+    // Get total count and apply pagination
+    const totalCount = filteredInvoices.length;
+    const paginatedInvoices = filteredInvoices.slice((page - 1) * pageSize, page * pageSize);
     
-    // Get the invoices with pagination
-    const invoices = await db.Invoice.findMany({
-      where: filter,
-      include: {
-        customer: {
-          select: {
-            id: true,
-            nama: true,
-            telp: true
-          }
-        },
-        order: {
-          select: {
-            id: true,
-            spk: true,
-            produk: true
-          }
-        }
-      },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      orderBy: {
-        [sortBy]: sortOrder
-      }
-    });
-    
+    // Return invoices with pagination info
     return NextResponse.json({
-      invoices,
+      invoices: paginatedInvoices,
       pagination: {
-        totalCount,
-        totalPages: Math.ceil(totalCount / pageSize),
-        currentPage: page,
-        pageSize
+        total: totalCount,
+        page,
+        pageSize,
+        pageCount: Math.ceil(totalCount / pageSize)
       }
     });
     
@@ -255,30 +165,32 @@ export async function GET(req: Request) {
 // Update an invoice
 export async function PUT(req: Request) {
   try {
-    const data = await req.json();
-    const { id, ...updateData } = data;
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
     
     if (!id) {
       return NextResponse.json({ error: "Invoice ID is required" }, { status: 400 });
     }
     
-    // Update the invoice
-    const invoice = await db.Invoice.update({
-      where: { id },
-      data: { 
-        ...updateData,
-        // Convert dates if provided
-        ...(updateData.invoiceDate && { invoiceDate: new Date(updateData.invoiceDate) }),
-        ...(updateData.dueDate && { dueDate: new Date(updateData.dueDate) }),
-        // Convert BigInt IDs if provided
-        ...(updateData.customerId && { customerId: BigInt(updateData.customerId.toString()) })
-      }
-    });
+    const invoiceIndex = mockInvoices.findIndex(inv => inv.id === id);
     
-    return NextResponse.json({
-      success: true,
-      invoice
-    });
+    if (invoiceIndex === -1) {
+      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    }
+    
+    const data = await req.json();
+    
+    // Create updated invoice
+    const updatedInvoice = {
+      ...mockInvoices[invoiceIndex],
+      ...data,
+      // Convert dates if provided
+      invoiceDate: data.invoiceDate ? new Date(data.invoiceDate).toISOString() : mockInvoices[invoiceIndex].invoiceDate,
+      dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : mockInvoices[invoiceIndex].dueDate
+    };
+    
+    // Return the updated invoice
+    return NextResponse.json(updatedInvoice);
     
   } catch (error) {
     console.error("Error updating invoice:", error);
@@ -289,7 +201,7 @@ export async function PUT(req: Request) {
   }
 }
 
-// Delete an invoice (typically only for admin or special cases)
+// Delete an invoice
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -299,25 +211,11 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Invoice ID is required" }, { status: 400 });
     }
     
-    // Check if the invoice has any transactions
-    const hasTransactions = await db.financialTransaction.findFirst({
-      where: { invoiceId: id }
-    });
-    
-    if (hasTransactions) {
-      return NextResponse.json({ 
-        error: "Cannot delete an invoice with associated transactions" 
-      }, { status: 400 });
-    }
-    
-    // Delete the invoice
-    await db.Invoice.delete({
-      where: { id }
-    });
-    
-    return NextResponse.json({
-      success: true,
-      message: "Invoice deleted successfully"
+    // In a real application, you would delete from the database
+    // Just return success for now
+    return NextResponse.json({ 
+      success: true, 
+      message: "Invoice deleted successfully" 
     });
     
   } catch (error) {

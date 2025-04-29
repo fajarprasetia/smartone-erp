@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { bigIntSerializer } from '@/lib/utils'
 
 // Helper function to handle BigInt serialization
 const serializeData = (data: any) => {
@@ -14,17 +15,13 @@ const serializeData = (data: any) => {
   }))
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(_req: Request, { params }: any) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
-    // Get the ID from params - properly awaited in Next.js 14+
-    const id = await params.id
-    const { action, role } = await req.json()
+    const { id } = params
+    const { action, role } = await _req.json()
     
     if (!action || !role) {
       return NextResponse.json(

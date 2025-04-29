@@ -34,7 +34,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { ChartOfAccount, FinancialPeriod, JournalEntry, JournalEntryItem } from "@prisma/client"
+import type { ChartOfAccount, FinancialPeriod, JournalEntry, JournalEntryItem } from "@/types/prisma"
 
 // Define schema for the journal entry items
 const journalEntryItemSchema = z.object({
@@ -79,9 +79,7 @@ const journalEntryFormSchema = z.object({
 
 type JournalEntryFormValues = z.infer<typeof journalEntryFormSchema>;
 
-interface JournalEntryWithItems extends JournalEntry {
-  items: JournalEntryItem[];
-}
+interface JournalEntryWithItems extends JournalEntry {}
 
 interface JournalEntryFormProps {
   accounts: ChartOfAccount[];
@@ -147,8 +145,8 @@ export function JournalEntryForm({
       // Only recalculate if we're changing items
       if (name && name.startsWith('items')) {
         const items = value.items || [];
-        const newTotalDebit = items.reduce((sum, item) => sum + (Number(item.debit) || 0), 0);
-        const newTotalCredit = items.reduce((sum, item) => sum + (Number(item.credit) || 0), 0);
+        const newTotalDebit = items.reduce((sum, item) => sum + (Number(item?.debit) || 0), 0);
+        const newTotalCredit = items.reduce((sum, item) => sum + (Number(item?.credit) || 0), 0);
         
         setTotalDebit(newTotalDebit);
         setTotalCredit(newTotalCredit);
@@ -177,7 +175,7 @@ export function JournalEntryForm({
   const activeAccounts = accounts.filter(account => account.isActive);
   
   // Get active periods
-  const activePeriods = periods.filter(period => !period.isClosed);
+  const activePeriods = periods.filter(period => period.status === "OPEN");
   
   // Format currency
   const formatCurrency = (amount: number) => {

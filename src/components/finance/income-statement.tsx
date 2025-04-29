@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { ReactNode, useState, useEffect } from "react"
 import { format, addMonths, subMonths, startOfMonth, endOfMonth } from "date-fns"
 import { toast } from "sonner"
 import { Calendar as CalendarIcon, Download, Printer, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
@@ -239,7 +239,7 @@ export function IncomeStatement() {
   }
   
   // Recursive function to render account rows
-  const renderAccountRows = (accounts: IncomeStatementAccount[] | undefined, level = 0) => {
+  const renderAccountRows = (accounts: IncomeStatementAccount[] | undefined, level = 0): ReactNode => {
     if (!accounts || accounts.length === 0) return null
     
     return accounts.map(account => (
@@ -351,11 +351,15 @@ export function IncomeStatement() {
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
-                      mode="range"
-                      selected={dateRange}
-                      onSelect={(value) => {
-                        if (value?.from && value.to) {
-                          setDateRange(value)
+                      mode="single"
+                      selected={dateRange?.from}
+                      onSelect={(date) => {
+                        if (date instanceof Date) {
+                          setDateRange({
+                            from: date,
+                            to: date
+                          });
+                          fetchIncomeStatementByDateRange(date, date);
                         }
                       }}
                       initialFocus

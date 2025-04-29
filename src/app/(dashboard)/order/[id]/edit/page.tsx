@@ -73,9 +73,16 @@ interface Customer {
   name: string
 }
 
-export default function EditOrderPage({ params }: { params: { id: string } }) {
-  // Unwrap params using React.use() to avoid warnings
-  const orderId = React.use(Promise.resolve(params.id))
+type PageProps = {
+  params: Promise<{
+    id: string
+  }>
+}
+
+export default async function EditOrderPage({ params }: PageProps) {
+  // Unwrap params using await
+  const resolvedParams = await params
+  const orderId = resolvedParams.id
   
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)

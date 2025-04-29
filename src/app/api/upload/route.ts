@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { v4 as uuidv4 } from "uuid";
 import { existsSync } from "fs";
+
+// Use the proper Route Segment Config format for Next.js 14
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
@@ -85,7 +89,7 @@ export async function POST(req: Request) {
     }
     
     // Process capture file
-    const captureFile = formData.get("capture") as File | null;
+    const captureFile = (formData as any).get("capture") as File | null;
     let captureUrl: string | undefined;
     
     if (captureFile) {
@@ -129,7 +133,7 @@ export async function POST(req: Request) {
     }
     
     // Process capture name file
-    const captureNameFile = formData.get("captureName") as File | null;
+    const captureNameFile = (formData as any).get("captureName") as File | null;
     let captureNameUrl: string | undefined;
     
     if (captureNameFile) {
@@ -173,7 +177,7 @@ export async function POST(req: Request) {
     }
     
     // Process generic file (for payment receipts, etc.)
-    const genericFile = formData.get("file") as File | null;
+    const genericFile = (formData as any).get("file") as File | null;
     let path: string | undefined;
     
     if (genericFile) {
@@ -237,11 +241,4 @@ export async function POST(req: Request) {
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
-}
-
-export const maxDuration = 60; // Set maximum execution time to 60 seconds
-export const config = {
-  api: {
-    bodyParser: false, // Disable body parsing, consume as stream
-  },
-}; 
+} 

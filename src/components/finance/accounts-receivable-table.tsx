@@ -7,10 +7,12 @@ import {
   DownloadIcon, 
   EyeIcon, 
   FileTextIcon, 
-  SendIcon 
+  SendIcon,
+  MoreHorizontal,
+  ArrowUpDown
 } from "lucide-react"
 import { format } from "date-fns"
-import { Invoice, customer } from "@prisma/client"
+import type { Invoice, Customer } from "@/types/prisma"
 
 import {
   Table,
@@ -31,7 +33,9 @@ import {
 import { cn, formatCurrency } from "@/lib/utils"
 
 type InvoiceWithCustomer = Invoice & {
-  customer: customer
+  customer?: {
+    nama: string
+  } | null
   order?: {
     spk: string | null
   } | null
@@ -78,10 +82,12 @@ export function AccountsReceivableTable({
         : b.invoiceNumber.localeCompare(a.invoiceNumber)
     }
     
-    if (sortField === "customerName") {
+    if (sortField === "customer") {
+      const aName = a.customer?.nama || "";
+      const bName = b.customer?.nama || "";
       return sortDirection === "asc" 
-        ? a.customer.nama.localeCompare(b.customer.nama)
-        : b.customer.nama.localeCompare(a.customer.nama)
+        ? aName.localeCompare(bName)
+        : bName.localeCompare(aName);
     }
     
     if (sortField === "total") {
@@ -143,7 +149,7 @@ export function AccountsReceivableTable({
         <TableHeader>
           <TableRow>
             <SortableHeader field="invoiceNumber">Invoice #</SortableHeader>
-            <SortableHeader field="customerName">Customer</SortableHeader>
+            <SortableHeader field="customer">Customer</SortableHeader>
             <TableHead>Order Reference</TableHead>
             <SortableHeader field="dueDate">Due Date</SortableHeader>
             <SortableHeader field="total">Total</SortableHeader>
@@ -165,8 +171,8 @@ export function AccountsReceivableTable({
                 invoice.balance > 0 && new Date(invoice.dueDate) < new Date() ? "bg-red-50 dark:bg-red-950/20" : ""
               )}>
                 <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                <TableCell>{invoice.customer.nama}</TableCell>
-                <TableCell>{invoice.order?.spk || '-'}</TableCell>
+                <TableCell>{invoice.customer?.nama || "N/A"}</TableCell>
+                <TableCell>{invoice.order?.spk || "N/A"}</TableCell>
                 <TableCell>{format(new Date(invoice.dueDate), "dd MMM yyyy")}</TableCell>
                 <TableCell>{formatCurrency(invoice.total)}</TableCell>
                 <TableCell>{formatCurrency(invoice.balance)}</TableCell>

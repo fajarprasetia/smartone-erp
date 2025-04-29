@@ -18,7 +18,23 @@ interface RolesClientProps {
 }
 
 export function RolesClient({ roles, permissions }: RolesClientProps) {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+
+  const handleEditRole = (role: Role) => {
+    setSelectedRole(role)
+    setIsDialogOpen(true)
+  }
+
+  const handleCreateRole = () => {
+    setSelectedRole(null)
+    setIsDialogOpen(true)
+  }
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false)
+    setSelectedRole(null)
+  }
 
   return (
     <div className="space-y-6">
@@ -29,20 +45,24 @@ export function RolesClient({ roles, permissions }: RolesClientProps) {
             Create and manage roles to control user permissions.
           </p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={handleCreateRole}>
           <ShieldPlus className="mr-2 h-4 w-4" />
           Add Role
         </Button>
       </div>
 
       <div>
-        <RoleTable roles={roles} permissions={permissions} />
+        <RoleTable 
+          roles={roles} 
+          permissions={permissions}
+          onEditRole={handleEditRole}
+        />
       </div>
 
       <RoleFormDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        permissions={permissions}
+        open={isDialogOpen}
+        onOpenChange={handleDialogClose}
+        role={selectedRole}
       />
     </div>
   )

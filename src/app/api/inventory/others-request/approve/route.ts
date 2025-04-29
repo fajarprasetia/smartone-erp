@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if the request exists and is not already processed
-    const othersRequest = await prisma.OthersRequest.findUnique({
+    const othersRequest = await prisma.othersRequest.findUnique({
       where: { id: request_id },
     })
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the request status to approved
-    const updatedRequest = await prisma.OthersRequest.update({
+    const updatedRequest = await prisma.othersRequest.update({
       where: { id: request_id },
       data: {
         status: "APPROVED",
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     })
     
     // Log the approval
-    await prisma.OthersLog.create({
+    await prisma.othersLog.create({
       data: {
         action: "APPROVED",
         user_id: session.user.id,

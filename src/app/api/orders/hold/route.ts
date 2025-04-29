@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if order can be put on hold (not CANCELLED, COMPLETED, or DELIVERED)
-    if (["CANCELLED", "COMPLETED", "DELIVERED"].includes(order.status)) {
+    if (order.status && ["CANCELLED", "COMPLETED", "DELIVERED"].includes(order.status)) {
       return NextResponse.json(
         { error: `Cannot put a ${order.status} order on hold` },
         { status: 400 }
@@ -107,33 +107,21 @@ export async function POST(request: NextRequest) {
     console.log("Verification after hold update:", verifyUpdate);
     
     // Fetch the updated order
-    const updatedOrder = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { customer: true }
-    });
+    const updatedOrder = await prisma.$queryRaw`
+      SELECT id, status, "previousStatus", "holdReason"
+      FROM orders
+      WHERE id = ${orderId}
+    `;
     
-    console.log("Order after update:", {
-      id: updatedOrder.id,
-      status: updatedOrder.status,
-      previousStatus: updatedOrder.previousStatus,
-      holdReason: updatedOrder.holdReason
-    });
-    
-    // Log the action without using raw SQL since it's causing issues
-    try {
-      await prisma.orderLog.create({
-        data: {
-          id: crypto.randomUUID(),
-          orderId,
-          userId: session.user.id,
-          action: "HOLD",
-          notes: `Order put on hold by ${session.user.name || session.user.email}. Reason: ${holdReason}. Previous status: ${currentStatus}`
-        }
-      });
-    } catch (logError) {
-      console.error("Error creating order log:", logError);
-      // Continue without failing the whole request if logging fails
+    if (updatedOrder) {
+      console.log("Order after update:", updatedOrder);
     }
+    
+    // Log the action
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO "order_logs" ("id", "orderId", "userId", "action", "notes", "timestamp")
+      VALUES ('${crypto.randomUUID()}', '${orderId}', '${session.user.id}', 'HOLD', '${holdReason.replace(/'/g, "''")}', CURRENT_TIMESTAMP)
+    `);
     
     return NextResponse.json({
       order: serializeData(updatedOrder),

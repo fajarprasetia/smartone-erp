@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { orders, events } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { getServerSession } from "next-auth";
+import { db } from "@/lib/db";
+// Import db/schema if it exists or comment out this line if it doesn't
+// import { orders, events } from "@/db/schema";
+// Comment out drizzle-orm if not needed
+// import { eq } from "drizzle-orm";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(_req: Request, { params }: any) {
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
@@ -23,8 +22,8 @@ export async function POST(
     const userId = session.user.id;
 
     // Get order ID from params
-    const orderId = params.id;
-    if (!orderId) {
+    const { id } = params;
+    if (!id) {
       return NextResponse.json(
         { error: "Order ID is required" },
         { status: 400 }
@@ -32,11 +31,12 @@ export async function POST(
     }
 
     // Parse request body
-    const { notes } = await request.json();
+    const { notes } = await _req.json();
 
+    // Use Prisma instead of Drizzle
     // Fetch the order to ensure it exists and is in a valid state
-    const order = await db.query.orders.findFirst({
-      where: eq(orders.id, orderId),
+    const order = await db.order.findUnique({
+      where: { id: id },
     });
 
     if (!order) {
@@ -55,22 +55,41 @@ export async function POST(
     }
 
     // Update order status to DTF and record start time
-    await db
-      .update(orders)
-      .set({
-        status: "DTF",
-        dtf_started_at: new Date(),
-        dtf_started_by: userId,
-        dtf_notes: notes || null,
-      })
-      .where(eq(orders.id, orderId));
+    const updatedOrder = await db.order.update({
+      where: { id: id },
+      data: {
+        status: "DTF_IN_PROGRESS",
+        tgl_dtf: new Date(),
+        dtf_id: userId,
+      },
+      include: {
+        dtf: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
 
     // Create event for DTF started
-    await db.insert(events).values({
-      order_id: orderId,
-      event_type: "DTF_STARTED",
-      user_id: userId,
-      notes: notes || null,
+    await db.orderLog.create({
+      data: {
+        orderId: id,
+        userId: userId,
+        action: "DTF_STARTED",
+        notes: "DTF process started",
+      },
+    });
+
+    // Create an order log entry
+    await db.orderLog.create({
+      data: {
+        orderId: id,
+        userId: userId,
+        action: "DTF_STARTED",
+        notes: "DTF process started",
+      },
     });
 
     return NextResponse.json({
@@ -78,9 +97,9 @@ export async function POST(
       message: "DTF process started successfully",
     });
   } catch (error) {
-    console.error("Error starting DTF process:", error);
+    console.error("[API] Error starting DTF:", error);
     return NextResponse.json(
-      { error: "Failed to start DTF process" },
+      { error: "Failed to start DTF" },
       { status: 500 }
     );
   }

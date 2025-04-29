@@ -303,9 +303,38 @@ export async function POST(req: NextRequest) {
       
       const balance = totalAmount - totalPaid;
       
+      const generateInvoiceNumber = async () => {
+        const now = new Date();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        const prefix = `SO01${month}${year}`;
+        
+        try {
+          const response = await fetch(`/api/finance/receivable?invoicePrefix=${prefix}`);
+          if (!response.ok) throw new Error("Failed to get latest invoice number");
+          
+          const data = await response.json();
+          let nextNumber = 1;
+          
+          if (data.latestInvoice) {
+            const sequenceStr = data.latestInvoice.substring(prefix.length);
+            const sequence = parseInt(sequenceStr, 10);
+            if (!isNaN(sequence)) {
+              nextNumber = sequence + 1;
+            }
+          }
+          
+          const formattedNumber = String(nextNumber).padStart(6, '0');
+          return `${prefix}${formattedNumber}`;
+        } catch (error) {
+          console.error("Error generating invoice number:", error);
+          return `${prefix}${Date.now().toString().slice(-6)}`;
+        }
+      };
+
       const invoiceResponse = {
         id: order.id,
-        invoiceNumber: order.invoice || `INV-${order.spk || order.id}`,
+        invoiceNumber: order.invoice || generateInvoiceNumber,
         amountPaid: totalPaid,
         balance: balance,
         status: Math.abs(balance) < 0.01 ? "PAID" : "PARTIALLY_PAID",

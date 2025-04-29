@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the ink request
-    const inkRequest = await db.ink_request.findUnique({
+    const inkRequest = await db.inkRequest.findUnique({
       where: { id: request_id },
     });
 
@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already approved or rejected
-    if (inkRequest.approved) {
+    if (inkRequest.status === "APPROVED") {
       return NextResponse.json(
         { error: "Cannot reject an already approved request" },
         { status: 400 }
       );
     }
 
-    if (inkRequest.rejected) {
+    if (inkRequest.status === "REJECTED") {
       return NextResponse.json(
         { error: "This request has already been rejected" },
         { status: 400 }
@@ -54,14 +54,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the ink request
-    const updatedRequest = await db.ink_request.update({
+    const updatedRequest = await db.inkRequest.update({
       where: { id: request_id },
       data: {
-        rejected: true,
-        rejected_by_id: userId,
-        rejected_date: new Date(),
-        rejection_reason: rejection_reason || null,
-      },
+        status: "REJECTED",
+        rejected_by: session.user.id,
+        user_notes: rejection_reason || null,
+        updated_at: new Date()
+      }
     });
 
     // Log the activity

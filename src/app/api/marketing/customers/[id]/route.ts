@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 
 // GET /api/marketing/customers/[id] - Get a specific customer
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: Request, { params }: any) {
   try {
     const id = Number(params.id)
 
@@ -35,10 +32,7 @@ export async function GET(
 }
 
 // PUT /api/marketing/customers/[id] - Update a customer
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: any) {
   try {
     const id = Number(params.id)
     const body = await req.json();
@@ -79,10 +73,7 @@ export async function PUT(
 }
 
 // DELETE /api/marketing/customers/[id] - Delete a customer
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     const id = Number(params.id)
 

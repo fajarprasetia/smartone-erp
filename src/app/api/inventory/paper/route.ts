@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -22,9 +22,9 @@ export async function GET(req: Request) {
     const availability = url.searchParams.get("availability");
     
     // Build query
-    const whereClause = {};
+    const whereClause: { availability?: "YES" | "NO" } = {};
     if (availability === "YES") {
-      whereClause["availability"] = "YES";
+      whereClause.availability = "YES";
     }
 
     // Fetch paper stocks

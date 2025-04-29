@@ -157,15 +157,20 @@ function parseDateValue(value: string | Date | undefined): Date | undefined {
 }
 
 // GET: Fetch single order by ID
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: Request, { params }: any) {
   try {
-    const orderId = params.id;
-    console.log(`[API] Fetching order with ID: ${orderId}`);
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-    if (!orderId) {
+    const { id } = params;
+    console.log(`[API] Fetching order with ID: ${id}`);
+
+    if (!id) {
       return NextResponse.json(
         { error: "Order ID is required" },
         { status: 400 }
@@ -175,7 +180,7 @@ export async function GET(
     // Fetch the order by ID
     const order = await db.order.findUnique({
       where: {
-        id: orderId,
+        id: id,
       },
       include: {
         customer: true,
@@ -209,14 +214,14 @@ export async function GET(
     });
 
     if (!order) {
-      console.log(`[API] Order with ID ${orderId} not found`);
+      console.log(`[API] Order with ID ${id} not found`);
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
       );
     }
 
-    console.log(`[API] Successfully found order with ID: ${orderId}`);
+    console.log(`[API] Successfully found order with ID: ${id}`);
 
     // Process marketing field to determine if it's a user ID or plain string
     let marketingInfo = null;
@@ -248,78 +253,59 @@ export async function GET(
 
     // Ensure datetime fields are properly formatted
     console.log("[API] Raw date values:", {
-      est_order: order.est_order,
-      est_order_type: typeof order.est_order,
+      tanggal: order.tanggal,
       created_at: order.created_at,
-      created_at_type: typeof order.created_at
+      updated_at: order.updated_at
     });
 
-    // Create a copy with explicitly converted date fields
-    const processedOrder = {
+    // Serialize the order data
+    const serializedOrder = serializeData({
       ...order,
-      est_order: order.est_order ? new Date(order.est_order).toISOString() : null,
+      marketingInfo,
+      tanggal: order.tanggal ? new Date(order.tanggal).toISOString() : null,
       created_at: order.created_at ? new Date(order.created_at).toISOString() : null,
-      marketingInfo
-    };
-
-    console.log("[API] Processed date values:", {
-      est_order: processedOrder.est_order,
-      created_at: processedOrder.created_at
+      updated_at: order.updated_at ? new Date(order.updated_at).toISOString() : null,
     });
 
-    // Format and return the order with all fields properly serialized
-    return NextResponse.json(serializeData(processedOrder));
-  } catch (error: any) {
-    console.error("Error fetching order by ID:", error);
-    
+    return NextResponse.json(serializedOrder);
+  } catch (error) {
+    console.error("[API] Error fetching order:", error);
     return NextResponse.json(
-      { 
-        error: "Failed to fetch order",
-        details: error.message || "Unknown error occurred"
-      },
+      { error: "Failed to fetch order", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
 }
 
-// PUT: Update order by ID
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// PUT: Update an existing order
+export async function PUT(_req: Request, { params }: any) {
   try {
-    // Properly await params.id - although in Next.js 14+ this should be automatically awaited
-    const orderId = params.id;
-    
-    // Safely parse request body
-    let body;
-    try {
-      const rawText = await req.text();
-      console.log(`[API] Raw request body: ${rawText}`);
-      body = JSON.parse(rawText);
-    } catch (parseError) {
-      console.error(`[API] Error parsing request body:`, parseError);
+    const session = await getServerSession(authOptions);
+    if (!session) {
       return NextResponse.json(
-        { 
-          error: "Failed to parse request body",
-          details: parseError instanceof Error ? parseError.message : "Unknown parsing error"
-        },
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = params;
+    console.log(`[API] Updating order with ID: ${id}`);
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Order ID is required" },
         { status: 400 }
       );
     }
 
-    console.log(`[API] Updating order with ID: ${orderId}`);
-    console.log(`[API] Parsed body:`, body);
-
-    // Validate input
+    // Parse and validate request body
+    const body = await _req.json();
     const validationResult = orderUpdateSchema.safeParse(body);
+
     if (!validationResult.success) {
-      console.log(`[API] Validation failed:`, validationResult.error.format());
+      console.error("[API] Validation error:", validationResult.error);
       return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validationResult.error.format(),
-        },
+        { error: "Invalid data", details: validationResult.error.format() },
         { status: 400 }
       );
     }
@@ -328,587 +314,123 @@ export async function PUT(
 
     // Check if order exists
     const existingOrder = await db.order.findUnique({
-      where: { id: orderId },
+      where: { id: id },
     });
 
     if (!existingOrder) {
-      console.log(`[API] Order with ID ${orderId} not found`);
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
       );
     }
 
-    // Check if customer exists - use customerId field if present or fall back to customer_id
-    const customerId = validatedData.customerId || validatedData.customer_id;
-    
-    if (customerId) {
-      const customer = await db.customer.findUnique({
-        where: { 
-          id: BigInt(customerId) 
-        }
-      });
-      
-      if (!customer) {
-        console.log(`[API] Customer with ID ${customerId} not found`);
-        return NextResponse.json(
-          { error: "Customer not found" },
-          { status: 400 }
-        );
-      }
-    }
-
-    console.log(`[API] Updating order...`);
-    
-    try {
-      // Create update data object with only the fields we want to update
+    // Prepare update data
       const updateData: any = {
-        updated_at: new Date(),
-      };
-      
-      // Handle all the fields that might be updated
-      if (validatedData.spk) updateData.spk = validatedData.spk;
-      if (validatedData.no_project) updateData.no_project = validatedData.no_project;
-      
+      ...validatedData,
       // Handle date fields
-      if (validatedData.tanggal) {
-        try {
-          const tanggalValue = validatedData.tanggal;
-          console.log(`[API] Processing tanggal field:`, tanggalValue);
-          
-          if (tanggalValue instanceof Date) {
-            updateData.tanggal = tanggalValue;
-          } else if (typeof tanggalValue === 'string') {
-            // Try direct parsing
-            updateData.tanggal = new Date(tanggalValue);
-          }
-          
-          console.log(`[API] Resulting tanggal:`, updateData.tanggal);
-        } catch (err) {
-          console.error(`[API] Error processing tanggal:`, err);
-        }
-      }
-      
-      if (validatedData.targetSelesai || validatedData.target_selesai) {
-        try {
-          const targetDate = validatedData.targetSelesai || validatedData.target_selesai;
-          console.log(`[API] Processing target date field:`, targetDate);
-          
-          if (targetDate instanceof Date) {
-            // Use est_order as the DB field name for targetSelesai
-            updateData.est_order = targetDate;
-            console.log(`[API] Set est_order to:`, updateData.est_order);
-          } else if (typeof targetDate === 'string') {
-            // Try direct parsing
-            updateData.est_order = new Date(targetDate);
-            console.log(`[API] Set est_order to:`, updateData.est_order);
-          }
-          
-          // Remove any incorrect field names if they exist
-          if ('targetSelesai' in updateData) {
-            delete updateData.targetSelesai;
-          }
-          if ('target_selesai' in updateData) {
-            delete updateData.target_selesai;
-          }
-          if ('estOrder' in updateData) {
-            delete updateData.estOrder;
-          }
-        } catch (err) {
-          console.error(`[API] Error processing target date:`, err);
-        }
-      }
-      
+      tanggal: parseDateValue(validatedData.tanggal),
       // Handle customer ID
-      if (customerId) {
-        console.log(`Processing customerId: ${customerId}`);
-        delete updateData.customerId;
-        updateData.customer = { connect: { id: customerId } };
-      }
-      
-      // Handle marketing
-      if (validatedData.marketing) updateData.marketing = validatedData.marketing;
-      
-      // Handle product related fields
-      if (validatedData.produk) updateData.produk = validatedData.produk;
-      if (validatedData.aplikasiProduk || validatedData.nama_produk) {
-        updateData.nama_produk = validatedData.aplikasiProduk || validatedData.nama_produk;
-      }
-      
-      // Check if this is a DTF order
-      let isDtfOrder = false;
-      
-      // Check if the product has 'DTF' in its produk field
-      if (validatedData.produk && validatedData.produk.includes('DTF')) {
-        isDtfOrder = true;
-        console.log('[API] DTF product detected from produk field');
-      }
-      
-      // Also check jenisProduk if available
-      if (validatedData.jenisProduk && 
-          typeof validatedData.jenisProduk === 'object' && 
-          'DTF' in validatedData.jenisProduk && 
-          validatedData.jenisProduk.DTF === true) {
-        isDtfOrder = true;
-        console.log('[API] DTF product detected from jenisProduk field');
-      }
-      
-      // Check tipe_produk if available
-      if ((validatedData as any).tipe_produk === 'DTF') {
-        isDtfOrder = true;
-        console.log('[API] DTF product detected from tipe_produk field');
-      }
-      
-      console.log(`[API] Is DTF order: ${isDtfOrder}`);
-      
-      // For DTF orders, clear fabric-related fields
-      if (isDtfOrder) {
-        updateData.nama_kain = "";
-        updateData.jumlah_kain = "";
-        updateData.lebar_kain = "";
-        
-        // Remove any fabric relation
-        if (updateData.asal_bahan_rel) {
-          delete updateData.asal_bahan_rel;
-        }
-        
-        console.log('[API] Cleared fabric-related fields for DTF order');
-      } else {
-        // Only process fabric fields for non-DTF orders
-        if (validatedData.namaBahan || validatedData.nama_kain) {
-          updateData.nama_kain = validatedData.namaBahan || validatedData.nama_kain;
-        }
-        
-        if (validatedData.fabricLength || validatedData.jumlah_kain) {
-          updateData.jumlah_kain = validatedData.fabricLength || validatedData.jumlah_kain;
-        }
-        
-        if ((validatedData as any).lebarKain || (validatedData as any).lebar_kain) {
-          updateData.lebar_kain = (validatedData as any).lebarKain || (validatedData as any).lebar_kain;
-        }
-      }
-      
-      // Handle quantity and unit
-      if (validatedData.qty || validatedData.jumlah) {
-        updateData.qty = validatedData.qty || validatedData.jumlah;
-      }
-      if (validatedData.unit) updateData.satuan_bahan = validatedData.unit;
-      
-      // Handle price
-      if (validatedData.harga || validatedData.harga_satuan) {
-        updateData.harga_satuan = validatedData.harga || validatedData.harga_satuan;
-      }
-      
+      customer_id: validatedData.customer_id || validatedData.customerId,
+      // Handle marketing field
+      marketing: validatedData.marketing,
+      // Handle product fields
+      produk: validatedData.produk || validatedData.aplikasiProduk,
+      nama_produk: validatedData.nama_produk,
+      // Handle fabric fields
+      asal_bahan: validatedData.asal_bahan || validatedData.asalBahan,
+      asal_bahan_id: validatedData.asalBahanId,
+      // Handle quantity fields
+      qty: validatedData.qty || validatedData.jumlah,
+      // Handle price fields
+      harga_satuan: validatedData.harga_satuan || validatedData.harga,
       // Handle status fields
-      if (validatedData.status) updateData.status = validatedData.status;
-      if (validatedData.statusm) updateData.statusm = validatedData.statusm;
-      if (validatedData.statusProduksi) updateData.statusprod = validatedData.statusProduksi;
-      
+      status: validatedData.status,
+      statusm: validatedData.statusm,
+      status_produksi: validatedData.statusProduksi,
       // Handle notes
-      if (validatedData.catatan || validatedData.notes) {
-        updateData.catatan = validatedData.catatan || validatedData.notes;
-      }
-      
-      // Handle fabric origin field
-      if (validatedData.asalBahan || validatedData.asal_bahan) {
-        try {
-          const asalBahan = validatedData.asalBahan || validatedData.asal_bahan;
-          console.log("[API] Processing fabric origin:", asalBahan);
-          
-          // Remove the direct asal_bahan field which doesn't exist in the schema
-          if ('asal_bahan' in updateData) {
-            delete updateData.asal_bahan;
-          }
-          
-          // For CUSTOMER origin - connect to the customer ID
-          if (asalBahan === "CUSTOMER" && customerId) {
-            updateData.asal_bahan_rel = {
-              connect: {
-                id: customerId
-              }
-            };
-            console.log("[API] Set fabric origin to customer:", customerId);
-          } 
-          // For SMARTONE origin - find SMARTONE customer and connect to it
-          else if (asalBahan === "SMARTONE") {
-            // Try to find the SMARTONE customer ID (could be hardcoded or looked up)
-            try {
-              const smartoneCustomer = await db.customer.findFirst({
-                where: {
-                  nama: {
-                    contains: "SMARTONE",
-                    mode: 'insensitive'
-                  }
-                }
-              });
-              
-              if (smartoneCustomer) {
-                updateData.asal_bahan_rel = {
-                  connect: {
-                    id: smartoneCustomer.id
-                  }
-                };
-                console.log("[API] Set fabric origin to SMARTONE:", smartoneCustomer.id);
-              } else {
-                console.warn("[API] Could not find SMARTONE customer, not setting fabric origin");
-              }
-            } catch (error) {
-              console.error("[API] Error finding SMARTONE customer:", error);
-            }
-          }
-          // For other values, store in tipe_produk field instead (if it exists in the schema)
-          else if (asalBahan && asalBahan !== "CUSTOMER" && asalBahan !== "SMARTONE") {
-            updateData.tipe_produk = String(asalBahan);
-            console.log("[API] Stored fabric origin in tipe_produk:", asalBahan);
-          }
-        } catch (err) {
-          console.error("[API] Error processing fabric origin:", err);
-        }
-      }
-
-      // Handle paper info
-      if (validatedData.gsmKertas || validatedData.gramasi) {
-        updateData.gramasi = validatedData.gsmKertas || validatedData.gramasi;
-      }
-      if (validatedData.lebarKertas || validatedData.lebar_kertas) {
-        updateData.lebar_kertas = validatedData.lebarKertas || validatedData.lebar_kertas;
-      }
-      if (validatedData.fileWidth || validatedData.lebar_file) {
-        updateData.lebar_file = validatedData.fileWidth || validatedData.lebar_file;
-      }
-      
+      catatan: validatedData.catatan || validatedData.notes,
+      // Handle fabric fields
+      nama_kain: validatedData.nama_kain || validatedData.namaBahan,
+      jumlah_kain: validatedData.jumlah_kain || validatedData.fabricLength,
+      // Handle paper fields
+      gramasi: validatedData.gramasi || validatedData.gsmKertas,
+      lebar_kertas: validatedData.lebar_kertas || validatedData.lebarKertas,
+      lebar_file: validatedData.lebar_file || validatedData.fileWidth,
       // Handle color matching
-      if (validatedData.matchingColor) {
-        updateData.warna_acuan = validatedData.matchingColor;
-      }
-      if (validatedData.warna_acuan) {
-        updateData.warna_acuan = validatedData.warna_acuan;
-      }
-      
-      // Handle file path
-      if (validatedData.fileDesain || validatedData.path) {
-        updateData.path = validatedData.fileDesain || validatedData.path;
-      }
-      
-      // Handle kategori
-      if (validatedData.kategori) updateData.kategori = validatedData.kategori;
-      
-      // Handle total price
-      if (validatedData.totalPrice) updateData.nominal = validatedData.totalPrice;
-      
-      // Handle priority field
-      if (validatedData.priority !== undefined) {
-        updateData.prioritas = validatedData.priority ? "YES" : "NO";
-      }
-      
-      // Handle product types (jenisProduk)
-      if (validatedData.jenisProduk) {
-        // If jenisProduk is already a string, use it directly
-        if (typeof validatedData.jenisProduk === 'string') {
-          updateData.produk = validatedData.jenisProduk;
-          console.log("[API] Using jenisProduk directly as string:", validatedData.jenisProduk);
-        } else {
-          // If it's an object, convert it to a string
-          const productTypes = Object.entries(validatedData.jenisProduk)
-            .filter(([_, isSelected]) => isSelected)
-            .map(([type, _]) => type)
-            .join(", ");
-          
-          if (productTypes) {
-            updateData.produk = productTypes;
-            console.log("[API] Converted jenisProduk object to string:", productTypes);
-          }
-        }
-        
-        // If DTF is selected, also update DTF pass
-        if ((typeof validatedData.jenisProduk === 'string' && validatedData.jenisProduk.includes('DTF')) || 
-            (typeof validatedData.jenisProduk === 'object' && validatedData.jenisProduk.DTF) && 
-            validatedData.dtfPass) {
-          updateData.produk = `${updateData.produk || ""} ${validatedData.dtfPass}`;
-          console.log("[API] Added DTF pass to produk:", updateData.produk);
-        }
-      }
-      
-      // Handle discount
-      if (validatedData.discountType && validatedData.discountValue) {
-        if (validatedData.discountType === "percentage") {
-          updateData.diskon = `${validatedData.discountValue}%`;
-        } else if (validatedData.discountType === "fixed") {
-          updateData.diskon = validatedData.discountValue;
-        } else {
-          updateData.diskon = null;
-        }
-      }
-      
-      // Handle tax data - store tax percentage in tambah_bahan field
-      if (validatedData.tax !== undefined) {
-        const isTaxEnabled = validatedData.tax === true || 
-                           String(validatedData.tax) === "YES" || 
-                           String(validatedData.tax) === "true";
-        
-        if (isTaxEnabled && validatedData.taxPercentage) {
-          updateData.tambah_bahan = `Tax: ${validatedData.taxPercentage}%`;
-        } else {
-          updateData.tambah_bahan = null;
-        }
-      } else if (validatedData.tambah_bahan && validatedData.tambah_bahan.includes("Tax:")) {
-        // Keep the existing tambah_bahan if it contains tax information
-        updateData.tambah_bahan = validatedData.tambah_bahan;
-      }
-
-      // Add proper handling for additional costs
-      // Handle additionalCosts field
-      if (validatedData.additionalCosts && validatedData.additionalCosts.length > 0) {
-        try {
-          console.log(`[API] Processing ${validatedData.additionalCosts.length} additional costs`);
-          
-          // Process each additional cost and map to the appropriate fields
-          validatedData.additionalCosts.forEach((cost, index) => {
-            if (index === 0) {
-              // First additional cost goes to main fields
-              updateData.tambah_cutting = cost.item || "";
-              updateData.satuan_cutting = cost.pricePerUnit || "";
-              updateData.qty_cutting = cost.unitQuantity || "";
-              updateData.total_cutting = cost.total || "";
-              console.log(`[API] Set primary additional cost: ${cost.item}`);
-            } else if (index < 6) {
-              // Additional costs 1-5
-              const suffix = index;
-              updateData[`tambah_cutting${suffix}`] = cost.item || "";
-              updateData[`satuan_cutting${suffix}`] = cost.pricePerUnit || "";
-              updateData[`qty_cutting${suffix}`] = cost.unitQuantity || "";
-              updateData[`total_cutting${suffix}`] = cost.total || "";
-              console.log(`[API] Set additional cost ${suffix}: ${cost.item}`);
-            }
-          });
-        } catch (error) {
-          console.error(`[API] Error processing additional costs:`, error);
-        }
-      }
-
-      // Before executing the update, check if we have the right field names
-      // This will help identify if there are any discrepancies between our code and the Prisma schema
-      try {
-        console.log("[API] Checking field names against Prisma schema...");
-        
-        // Based on error messages, we need to use the database column names
-        const camelToSnakeFields = [
-          { camel: 'customerId', snake: 'customer_id' },
-          { camel: 'asalBahanId', snake: 'asal_bahan_id' },
-          { camel: 'estOrder', snake: 'est_order' },
-          { camel: 'targetSelesai', snake: 'est_order' } // targetSelesai maps to est_order in DB
-        ];
-        
-        for (const field of camelToSnakeFields) {
-          if (field.camel in updateData) {
-            console.warn(`[API] Converting camelCase ${field.camel} to snake_case ${field.snake}`);
-            // Use snake_case for database column names
-            updateData[field.snake] = updateData[field.camel];
-            delete updateData[field.camel];
-          }
-        }
-        
-        // Check specific field names just to be safe
-        if ('customer_id' in updateData) {
-          console.log("[API] Using customer_id field as expected by database schema");
-        }
-        
-        if ('asal_bahan_id' in updateData) {
-          console.log("[API] Using asal_bahan_id field as expected by database schema");
-        }
-      } catch (checkError) {
-        console.error("[API] Error while checking field names:", checkError);
-      }
-
-      // Before executing the update, remove any unexpected fields
-      if ('asal_bahan' in updateData) {
-        console.warn("[API] Removing invalid asal_bahan field:", updateData.asal_bahan);
-        delete updateData.asal_bahan;
-      }
-
-      // Remove fields that don't exist in the Prisma schema
-      if ('tax' in updateData) {
-        console.warn("[API] Removing non-schema field 'tax'");
-        delete updateData.tax;
-      }
-
-      if ('tax_percentage' in updateData) {
-        console.warn("[API] Removing non-schema field 'tax_percentage'");
-        delete updateData.tax_percentage;
-      }
-
-      // Process asalBahanId field
-      const asalBahanId = updateData.asalBahanId;
-      if (asalBahanId && !isDtfOrder) {
-        console.log(`Processing asalBahanId: ${asalBahanId}`);
-        delete updateData.asalBahanId;
-        delete updateData.asal_bahan_id; // Remove deprecated field
-
-        // Only add relation if we have a valid ID
-        if (/^\d+$/.test(asalBahanId)) {
-          updateData.asal_bahan_rel = { connect: { id: asalBahanId } };
-        }
-      } else if (isDtfOrder) {
-        // For DTF orders, remove any asalBahan data
-        delete updateData.asalBahanId;
-        delete updateData.asal_bahan_id;
-        console.log('[API] Removed asalBahan data for DTF order');
-      }
-
-      // Process tipe_produk field (comes from non-CUSTOMER, non-SMARTONE asalBahan values)
-      if (updateData.tipe_produk) {
-        console.log(`Processing tipe_produk: ${updateData.tipe_produk}`);
-      }
-
-      // Clean up fields that aren't in the schema or might cause issues
-      // List of fields known to possibly cause issues or not exist in the schema
-      const fieldsToRemove = [
-        'asal_bahan', 
-        'asalBahan',
-        'asalBahanId',
-        'tax', 
-        'tax_percentage', 
-        'taxPercentage',
-        'repeat_order_spk', // Not in schema
-        'repeat_spk', // Not in schema
-        'repeatOrderSpk', // Not in schema
-        'fileDesain',
-        'fabricLength',
-        'selectedFabric',
-        'discountType',
-        'additionalCosts' // These are processed separately
-      ];
-      
-      // Remove all known problematic fields
-      fieldsToRemove.forEach(field => {
-        if (field in updateData) {
-          console.warn(`[API] Removing non-schema field '${field}'`);
-          delete updateData[field];
-        }
-      });
-      
-      console.log('Cleaned update data:', JSON.stringify(updateData, null, 2));
+      warna_acuan: validatedData.warna_acuan,
+      // Handle design file
+      path: validatedData.path || validatedData.fileDesain,
+      // Handle additional fields
+      tambah_bahan: validatedData.tambah_bahan,
+      priority: validatedData.priority,
+      kategori: validatedData.kategori,
+      // Update timestamp
+      updated_at: new Date(),
+    };
 
       // Update the order
-      console.log("[API] About to update order with data:", JSON.stringify(updateData, null, 2));
-
-      // Perform the update in a try/catch block
-      console.log("[API] Executing update for order ID:", orderId);
-
-      // First, check if the order exists
-      try {
-        const orderExists = await db.order.findUnique({
-          where: { id: orderId },
-          select: { id: true }
-        });
-        
-        if (!orderExists) {
-          console.error(`[API] Order with ID ${orderId} not found before update`);
-          return NextResponse.json(
-            { error: "Order not found", details: "Cannot update non-existent order" },
-            { status: 404 }
-          );
-        }
-        
-        console.log("[API] Order exists, proceeding with update");
-      } catch (checkError) {
-        console.error("[API] Error checking if order exists:", checkError);
-        // Continue with update attempt
-      }
-
-      let updatedOrder;
-
-      try {
-        updatedOrder = await db.order.update({
-          where: { id: orderId },
+    const updatedOrder = await db.order.update({
+      where: { id: id },
           data: updateData,
           include: {
             customer: true,
             asal_bahan_rel: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
-        });
-        console.log(`[API] Successfully updated order:`, updatedOrder ? "yes" : "no");
-      } catch (updateError: any) {
-        console.error("[API] Error during update operation:", updateError);
-        console.error("[API] Error message:", updateError.message);
-        
-        // Re-throw the error to be caught by the outer catch block
-        throw updateError;
-      }
-
-      console.log(`[API] Order updated successfully`);
-      return NextResponse.json(serializeData(updatedOrder));
-    } catch (error: any) {
-      console.error("[API] Error updating order:", error);
-      return NextResponse.json(
-        { 
-          error: "Failed to update order",
-          details: error.message || "Unknown error occurred"
         },
-        { status: 500 }
-      );
-    }
-  } catch (error: any) {
-    console.error("[API] Error updating order:", error);
-    
-    if (error.code) {
-      console.error("[API] Database error code:", error.code);
-      console.error("[API] Error meta:", error.meta);
-      
-      if (error.meta?.target) {
-        console.error("[API] Problem field:", error.meta.target);
-      }
-      
-      if (error.code === 'P2025') {
-        // Record not found error
-        return NextResponse.json(
-          { 
-            error: "Order not found",
-            details: "The order may have been deleted or the ID is invalid"
+        designer: {
+          select: {
+            id: true,
+            name: true,
           },
-          { status: 404 }
-        );
-      } else if (error.code === 'P2002') {
-        // Unique constraint violation
-        return NextResponse.json(
-          { 
-            error: "Unique constraint violation",
-            details: `Field ${error.meta?.target} already exists with this value`
+        },
+        operator: {
+          select: {
+            id: true,
+            name: true,
           },
-          { status: 400 }
-        );
-      } else if (error.code === 'P2003') {
-        // Foreign key constraint violation
-        return NextResponse.json(
-          { 
-            error: "Foreign key constraint violation",
-            details: `The referenced ${error.meta?.target} does not exist`
+        },
+        manager: {
+          select: {
+            id: true,
+            name: true,
           },
-          { status: 400 }
-        );
-      }
-    }
-    
-    return NextResponse.json(
-      { 
-        error: "Failed to update order",
-        details: error.message || "Unknown error occurred"
+        },
       },
+    });
+
+    // Serialize the updated order
+    const serializedOrder = serializeData(updatedOrder);
+
+    return NextResponse.json(serializedOrder);
+  } catch (error) {
+    console.error("[API] Error updating order:", error);
+    return NextResponse.json(
+      { error: "Failed to update order", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
 }
 
-// DELETE: Delete an order by ID
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// DELETE: Delete an order
+export async function DELETE(_req: Request, { params }: any) {
   try {
-    const orderId = params.id;
-    console.log(`[API] Deleting order with ID: ${orderId}`);
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-    if (!orderId) {
+    const { id } = params;
+    console.log(`[API] Deleting order with ID: ${id}`);
+
+    if (!id) {
       return NextResponse.json(
         { error: "Order ID is required" },
         { status: 400 }
@@ -917,11 +439,10 @@ export async function DELETE(
 
     // Check if order exists
     const existingOrder = await db.order.findUnique({
-      where: { id: orderId },
+      where: { id: id },
     });
 
     if (!existingOrder) {
-      console.log(`[API] Order with ID ${orderId} not found for deletion`);
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
@@ -930,52 +451,63 @@ export async function DELETE(
 
     // Delete the order
     await db.order.delete({
-      where: { id: orderId },
+      where: { id: id },
     });
 
-    console.log(`[API] Order with ID ${orderId} deleted successfully`);
-    return NextResponse.json({ message: "Order deleted successfully" });
-  } catch (error: any) {
+    return NextResponse.json(
+      { message: "Order deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
     console.error("[API] Error deleting order:", error);
     return NextResponse.json(
-      { 
-        error: "Failed to delete order",
-        details: error.message || "Unknown error occurred"
-      },
+      { error: "Failed to delete order", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
 }
 
-// PATCH: Update partial data for design workflow
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// PATCH: Partially update an order
+export async function PATCH(_req: Request, { params }: any) {
   try {
-    const orderId = params.id;
-    console.log(`[API] PATCH request for order ID: ${orderId}`);
-
-    // Get current user session
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Parse request body
-    const data = await req.json();
-    console.log("[API] Update data:", data);
+    const { id } = params;
+    console.log(`[API] Partially updating order with ID: ${id}`);
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Order ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Parse and validate request body
+    const body = await _req.json();
+    const validationResult = orderUpdateSchema.partial().safeParse(body);
+
+    if (!validationResult.success) {
+      console.error("[API] Validation error:", validationResult.error);
+      return NextResponse.json(
+        { error: "Invalid data", details: validationResult.error.format() },
+        { status: 400 }
+      );
+    }
+
+    const validatedData = validationResult.data;
 
     // Check if order exists
     const existingOrder = await db.order.findUnique({
-      where: { id: orderId },
+      where: { id: id },
     });
 
     if (!existingOrder) {
-      console.log(`[API] Order with ID ${orderId} not found`);
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
@@ -983,84 +515,92 @@ export async function PATCH(
     }
 
     // Prepare update data
-    const updateData: any = {};
-    
-    // Determine which workflow this update is for
-    const isDesignUpdate = data.lebar_file !== undefined || data.warna_acuan !== undefined;
-    const isPressUpdate = data.press_mesin !== undefined || data.press_presure !== undefined || 
-                          data.press_pressure !== undefined || data.press_suhu !== undefined;
-    const isPressDoneUpdate = data.press_bagus !== undefined || data.press_waste !== undefined;
-    
-    // Set appropriate user ID based on workflow
-    if (isDesignUpdate) {
-      updateData.designer_id = session.user.id; // Set current user as designer
-    } else if (isPressUpdate) {
-      updateData.press_id = data.press_id || session.user.id; // Set press operator
-    }
-    
-    // Handle common fields
-    if (data.status !== undefined) updateData.status = String(data.status);
-    if (data.statusm !== undefined) updateData.statusm = String(data.statusm);
-    if (data.qty !== undefined) updateData.qty = String(data.qty);
-    if (data.catatan !== undefined) updateData.catatan = String(data.catatan);
-    
-    // Handle design workflow fields
-    if (data.lebar_file !== undefined) updateData.lebar_file = String(data.lebar_file);
-    if (data.warna_acuan !== undefined) updateData.warna_acuan = String(data.warna_acuan);
-    if (data.capture !== undefined) updateData.capture = String(data.capture);
-    if (data.capture_name !== undefined) updateData.capture_name = String(data.capture_name);
-    
-    // Handle press workflow fields
-    if (data.press_mesin !== undefined) updateData.press_mesin = String(data.press_mesin);
-    if (data.press_presure !== undefined) updateData.press_presure = String(data.press_presure);
-    if (data.press_pressure !== undefined) updateData.press_pressure = String(data.press_pressure);
-    if (data.press_suhu !== undefined) updateData.press_suhu = String(data.press_suhu);
-    if (data.press_speed !== undefined) {
-      // Convert press_speed to a number or null
-      if (data.press_speed === null || data.press_speed === '') {
-        updateData.press_speed = null;
-      } else if (typeof data.press_speed === 'number') {
-        updateData.press_speed = data.press_speed;
-      } else if (typeof data.press_speed === 'string') {
-        const parsedSpeed = parseFloat(data.press_speed);
-        updateData.press_speed = !isNaN(parsedSpeed) ? parsedSpeed : null;
-      } else {
-        updateData.press_speed = null;
-      }
-    }
-    if (data.press_protect !== undefined) updateData.press_protect = String(data.press_protect);
-    if (data.total_kain !== undefined) updateData.total_kain = String(data.total_kain);
-    if (data.prints_qty !== undefined) updateData.prints_qty = String(data.prints_qty);
-    if (data.tgl_press !== undefined) updateData.tgl_press = parseDateValue(data.tgl_press);
-    
-    // Handle press done workflow fields
-    if (data.press_bagus !== undefined) updateData.press_bagus = String(data.press_bagus);
-    if (data.press_waste !== undefined) updateData.press_waste = String(data.press_waste);
-    if (data.catatan_press !== undefined) updateData.catatan_press = String(data.catatan_press);
-    if (data.press_done !== undefined) updateData.press_done = parseDateValue(data.press_done);
-    
-    console.log("[API] Final update data:", updateData);
+    const updateData: any = {
+      ...validatedData,
+      // Handle date fields if provided
+      ...(validatedData.tanggal && { tanggal: parseDateValue(validatedData.tanggal) }),
+      // Handle customer ID if provided
+      ...(validatedData.customer_id && { customer_id: validatedData.customer_id || validatedData.customerId }),
+      // Handle marketing field if provided
+      ...(validatedData.marketing && { marketing: validatedData.marketing }),
+      // Handle product fields if provided
+      ...(validatedData.produk && { produk: validatedData.produk || validatedData.aplikasiProduk }),
+      ...(validatedData.nama_produk && { nama_produk: validatedData.nama_produk }),
+      // Handle fabric fields if provided
+      ...(validatedData.asal_bahan && { asal_bahan: validatedData.asal_bahan || validatedData.asalBahan }),
+      ...(validatedData.asalBahanId && { asal_bahan_id: validatedData.asalBahanId }),
+      // Handle quantity fields if provided
+      ...(validatedData.qty && { qty: validatedData.qty || validatedData.jumlah }),
+      // Handle price fields if provided
+      ...(validatedData.harga_satuan && { harga_satuan: validatedData.harga_satuan || validatedData.harga }),
+      // Handle status fields if provided
+      ...(validatedData.status && { status: validatedData.status }),
+      ...(validatedData.statusm && { statusm: validatedData.statusm }),
+      ...(validatedData.statusProduksi && { status_produksi: validatedData.statusProduksi }),
+      // Handle notes if provided
+      ...(validatedData.catatan && { catatan: validatedData.catatan || validatedData.notes }),
+      // Handle fabric fields if provided
+      ...(validatedData.nama_kain && { nama_kain: validatedData.nama_kain || validatedData.namaBahan }),
+      ...(validatedData.jumlah_kain && { jumlah_kain: validatedData.jumlah_kain || validatedData.fabricLength }),
+      // Handle paper fields if provided
+      ...(validatedData.gramasi && { gramasi: validatedData.gramasi || validatedData.gsmKertas }),
+      ...(validatedData.lebar_kertas && { lebar_kertas: validatedData.lebar_kertas || validatedData.lebarKertas }),
+      ...(validatedData.lebar_file && { lebar_file: validatedData.lebar_file || validatedData.fileWidth }),
+      // Handle color matching if provided
+      ...(validatedData.warna_acuan && { warna_acuan: validatedData.warna_acuan }),
+      // Handle design file if provided
+      ...(validatedData.path && { path: validatedData.path || validatedData.fileDesain }),
+      // Handle additional fields if provided
+      ...(validatedData.tambah_bahan && { tambah_bahan: validatedData.tambah_bahan }),
+      ...(validatedData.priority && { priority: validatedData.priority }),
+      ...(validatedData.kategori && { kategori: validatedData.kategori }),
+      // Update timestamp
+      updated_at: new Date(),
+    };
 
     // Update the order
     const updatedOrder = await db.order.update({
-      where: { id: orderId },
+      where: { id: id },
       data: updateData,
       include: {
         customer: true,
         asal_bahan_rel: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        designer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        operator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        manager: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
-    console.log(`[API] Order updated successfully`);
-    return NextResponse.json(serializeData(updatedOrder));
-  } catch (error: any) {
-    console.error("[API] Error processing update:", error);
-    
+    // Serialize the updated order
+    const serializedOrder = serializeData(updatedOrder);
+
+    return NextResponse.json(serializedOrder);
+  } catch (error) {
+    console.error("[API] Error partially updating order:", error);
     return NextResponse.json(
-      { 
-        error: "Failed to update order",
-        details: error.message || "Unknown error occurred"
-      },
+      { error: "Failed to update order", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

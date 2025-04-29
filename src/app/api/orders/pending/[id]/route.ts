@@ -14,8 +14,8 @@ function serializeData(data: any): any {
 
 // GET: Fetch a specific order for editing in the pending tab
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: any
 ) {
   try {
     console.log("API: Pending order route called for ID:", params.id);

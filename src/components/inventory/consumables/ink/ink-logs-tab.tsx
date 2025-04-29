@@ -234,7 +234,11 @@ export function InkLogsTab() {
                   <Calendar
                     mode="single"
                     selected={dateFilter}
-                    onSelect={setDateFilter}
+                    onSelect={(date) => {
+                      if (date instanceof Date) {
+                        setDateFilter(date)
+                      }
+                    }}
                     className="rounded-md border"
                   />
                 </div>

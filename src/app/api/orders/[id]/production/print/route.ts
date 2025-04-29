@@ -34,7 +34,7 @@ const printDataSchema = z.object({
  */
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  params: any
 ) {
   try {
     // Check authentication
@@ -47,7 +47,7 @@ export async function PATCH(
     }
 
     // Get order ID from params
-    const orderId = params.id;
+    const orderId = params.params.id;
     if (!orderId) {
       return NextResponse.json(
         { error: "Order ID is required" },

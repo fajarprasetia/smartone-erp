@@ -1,75 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // GET: Fetch specific paper request
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+    if (!session?.user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized - Please login" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const id = params.id;
-    
+    const { id } = params;
     const paperRequest = await prisma.paperRequest.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
       include: {
+        paper_stock: true,
         requester: {
           select: {
+            id: true,
             name: true,
-          },
-        },
-        approver: {
-          select: {
-            name: true,
-          },
-        },
-        rejecter: {
-          select: {
-            name: true,
-          },
-        },
-      },
+            email: true
+          }
+        }
+      }
     });
 
     if (!paperRequest) {
-      return NextResponse.json(
-        { error: "Paper request not found" },
-        { status: 404 }
+      return new NextResponse(
+        JSON.stringify({ error: "Paper request not found" }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    return NextResponse.json({
-      ...paperRequest,
-      requester_name: paperRequest.requester?.name,
-      approver_name: paperRequest.approver?.name,
-      rejecter_name: paperRequest.rejecter?.name,
-    });
+    return NextResponse.json(paperRequest);
   } catch (error) {
     console.error("Error fetching paper request:", error);
-    return NextResponse.json(
-      { error: "Error fetching paper request", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to fetch paper request" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
 
 // PUT: Approve or reject paper request
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -305,163 +283,66 @@ export async function PUT(
 }
 
 // DELETE: Delete a paper request
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+    if (!session?.user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized - Please login" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const userId = session.user.id;
-    const requestId = params.id;
-    
-    // Find the paper request
-    const paperRequest = await prisma.paperRequest.findUnique({
-      where: {
-        id: requestId,
-      },
-    });
-    
-    if (!paperRequest) {
-      return NextResponse.json(
-        { error: "Paper request not found" },
-        { status: 404 }
-      );
-    }
-    
-    // Check if request is already approved
-    if (paperRequest.status === "APPROVED") {
-      return NextResponse.json(
-        { error: "Cannot cancel an approved request" },
-        { status: 400 }
-      );
-    }
-    
-    // Delete the paper request
+    const { id } = params;
     await prisma.paperRequest.delete({
-      where: {
-        id: requestId,
-      },
+      where: { id }
     });
-    
-    // Log the activity
-    await prisma.paperLog.create({
-      data: {
-        action: "CANCEL",
-        performed_by: userId,
-        notes: `Cancelled request for ${paperRequest.paper_type} paper (GSM: ${paperRequest.gsm}, Width: ${paperRequest.width}, Length: ${paperRequest.length})`,
-        created_at: new Date(),
-      },
-    });
-    
-    return NextResponse.json(
-      { message: "Paper request cancelled successfully" }
-    );
+
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("Error cancelling paper request:", error);
-    return NextResponse.json(
-      { error: "Failed to cancel paper request" },
-      { status: 500 }
+    console.error("Error deleting paper request:", error);
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to delete paper request" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
 
 // PATCH: Update a paper request (rejection)
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: Request, { params }: any) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+    if (!session?.user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized - Please login" }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const userId = session.user.id;
-    const id = params.id;
-    const data = await req.json();
-    
-    // Get the paper request
-    const paperRequest = await prisma.paperRequest.findUnique({
-      where: {
-        id,
-      },
+    const { id } = params;
+    const body = await req.json();
+
+    const updatedPaperRequest = await prisma.paperRequest.update({
+      where: { id },
+      data: body,
+      include: {
+        paper_stock: true,
+        requester: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
 
-    if (!paperRequest) {
-      return NextResponse.json(
-        { error: "Paper request not found" },
-        { status: 404 }
-      );
-    }
-
-    if (paperRequest.status !== "PENDING") {
-      return NextResponse.json(
-        { error: "Request has already been processed" },
-        { status: 400 }
-      );
-    }
-
-    // Update to REJECTED status
-    if (data.status === "REJECTED") {
-      const updatedRequest = await prisma.paperRequest.update({
-        where: {
-          id,
-        },
-        data: {
-          status: "REJECTED",
-          rejected_by: userId,
-        },
-        include: {
-          requester: {
-            select: {
-              name: true,
-            },
-          },
-          rejecter: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      });
-      
-      // Create log entry
-      await prisma.paperLog.create({
-        data: {
-          action: "REJECTED",
-          performed_by: userId,
-          notes: `Rejected request for ${paperRequest.paper_type}, ${paperRequest.gsm} GSM, ${paperRequest.width}x${paperRequest.length}cm`,
-          request_id: id,
-        },
-      });
-
-      return NextResponse.json({
-        ...updatedRequest,
-        requester_name: updatedRequest.requester?.name,
-        rejecter_name: updatedRequest.rejecter?.name,
-      });
-    }
-
-    return NextResponse.json(
-      { error: "Invalid operation" },
-      { status: 400 }
-    );
+    return NextResponse.json(updatedPaperRequest);
   } catch (error) {
     console.error("Error updating paper request:", error);
-    return NextResponse.json(
-      { error: "Error updating paper request", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to update paper request" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 } 

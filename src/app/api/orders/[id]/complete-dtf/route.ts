@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  params: any
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,7 @@ export async function POST(
       );
     }
 
-    const orderId = params.id;
+    const orderId = params.params.id;
     const { quantity_completed, notes } = await request.json();
 
     // Validate input
@@ -48,23 +48,31 @@ export async function POST(
         id: orderId,
       },
       data: {
-        status: "CUTTING", // Move to next step in production flow
-        dtf_completed_at: new Date(),
-        dtf_completed_by: session.user.id,
-        dtf_quantity_completed: quantity_completed,
-        dtf_notes: notes || null,
-        // Add order event
-        events: {
-          create: {
-            type: "DTF_COMPLETED",
-            user_id: session.user.id,
-            details: {
-              quantity_completed,
-              notes: notes || null,
-            },
+        status: "DTF_COMPLETED",
+        dtf_done: new Date(),
+        tgl_dtf: new Date(),
+        dtf_id: session.user.id,
+        qty: quantity_completed,
+        catatan_print: notes || null,
+      },
+      include: {
+        dtf: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },
+    });
+
+    // Create log entry
+    await db.orderLog.create({
+      data: {
+        orderId,
+        userId: session.user.id,
+        action: "DTF_COMPLETED",
+        notes: `DTF completed with quantity ${quantity_completed}${notes ? `. Notes: ${notes}` : ''}`
+      }
     });
 
     return NextResponse.json(

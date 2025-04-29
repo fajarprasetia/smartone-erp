@@ -353,7 +353,7 @@ export default function BudgetsPage() {
                   <Label htmlFor="budget-department">Department</Label>
                   <Select 
                     value={formData.departmentId}
-                    onValueChange={(value) => handleFormChange('departmentId', value)}
+                    onValueChange={(value: string) => handleFormChange('departmentId', value)}
                   >
                     <SelectTrigger id="budget-department">
                       <SelectValue placeholder="Select department" />
@@ -368,76 +368,76 @@ export default function BudgetsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Budget Items</h3>
-                  <div className="font-semibold text-md">
-                    Total: {formatCurrency(calculateTotalBudgetAmount())}
-                  </div>
-                </div>
-                <div className="border rounded-md p-4 space-y-4">
-                  {newBudgetItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-3 items-end">
-                      <div className="col-span-5">
-                        <Label htmlFor={`account-${index}`}>Account</Label>
-                        <Select 
-                          value={item.accountId}
-                          onValueChange={(value) => handleBudgetItemChange(index, 'accountId', value)}
-                        >
-                          <SelectTrigger id={`account-${index}`}>
-                            <SelectValue placeholder="Select account" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {accounts.map((account) => (
-                              <SelectItem key={account.id} value={account.id}>
-                                {account.code} - {account.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="col-span-4">
-                        <Label htmlFor={`description-${index}`}>Description</Label>
-                        <Input 
-                          id={`description-${index}`} 
-                          value={item.description}
-                          onChange={(e) => handleBudgetItemChange(index, 'description', e.target.value)}
-                          placeholder="Description" 
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label htmlFor={`amount-${index}`}>Amount</Label>
-                        <Input 
-                          id={`amount-${index}`} 
-                          value={item.amount}
-                          onChange={(e) => handleBudgetItemChange(index, 'amount', e.target.value)}
-                          placeholder="0.00" 
-                          type="number"
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button 
-                          variant="ghost" 
-                          className="px-2" 
-                          onClick={() => removeBudgetItem(index)}
-                          disabled={newBudgetItems.length === 1}
-                        >
-                          ✕
-                        </Button>
-                      </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Budget Items</h3>
+                    <div className="font-semibold text-md">
+                      Total: {formatCurrency(calculateTotalBudgetAmount())}
                     </div>
-                  ))}
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-2"
-                    onClick={addBudgetItem}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Item
-                  </Button>
+                  </div>
+                  <div className="border rounded-md p-4 space-y-4">
+                    {newBudgetItems.map((item, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-3 items-end">
+                        <div className="col-span-5">
+                          <Label htmlFor={`account-${index}`}>Account</Label>
+                          <Select 
+                            value={item.accountId}
+                            onValueChange={(value: string) => handleBudgetItemChange(index, 'accountId', value)}
+                          >
+                            <SelectTrigger id={`account-${index}`}>
+                              <SelectValue placeholder="Select account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {accounts.map((account) => (
+                                <SelectItem key={account.id} value={account.id}>
+                                  {account.code} - {account.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-4">
+                          <Label htmlFor={`description-${index}`}>Description</Label>
+                          <Input 
+                            id={`description-${index}`} 
+                            value={item.description}
+                            onChange={(e) => handleBudgetItemChange(index, 'description', e.target.value)}
+                            placeholder="Description" 
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label htmlFor={`amount-${index}`}>Amount</Label>
+                          <Input 
+                            id={`amount-${index}`} 
+                            value={item.amount}
+                            onChange={(e) => handleBudgetItemChange(index, 'amount', e.target.value)}
+                            placeholder="0.00" 
+                            type="number"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <Button 
+                            variant="ghost" 
+                            className="px-2" 
+                            onClick={() => removeBudgetItem(index)}
+                            disabled={newBudgetItems.length === 1}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button 
+                      variant="outline" 
+                      className="w-full mt-2"
+                      onClick={addBudgetItem}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Item
+                    </Button>
+                  </div>
                 </div>
               </div>
               <DialogFooter>

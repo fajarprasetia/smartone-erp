@@ -290,7 +290,7 @@ export default function InventoryOutboundPage() {
   }
   
   // Format date
-  const formatDate = (dateString: string | null | undefined) => {
+  const formatDate = (dateString: string | Date | null | undefined) => {
     if (!dateString) return "N/A"
     try {
       return format(new Date(dateString), "dd MMM yyyy")
@@ -322,14 +322,14 @@ export default function InventoryOutboundPage() {
   // Helper function to get status badge details
   const getStatusBadge = (order: Order) => {
     // Display status from status field or statusm field
-    const status = order.statusm || order.status || "Processing";
+    const status = order.statusm || order.status || "DELIVERY";
     
     // Determine badge style based on status
     let badgeClass = "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100";
     
-    if (status === "DISERAHKAN") {
+    if (status === "DISERAHKAN" || status === "DELIVERY") {
       badgeClass = "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100";
-    } else if (status === "REJECTED") {
+    } else if (status === "REJECTED" || status === "CANCELLED") {
       badgeClass = "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100";
     }
     
@@ -338,7 +338,7 @@ export default function InventoryOutboundPage() {
   
   // Helper function to get QC approval badge details
   const getApprovalBadge = (order: Order) => {
-    const approval = order.approval_barang || "Pending";
+    const approval = order.approval_barang || "APPROVED";
     
     let badgeClass = "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100";
     
@@ -407,9 +407,9 @@ export default function InventoryOutboundPage() {
       
       <Card className="bg-transparent border-border/30 backdrop-blur-md backdrop-saturate-150">
         <CardHeader className="pb-2 bg-transparent">
-          <CardTitle>Completed DTF Orders</CardTitle>
+          <CardTitle>Completed Orders</CardTitle>
           <CardDescription>
-            Manage completed orders that have passed DTF processing and are ready for handover.
+            Manage completed orders are ready for handover.
           </CardDescription>
         </CardHeader>
         <CardContent className="bg-transparent">

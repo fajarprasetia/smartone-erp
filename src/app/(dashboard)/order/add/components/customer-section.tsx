@@ -25,12 +25,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, ChevronsUpDown, Plus, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { OrderFormValues } from "../schemas/order-form-schema"
+import { OrderFormValues, Customer } from "../schemas/order-form-schema"
 import { CustomerFormDialogNew } from "@/components/marketing/customer-form-dialog-new"
 
 interface CustomerSectionProps {
   form: UseFormReturn<OrderFormValues>
-  customers: Array<{ id: string; nama: string; telp?: string }>
+  customers: Customer[]
   marketingUsers: Array<{ id: string; name: string; email: string }>
   isCustomerOpen: boolean
   setIsCustomerOpen: (open: boolean) => void

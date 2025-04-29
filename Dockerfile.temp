@@ -1,0 +1,34 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Set Next.js to use standalone output
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Build the app with the simplest configuration
+RUN echo '/** @type {import("next").NextConfig} */ module.exports = { output: "standalone" };' > next.config.js
+RUN pnpm build
+
+# Create a directory with everything needed for deployment
+RUN mkdir -p /app/.next/standalone
+RUN cp -R /app/.next/standalone /app/deployment
+RUN mkdir -p /app/deployment/public
+RUN cp -R /app/public /app/deployment/
+RUN mkdir -p /app/deployment/.next/static
+RUN cp -R /app/.next/static /app/deployment/.next/
+
+# Keep container running for file extraction
+CMD ["tail", "-f", "/dev/null"]

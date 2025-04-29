@@ -12,41 +12,32 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Return mock templates for now
-    const mockTemplates = [
-      {
-        id: "template1",
-        name: "Welcome Message",
-        description: "Welcome message for new customers",
-        parameterCount: 1
+    const templates = await prisma.whatsAppTemplate.findMany({
+      select: {
+        id: true,
+        name: true,
+        language: true,
+        components: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
       },
-      {
-        id: "template2",
-        name: "Order Confirmation",
-        description: "Confirm customer orders",
-        parameterCount: 2
+      orderBy: {
+        createdAt: 'desc',
       },
-      {
-        id: "template3",
-        name: "Shipment Update",
-        description: "Update on order shipment",
-        parameterCount: 2
-      },
-      {
-        id: "template4",
-        name: "Payment Reminder",
-        description: "Reminder for pending payments",
-        parameterCount: 1
-      },
-      {
-        id: "template5",
-        name: "Promo Announcement",
-        description: "Promotional messages for sales",
-        parameterCount: 0
-      }
-    ];
-    
-    return NextResponse.json(mockTemplates)
+    });
+
+    return NextResponse.json({
+      templates: templates.map((template) => ({
+        id: template.id,
+        name: template.name,
+        language: template.language,
+        components: template.components,
+        isActive: template.isActive,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt,
+      })),
+    });
   } catch (error) {
     console.error("Error fetching WhatsApp templates:", error)
     return NextResponse.json(
@@ -57,31 +48,43 @@ export async function GET(request: Request) {
 }
 
 // POST - Create a new template
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    // Check authentication
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const { name, language, components } = await req.json();
+
+    if (!name || !components) {
+      return NextResponse.json(
+        { error: "Name and components are required" },
+        { status: 400 }
+      );
     }
-    
-    const body = await request.json()
-    
-    // Mock success response
-    return NextResponse.json({ 
-      success: true, 
+
+    const template = await prisma.whatsAppTemplate.create({
+      data: {
+        name,
+        language: language || "en",
+        components,
+        isActive: true,
+      },
+    });
+
+    return NextResponse.json({
       template: {
-        id: "new-template-" + Date.now(),
-        ...body,
-        createdAt: new Date()
-      }
-    })
+        id: template.id,
+        name: template.name,
+        language: template.language,
+        components: template.components,
+        isActive: template.isActive,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt,
+      },
+    });
   } catch (error) {
-    console.error("Error creating WhatsApp template:", error)
+    console.error("Error creating WhatsApp template:", error);
     return NextResponse.json(
-      { error: "Failed to create WhatsApp template" },
+      { error: "Failed to create template" },
       { status: 500 }
-    )
+    );
   }
 }
 

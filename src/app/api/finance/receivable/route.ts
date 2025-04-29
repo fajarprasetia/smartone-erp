@@ -93,54 +93,67 @@ export async function GET(req: NextRequest) {
     // If not searching all records, only include orders with invoices/payment info
     if (!searchAll || !search) {
       whereCondition = {
-        OR: [
-          { tgl_invoice: { not: null } },
-          { invoice: { not: null } },
-          { dp: { not: null } },
-          { tgl_dp: { not: null } },
-          { tgl_lunas: { not: null } },
-          { status: "COMPLETED" } // Include orders with COMPLETED status
-        ],
-        ...monthFilter
+        AND: [
+          {
+            OR: [
+              { tgl_invoice: { not: null } },
+              { invoice: { not: null } },
+              { dp: { not: null } },
+              { tgl_dp: { not: null } },
+              { tgl_lunas: { not: null } },
+              { status: "COMPLETED" } // Include orders with COMPLETED status
+            ]
+          },
+          monthFilter
+        ]
       };
     } else {
       // When searching the entire database (searchAll = true)
       // If no search term is provided but searchAll is true, limit to recent orders
       if (!search) {
         whereCondition = {
-          ...monthFilter,
-          // Only return the most recent orders to avoid performance issues
-          created_at: {
-            gte: new Date(new Date().setDate(new Date().getDate() - 14)) // last 14 days
-          }
+          AND: [
+            monthFilter,
+            {
+              // Only return the most recent orders to avoid performance issues
+              created_at: {
+                gte: new Date(new Date().setDate(new Date().getDate() - 14)) // last 14 days
+              }
+            }
+          ]
         };
       } else {
-        whereCondition = {
-          ...monthFilter
-        };
+        whereCondition = monthFilter;
       }
     }
 
     // Add search condition if search is provided
     if (search) {
-      if (searchAll) {
-        // When searching all records, focus on finding matches by SPK or customer
-        whereCondition.OR = [
-          { spk: { contains: search, mode: "insensitive" } },
-          { customer: { nama: { contains: search, mode: "insensitive" } } },
-        ];
-      } else {
-        // Regular search with more fields
-        whereCondition.OR = [
-          ...(whereCondition.OR || []),
-          { spk: { contains: search, mode: "insensitive" } },
-          { invoice: { contains: search, mode: "insensitive" } },
-          { produk: { contains: search, mode: "insensitive" } },
-          { catatan: { contains: search, mode: "insensitive" } },
-          { customer: { nama: { contains: search, mode: "insensitive" } } },
-          { customer: { telp: { contains: search, mode: "insensitive" } } },
-        ];
-      }
+      const searchCondition = {
+        OR: searchAll
+          ? [
+              // When searching all records, focus on finding matches by SPK or customer
+              { spk: { contains: search, mode: "insensitive" } },
+              { customer: { nama: { contains: search, mode: "insensitive" } } },
+            ]
+          : [
+              // Regular search with more fields
+              { spk: { contains: search, mode: "insensitive" } },
+              { invoice: { contains: search, mode: "insensitive" } },
+              { produk: { contains: search, mode: "insensitive" } },
+              { catatan: { contains: search, mode: "insensitive" } },
+              { customer: { nama: { contains: search, mode: "insensitive" } } },
+              { customer: { telp: { contains: search, mode: "insensitive" } } },
+            ]
+      };
+
+      // Add search condition to whereCondition
+      whereCondition = {
+        AND: [
+          whereCondition,
+          searchCondition
+        ]
+      };
     }
 
     // Add status filter if provided

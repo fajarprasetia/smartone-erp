@@ -3,10 +3,7 @@ import { getSession } from "@/lib/auth"
 import { db } from "@/lib/db"
 
 // Get a specific financial period by ID
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: Request, { params }: any) {
   try {
     // Validate session
     const session = await getSession()
@@ -42,10 +39,7 @@ export async function GET(
 }
 
 // Update a financial period
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: Request, { params }: any) {
   try {
     // Validate session
     const session = await getSession()
@@ -73,6 +67,14 @@ export async function PATCH(
 
     // Extract updatable fields
     const { name, startDate, endDate, type, year, quarter, month, status } = body
+
+    // Validate status if provided
+    if (status && !["OPEN", "CLOSED", "PENDING"].includes(status)) {
+      return NextResponse.json(
+        { error: "Invalid status value" },
+        { status: 400 }
+      )
+    }
 
     // Check for overlapping periods if dates are being updated
     if (startDate && endDate) {
@@ -133,10 +135,7 @@ export async function PATCH(
 }
 
 // Delete a financial period
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     // Validate session
     const session = await getSession()

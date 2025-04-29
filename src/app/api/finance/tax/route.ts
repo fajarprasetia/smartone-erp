@@ -1,20 +1,69 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { formatCurrency } from "@/lib/utils";
 
+interface TaxFiling {
+  id: string;
+  type: string;
+  period: string;
+  amount: number;
+  dueDate: Date;
+  status: string;
+  description: string | null;
+  filingDate: Date | null;
+  paymentDate: Date | null;
+  referenceNumber: string | null;
+}
+
+// GET /api/finance/tax
 export async function GET() {
   try {
-    // Aggregate tax-related data from orders and payments
-    // Example: total taxable sales, total tax collected (assuming tax fields exist)
-    const totalTaxableSales = await db.order.aggregate({ _sum: { nominal_total: true } });
-    const totalTaxCollected = await db.financialTransaction.aggregate({ _sum: { tax: true } });
-    const totalOrders = await db.order.count();
-    const totalTransactions = await db.financialTransaction.count();
-    return NextResponse.json({
-      totalTaxableSales: totalTaxableSales._sum.nominal_total || 0,
-      totalTaxCollected: totalTaxCollected._sum.tax || 0,
-      totalOrders,
-      totalTransactions
+    const taxFilings = await prisma.taxFiling.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
     });
+
+    return NextResponse.json(taxFilings);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to aggregate tax management data", message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+    console.error("Error fetching tax filings:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch tax filings" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/finance/tax
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { type, period, amount, dueDate, notes } = body;
+
+    if (!type || !period || !amount || !dueDate) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const taxFiling = await prisma.taxFiling.create({
+      data: {
+        type,
+        period,
+        amount: parseFloat(amount),
+        dueDate: new Date(dueDate),
+        status: "PENDING",
+        description: notes,
+      },
+    });
+
+    return NextResponse.json(taxFiling);
+  } catch (error) {
+    console.error("Error creating tax filing:", error);
+    return NextResponse.json(
+      { error: "Failed to create tax filing" },
+      { status: 500 }
+    );
   }
 }

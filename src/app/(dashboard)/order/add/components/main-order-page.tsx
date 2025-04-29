@@ -184,7 +184,7 @@ export function MainOrderPage({ mode = 'create', initialData }: MainOrderPagePro
                 customers={customers.map(c => ({
                   id: c.id,
                   nama: c.nama,
-                  telp: c.telp || undefined
+                  telp: c.telp || null
                 }))}
                 marketingUsers={marketingUsers}
                 isCustomerOpen={isCustomerOpen}

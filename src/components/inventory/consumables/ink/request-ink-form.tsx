@@ -290,7 +290,7 @@ export function RequestInkForm({ onClose }: { onClose: () => void }) {
             </Button>
             <Button
               type="submit"
-              disabled={loading || (validationResult && !validationResult.isValid)}
+              disabled={loading || (validationResult ? !validationResult.isValid : false)}
             >
               {loading ? "Submitting..." : "Submit Request"}
             </Button>

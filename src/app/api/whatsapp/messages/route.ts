@@ -21,11 +21,20 @@ export async function GET(request: Request) {
     // Get real messages from the database
     const messages = await prisma.chatMessage.findMany({
       where: {
-        customerId: customerId
+        customerId: BigInt(customerId),
       },
       orderBy: {
-        timestamp: 'asc'
-      }
+        timestamp: 'desc',
+      },
+      take: 50,
+      include: {
+        customer: {
+          select: {
+            id: true,
+            nama: true,
+          },
+        },
+      },
     });
     
     // If no messages found yet, return empty array

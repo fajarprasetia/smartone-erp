@@ -9,8 +9,6 @@ import { z } from "zod"
 import { toast } from "sonner"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import { Uploader, UploadButton } from 'react-uploader';
-import { Camera } from 'react-native-vision-camera';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -111,17 +109,24 @@ const formSchema = z.object({
   est_pjg_bahan: z.string().optional(),
   tanggal: z.date().optional(),
   foto: z.string().optional(),
-  images: z.array(z.instanceof(File)).optional(),
+  images: z.array(z.any()).optional(),
   roll: z.string().optional(),
   keterangan: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
+// Image interface to match InboundForm
+interface ImageFile {
+  fileUrl: string
+  fileName: string
+}
+
 // Customer interface
 interface Customer {
   id: string
-  name: string
+  nama: string
+  telp?: string | null
 }
 
 // Page size options
@@ -146,7 +151,7 @@ export default function InventoryInboundPage() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   
   // Handle form submission
-  const handleFormSubmit = async (data: FormValues) => {
+  const handleFormSubmit = async (data: FormValues & { images?: ImageFile[] }) => {
     try {
       const formData = new FormData();
       
@@ -168,9 +173,9 @@ export default function InventoryInboundPage() {
         formData.append('tanggal', data.tanggal.toISOString());
       }
       
-      // Handle images from the InboundForm component
+      // Handle images
       if (data.images && Array.isArray(data.images)) {
-        data.images.forEach((imageData: any) => {
+        data.images.forEach((imageData: ImageFile) => {
           // Convert base64 to blob if needed
           if (imageData.fileUrl && imageData.fileUrl.startsWith('data:')) {
             const blob = dataURLtoBlob(imageData.fileUrl);
