@@ -116,7 +116,7 @@ export default function WhatsAppSettingsPage() {
                 placeholder="Enter your WhatsApp phone number ID"
               />
               <p className="text-xs text-muted-foreground">
-                Found in WhatsApp > Getting Started > select your phone number
+                Found in WhatsApp {">"}  Getting Started {">"}  select your phone number
               </p>
             </div>
             
@@ -130,7 +130,7 @@ export default function WhatsAppSettingsPage() {
                 placeholder="Enter your WhatsApp business account ID"
               />
               <p className="text-xs text-muted-foreground">
-                Found in WhatsApp > Account Overview
+                Found in WhatsApp {">"} Account Overview
               </p>
             </div>
             
@@ -225,7 +225,7 @@ export default function WhatsAppSettingsPage() {
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
             <h4 className="font-medium text-sm mb-1">Configuration Steps:</h4>
             <ol className="text-sm list-decimal pl-5 space-y-1">
-              <li>Go to WhatsApp > Configuration > Webhooks in Meta Developer Portal</li>
+              <li>Go to WhatsApp {">"} Configuration {">"} Webhooks in Meta Developer Portal</li>
               <li>Enter your webhook URL and verify token</li>
               <li>Subscribe to message, message_status_update fields</li>
               <li>Click "Verify and Save"</li>

@@ -583,8 +583,12 @@ const DpPaymentForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: () =
                 <Calendar
                   mode="single"
                   selected={formData.date}
-                  onSelect={(date) => date && setFormData({...formData, date})}
-                  disabled={(date) => date < new Date()}
+                  onSelect={(date) => {
+                    if (date instanceof Date) {
+                      setFormData({...formData, date})
+                    }
+                  }}
+                  disabled={(date: Date) => date < new Date()}
                   initialFocus
                 />
               </div>
@@ -864,8 +868,12 @@ const SettlePaymentForm = ({ order, onSuccess }: { order: OrderItem, onSuccess: 
                   <Calendar
                     mode="single"
                     selected={formData.date}
-                    onSelect={(date) => date && setFormData({...formData, date})}
-                    disabled={(date) => date < new Date()}
+                    onSelect={(date) => {
+                      if (date instanceof Date) {
+                        setFormData({...formData, date})
+                      }
+                    }}
+                    disabled={(date: Date) => date < new Date()}
                     initialFocus
                   />
                 </div>

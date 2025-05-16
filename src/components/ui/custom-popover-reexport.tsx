@@ -9,14 +9,9 @@ import {
   CustomPopoverTrigger
 } from "./custom-popover"
 
-// Re-export with the original Radix UI component names
-export const Popover = CustomPopover
-export const PopoverContent = CustomPopoverContent
-export const PopoverTrigger = CustomPopoverTrigger
-
-// Also export as a named object for consistency with the original
+// Export with the original Radix UI component names
 export {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
+  CustomPopover as Popover,
+  CustomPopoverContent as PopoverContent,
+  CustomPopoverTrigger as PopoverTrigger
 } 

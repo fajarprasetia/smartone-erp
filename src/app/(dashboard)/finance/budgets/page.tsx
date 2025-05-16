@@ -353,7 +353,7 @@ export default function BudgetsPage() {
                   <Label htmlFor="budget-department">Department</Label>
                   <Select 
                     value={formData.departmentId}
-                    onValueChange={(value) => handleFormChange('departmentId', value)}
+                    onValueChange={(value: string) => handleFormChange('departmentId', value)}
                   >
                     <SelectTrigger id="budget-department">
                       <SelectValue placeholder="Select department" />
@@ -383,7 +383,7 @@ export default function BudgetsPage() {
                         <Label htmlFor={`account-${index}`}>Account</Label>
                         <Select 
                           value={item.accountId}
-                          onValueChange={(value) => handleBudgetItemChange(index, 'accountId', value)}
+                          onValueChange={(value: string) => handleBudgetItemChange(index, 'accountId', value)}
                         >
                           <SelectTrigger id={`account-${index}`}>
                             <SelectValue placeholder="Select account" />

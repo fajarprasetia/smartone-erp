@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PendingDTFList } from "./pending-dtf-list";
 import DTFInProgressList from "./dtf-in-progress-list";
+import { DTFStocksTab } from "./dtf-stocks-tab";
 import { Card } from "@/components/ui/card";
 
 export function DTFManagement() {
@@ -16,9 +17,10 @@ export function DTFManagement() {
   return (
     <Card className="p-6">
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="pending">Pending DTF</TabsTrigger>
           <TabsTrigger value="in-progress">DTF List</TabsTrigger>
+          <TabsTrigger value="stocks">Stocks</TabsTrigger>
         </TabsList>
         <TabsContent value="pending">
           <PendingDTFList
@@ -31,6 +33,9 @@ export function DTFManagement() {
             key={`in-progress-${refreshKey}`}
             onOrderComplete={handleDTFActionComplete}
           />
+        </TabsContent>
+        <TabsContent value="stocks">
+          <DTFStocksTab />
         </TabsContent>
       </Tabs>
     </Card>

@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Find the ink stock
-    const inkStock = await db.ink_stocks.findUnique({
+    const inkStock = await db.inkStock.findUnique({
       where: { id: ink_stock_id },
     });
 

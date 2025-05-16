@@ -343,6 +343,7 @@ exports.Prisma.ChartOfAccountScalarFieldEnum = {
   type: 'type',
   subtype: 'subtype',
   description: 'description',
+  balance: 'balance',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -372,7 +373,9 @@ exports.Prisma.JournalEntryScalarFieldEnum = {
   status: 'status',
   periodId: 'periodId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  postedAt: 'postedAt',
+  postedById: 'postedById'
 };
 
 exports.Prisma.JournalEntryItemScalarFieldEnum = {

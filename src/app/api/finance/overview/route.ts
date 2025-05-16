@@ -105,7 +105,7 @@ export async function GET() {
       : 0;
 
     // Get accounts receivable (unpaid invoices) - Fixed to use Invoice model
-    const accountsReceivable = await db.Invoice.aggregate({
+    const accountsReceivable = await db.invoice.aggregate({
       where: {
         status: {
           in: ["UNPAID", "PARTIALLY_PAID", "OVERDUE"]

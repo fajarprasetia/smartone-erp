@@ -47,7 +47,7 @@ interface Template {
   status: string
   createdAt: string
   header?: {
-    format: string
+    format: "TEXT" | "NONE"
     text?: string
     example?: string
   }
@@ -206,7 +206,7 @@ export default function EditTemplatePage() {
       form.reset({
         name: mockTemplate.name,
         description: mockTemplate.description,
-        header: mockTemplate.header || { format: "NONE", text: "" },
+        header: mockTemplate.header || { format: "NONE" as const, text: "" },
         body: {
           text: mockTemplate.body.text,
           example: mockTemplate.body.example,
@@ -442,7 +442,7 @@ export default function EditTemplatePage() {
                           />
                         </FormControl>
                         <FormDescription>
-                          The main content of your message. Use {{n}} for variables.
+                          The main content of your message. Use {"{{n}}"} for variables.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

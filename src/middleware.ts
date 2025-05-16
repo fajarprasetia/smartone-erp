@@ -25,6 +25,11 @@ export default withAuth(
     const token = await getToken({ req });
     const path = req.nextUrl.pathname;
 
+    // Special handling for the root path - allow the redirect in page.tsx to handle it
+    if (path === "/") {
+      return NextResponse.next();
+    }
+
     // Check if the path requires authentication
     const isProtectedPath = protectedPaths.some((protectedPath) =>
       path.startsWith(protectedPath)
@@ -53,7 +58,13 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        // Allow the root path to proceed without authentication
+        if (req.nextUrl.pathname === "/") {
+          return true;
+        }
+        return !!token;
+      },
     },
   }
 );

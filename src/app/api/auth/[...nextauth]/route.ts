@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -6,7 +5,6 @@ import bcrypt from "bcryptjs";
 import NextAuth from "next-auth/next";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -26,7 +24,12 @@ export const authOptions: NextAuthOptions = {
           include: {
             role: {
               include: {
-                permissions: true,
+                permissions: {
+                  select: {
+                    id: true,
+                    name: true,
+                  }
+                },
               },
             },
           },
@@ -49,7 +52,12 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: {
+            id: user.role.id,
+            name: user.role.name,
+            isAdmin: user.role.isAdmin,
+            permissionIds: user.role.permissions.map(p => p.id),
+          },
         };
       },
     }),
@@ -58,7 +66,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = {
+          id: user.role.id,
+          name: user.role.name,
+          isAdmin: user.role.isAdmin,
+          permissionIds: user.role.permissionIds || []
+        };
       }
       return token;
     },
@@ -76,8 +89,41 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 8 * 60 * 60,
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 8 * 60 * 60,
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  jwt: {
+    maxAge: 8 * 60 * 60,
+  },
 };
 
 const handler = NextAuth(authOptions);

@@ -146,23 +146,11 @@ export default function AddInventoryItemPage() {
   }
 
   return (
-    <div className="container mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Add Inventory Item</h1>
-        <Button 
-          variant="outline" 
-          onClick={() => router.push("/inventory/inbound")}
-        >
-          Back to Inventory
-        </Button>
-      </div>
-      
-      <Card className="w-full max-w-4xl mx-auto">
+    <div className="container mx-auto py-6">
+      <Card>
         <CardHeader>
-          <CardTitle>New Inventory Item</CardTitle>
-          <CardDescription>
-            Fill in the details to add a new item to your inventory.
-          </CardDescription>
+          <CardTitle>Add New Fabric</CardTitle>
+          <CardDescription>Add a new fabric to your inventory.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -369,6 +357,18 @@ export default function AddInventoryItemPage() {
                 )}
               />
   
+              {/* Add Product Images Field */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Product Images</label>
+                <input
+                  type="file"
+                  id="images"
+                  multiple
+                  accept="image/*"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              
               <CardFooter className="px-0 pb-0 flex justify-between">
                 <Button 
                   type="button" 
@@ -389,14 +389,3 @@ export default function AddInventoryItemPage() {
     </div>
   )
 }
-
-<div className="mb-4">
-  <label className="block text-sm font-medium mb-2">Product Images</label>
-  <input
-    type="file"
-    id="images"
-    multiple
-    accept="image/*"
-    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-  />
-</div>

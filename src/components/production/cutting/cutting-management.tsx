@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import  PendingCuttingList  from "./pending-cutting-list";
 import  CuttingInProgressList  from "./cutting-in-progress-list";
+import { CuttingStocksTab } from "./cutting-stocks-tab";
 
 export function CuttingManagement() {
   const [refreshKey, setRefreshKey] = useState<number>(0);
@@ -26,9 +27,10 @@ export function CuttingManagement() {
       className="space-y-4"
     >
       <div className="flex justify-between items-center">
-        <TabsList>
+        <TabsList className="grid grid-cols-3">
           <TabsTrigger value="pending">Pending Cutting</TabsTrigger>
           <TabsTrigger value="in-progress">Cutting List</TabsTrigger>
+          <TabsTrigger value="stocks">Stocks</TabsTrigger>
         </TabsList>
         
       </div>
@@ -43,6 +45,9 @@ export function CuttingManagement() {
           key={`in-progress-${refreshKey}`}
           onCuttingComplete={handleCuttingComplete} 
         />
+      </TabsContent>
+      <TabsContent value="stocks" className="space-y-4">
+        <CuttingStocksTab />
       </TabsContent>
     </Tabs>
   );

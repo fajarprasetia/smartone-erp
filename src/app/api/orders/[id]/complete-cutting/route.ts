@@ -50,15 +50,15 @@ export async function PATCH(
     }
 
     // Update the cutting record with completion info
-    await prisma.cutting.update({
+    await prisma.order.update({
       where: {
         id: order.cutting_id,
       },
       data: {
         cutting_bagus: cutting_bagus || "0",
         cutting_reject: cutting_reject || "0",
-        notes: notes,
-        updatedAt: new Date(),
+        catatan_cutting: notes,
+        updated_at: new Date(),
       },
     });
 
@@ -67,13 +67,18 @@ export async function PATCH(
 
     // Update the order with completion information
     const updatedOrder = await prisma.order.update({
-      where: {
-        id: orderId,
-      },
+      where: { id: params.id },
       data: {
-        cutting_done: new Date(), // Record completion time
-        status: newStatus, // Update the status
-        catatan_cutting: notes || undefined, // Update cutting notes if provided
+        status: "CUTTING_COMPLETED",
+        cutting_done: new Date(),
+      },
+      include: {
+        cutting: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 

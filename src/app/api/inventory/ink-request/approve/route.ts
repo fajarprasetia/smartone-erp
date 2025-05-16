@@ -61,14 +61,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (inkRequest.approved) {
+    if (inkRequest.status === "APPROVED") {
       return NextResponse.json(
         { error: "This request has already been approved" },
         { status: 400 }
       );
     }
 
-    if (inkRequest.rejected) {
+    if (inkRequest.status === "REJECTED") {
       return NextResponse.json(
         { error: "Cannot approve a rejected request" },
         { status: 400 }

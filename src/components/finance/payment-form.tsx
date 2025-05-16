@@ -45,6 +45,7 @@ const formSchema = z.object({
   paymentMethod: z.string().min(1, "Payment method is required"),
   reference: z.string().optional(),
   notes: z.string().optional(),
+  fileUrl: z.string().optional(),
 })
 
 export type PaymentFormValues = z.infer<typeof formSchema>

@@ -290,7 +290,7 @@ export default function InventoryOutboundPage() {
   }
   
   // Format date
-  const formatDate = (dateString: string | null | undefined) => {
+  const formatDate = (dateString: string | Date | null | undefined) => {
     if (!dateString) return "N/A"
     try {
       return format(new Date(dateString), "dd MMM yyyy")
@@ -407,9 +407,9 @@ export default function InventoryOutboundPage() {
       
       <Card className="bg-transparent border-border/30 backdrop-blur-md backdrop-saturate-150">
         <CardHeader className="pb-2 bg-transparent">
-          <CardTitle>Completed DTF Orders</CardTitle>
+          <CardTitle>Completed Orders</CardTitle>
           <CardDescription>
-            Manage completed orders that have passed DTF processing and are ready for handover.
+            Manage completed orders that have passed processing and are ready for handover.
           </CardDescription>
         </CardHeader>
         <CardContent className="bg-transparent">

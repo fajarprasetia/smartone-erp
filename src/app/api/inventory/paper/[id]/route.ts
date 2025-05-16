@@ -90,16 +90,16 @@ export async function PUT(
         id: params.id,
       },
       data: {
-        barcode_id: data.barcode_id || null,
-        supplier: data.supplier || null,
-        paperType: data.paper_type || "Sublimation Paper",
+        qrCode: data.barcode_id || null,
+        manufacturer: data.supplier || null,
+        type: data.paper_type || "Sublimation Paper",
         gsm: data.gsm,
         width: data.width,
         length: data.length,
-        remaining_length: data.remaining_length,
+        remainingLength: data.remaining_length,
         notes: data.notes || null,
-        updated_by: userId,
-        updated_at: new Date(),
+        updatedByUserId: userId,
+        dateUpdated: new Date(),
       },
     });
 

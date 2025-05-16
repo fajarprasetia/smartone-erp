@@ -7,22 +7,21 @@ export async function GET() {
     const paperStocks = await db.paperStock.groupBy({
       by: ['gsm'],
       where: {
-        remaining_length: {
+        remainingLength: {
           gt: 0
         },
         gsm: {
-          not: '',
-          not: null
+          not: 0
         }
       },
       _sum: {
-        remaining_length: true
+        remainingLength: true
       },
       orderBy: {
         gsm: 'asc'
       },
       having: {
-        remaining_length: {
+        remainingLength: {
           _sum: {
             gt: 0
           }
@@ -39,7 +38,7 @@ export async function GET() {
     const formattedResults = paperStocks
       .map(stock => ({
         gsm: stock.gsm,
-        remainingLength: stock._sum.remaining_length || 0
+        remainingLength: stock._sum?.remainingLength || 0
       }))
       .filter(item => item.gsm && item.remainingLength > 0);
 

@@ -23,7 +23,9 @@ export async function GET(req: Request) {
     const role = url.searchParams.get("role");
     
     // Build where clause
-    const where = role ? { role } : {};
+    const where = role ? {
+      roleId: role
+    } : undefined;
     
     // Fetch users
     const users = await prisma.user.findMany({
@@ -32,7 +34,12 @@ export async function GET(req: Request) {
         id: true,
         name: true,
         email: true,
-        role: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         name: "asc",

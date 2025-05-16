@@ -132,7 +132,7 @@ export async function PATCH(
           quantity: {
             decrement: inkRequest.quantity,
           },
-          updated_at: new Date(),
+          dateUpdated: new Date(),
         },
       });
     }
@@ -144,11 +144,9 @@ export async function PATCH(
       },
       data: {
         status,
-        admin_notes: notes,
+        user_notes: notes,
         approved_by: status === "APPROVED" ? userId : null,
-        approved_at: status === "APPROVED" ? new Date() : null,
         rejected_by: status === "REJECTED" ? userId : null,
-        rejected_at: status === "REJECTED" ? new Date() : null,
         ink_stock_id: status === "APPROVED" ? ink_stock_id : null,
         updated_at: new Date(),
       },

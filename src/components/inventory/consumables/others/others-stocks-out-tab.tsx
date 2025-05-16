@@ -85,10 +85,10 @@ export function OthersStocksOutTab() {
   // Filter items based on search query and category
   const filteredItems = usedItems.filter(item => {
     const matchesSearch = 
-      item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.qr_code && item.qr_code.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase()))
+      (item.item_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (item.description?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (item.qr_code?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (item.notes?.toLowerCase() || '').includes(searchQuery.toLowerCase())
     
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter
     
@@ -186,7 +186,7 @@ export function OthersStocksOutTab() {
                   <TableCell className="capitalize">{item.category}</TableCell>
                   <TableCell>{item.item_name}</TableCell>
                   <TableCell>{item.description || 'N/A'}</TableCell>
-                  <TableCell>{item.user.name}</TableCell>
+                  <TableCell>{item.user?.name || 'Unknown'}</TableCell>
                   <TableCell>{item.taken_by_user?.name || 'Unknown'}</TableCell>
                   <TableCell>{formatDate(item.used_at)}</TableCell>
                   <TableCell>{item.notes || 'N/A'}</TableCell>

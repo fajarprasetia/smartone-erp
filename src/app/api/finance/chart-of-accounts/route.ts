@@ -110,20 +110,19 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
     
-    // Create the new account
-    const newAccount = await db.chartOfAccount.create({
+    // Create new account
+    const account = await db.chartOfAccount.create({
       data: {
         code: data.code,
         name: data.name,
         type: data.type,
         subtype: data.subtype || null,
         description: data.description || null,
-        isActive: data.isActive !== undefined ? data.isActive : true,
-        balance: data.balance || 0
+        isActive: data.isActive !== undefined ? data.isActive : true
       }
     });
     
-    return NextResponse.json(newAccount, { status: 201 });
+    return NextResponse.json(account, { status: 201 });
     
   } catch (error) {
     console.error("Error creating account:", error);
@@ -171,7 +170,7 @@ export async function PUT(req: Request) {
       }
     }
     
-    // Update the account
+    // Update account
     const updatedAccount = await db.chartOfAccount.update({
       where: { id },
       data: {
@@ -180,8 +179,7 @@ export async function PUT(req: Request) {
         type: data.type !== undefined ? data.type : existingAccount.type,
         subtype: data.subtype !== undefined ? data.subtype : existingAccount.subtype,
         description: data.description !== undefined ? data.description : existingAccount.description,
-        isActive: data.isActive !== undefined ? data.isActive : existingAccount.isActive,
-        balance: data.balance !== undefined ? data.balance : existingAccount.balance
+        isActive: data.isActive !== undefined ? data.isActive : existingAccount.isActive
       }
     });
     

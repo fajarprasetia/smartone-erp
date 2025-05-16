@@ -74,15 +74,14 @@ export async function GET(req: NextRequest) {
           { type: "REVENUE" },
           { type: "EXPENSE" }
         ],
-        active: true
+        isActive: true
       },
       select: {
         id: true,
         code: true,
         name: true,
         type: true,
-        subtype: true,
-        parentId: true
+        subtype: true
       },
       orderBy: [
         { type: "asc" },
@@ -90,57 +89,39 @@ export async function GET(req: NextRequest) {
       ]
     })
 
-    // Create account hierarchy
-    const accountMap = new Map()
-    const topLevelAccounts = {
-      REVENUE: [],
-      EXPENSE: []
-    }
-
-    // First, map all accounts by ID
-    accounts.forEach(account => {
-      accountMap.set(account.id, {
+    // Initialize an array to categorize accounts
+    const accountsWithValues = accounts.map(account => {
+      // Add the transactions field to all accounts
+      return {
         ...account,
+        transactions: [],
         balance: 0,
         children: []
-      })
-    })
-
-    // Then, build the hierarchy
-    accounts.forEach(account => {
-      if (account.parentId && accountMap.has(account.parentId)) {
-        const parent = accountMap.get(account.parentId)
-        parent.children.push(accountMap.get(account.id))
-      } else {
-        // Top-level account
-        topLevelAccounts[account.type].push(accountMap.get(account.id))
       }
     })
 
-    // Fetch journal entry items for the specified date range
-    const journalItems = await db.journalEntryItem.findMany({
+    // Organize accounts by type
+    const revenueAccounts = accountsWithValues.filter(account => account.type === "REVENUE")
+    const expenseAccounts = accountsWithValues.filter(account => account.type === "EXPENSE")
+
+    // Define date filter
+    const dateFilter = {
+      date: {
+        gte: new Date(queryStartDate),
+        lte: new Date(queryEndDate)
+      }
+    }
+
+    // Find all journal entries with matching criteria
+    const journalEntries = await db.journalEntry.findMany({
       where: {
-        journalEntry: {
-          date: {
-            gte: new Date(queryStartDate),
-            lte: new Date(queryEndDate)
-          },
-          status: "POSTED"
-        },
-        account: {
-          OR: [
-            { type: "REVENUE" },
-            { type: "EXPENSE" }
-          ]
-        }
+        status: "POSTED",
+        ...dateFilter
       },
-      select: {
-        accountId: true,
-        debit: true,
-        credit: true,
-        account: {
-          select: {
-            type: true
+      include: {
+        items: {
+          include: {
+            account: true
           }
         }
       }
@@ -150,23 +131,27 @@ export async function GET(req: NextRequest) {
     let totalRevenue = 0
     let totalExpenses = 0
 
-    journalItems.forEach(item => {
-      if (!accountMap.has(item.accountId)) return
+    journalEntries.forEach(entry => {
+      entry.items.forEach(item => {
+        if (!accountsWithValues.some(account => account.id === item.accountId)) return
 
-      const account = accountMap.get(item.accountId)
-      const isRevenue = account.type === "REVENUE"
-      
-      // For revenue accounts: credits increase, debits decrease
-      // For expense accounts: debits increase, credits decrease
-      if (isRevenue) {
-        account.balance += item.credit - item.debit
-      } else {
-        account.balance += item.debit - item.credit
-      }
+        const account = accountsWithValues.find(account => account.id === item.accountId)
+        if (!account) return
+        
+        const isRevenue = account.type === "REVENUE"
+        
+        // For revenue accounts: credits increase, debits decrease
+        // For expense accounts: debits increase, credits decrease
+        if (isRevenue) {
+          account.balance += item.credit - item.debit
+        } else {
+          account.balance += item.debit - item.credit
+        }
+      })
     })
 
     // Calculate totals and handle rollups for parent accounts
-    const calculateTotals = (accounts, isRevenue = true) => {
+    const calculateTotals = (accounts: any[], isRevenue = true) => {
       let total = 0
       
       accounts.forEach(account => {
@@ -180,8 +165,8 @@ export async function GET(req: NextRequest) {
       return total
     }
 
-    totalRevenue = calculateTotals(topLevelAccounts.REVENUE, true)
-    totalExpenses = calculateTotals(topLevelAccounts.EXPENSE, false)
+    totalRevenue = calculateTotals(revenueAccounts, true)
+    totalExpenses = calculateTotals(expenseAccounts, false)
 
     // If comparing to previous period, calculate previous period data
     let previousPeriodData = null
@@ -198,29 +183,18 @@ export async function GET(req: NextRequest) {
       const formattedPrevEnd = format(previousEndDate, "yyyy-MM-dd")
 
       // Fetch journal entries for previous period
-      const prevJournalItems = await db.journalEntryItem.findMany({
+      const prevJournalEntries = await db.journalEntry.findMany({
         where: {
-          journalEntry: {
-            date: {
-              gte: previousStartDate,
-              lte: previousEndDate
-            },
-            status: "POSTED"
-          },
-          account: {
-            OR: [
-              { type: "REVENUE" },
-              { type: "EXPENSE" }
-            ]
+          status: "POSTED",
+          date: {
+            gte: previousStartDate,
+            lte: previousEndDate
           }
         },
-        select: {
-          accountId: true,
-          debit: true,
-          credit: true,
-          account: {
-            select: {
-              type: true
+        include: {
+          items: {
+            include: {
+              account: true
             }
           }
         }
@@ -231,22 +205,23 @@ export async function GET(req: NextRequest) {
       let prevTotalExpenses = 0
 
       // Create temporary map for previous period calculations
-      const prevAccountMap = new Map()
-      accounts.forEach(account => {
-        prevAccountMap.set(account.id, { ...account, balance: 0 })
-      })
+      const prevAccountsWithValues = accountsWithValues.map(account => ({ ...account, balance: 0 }))
 
-      prevJournalItems.forEach(item => {
-        if (!prevAccountMap.has(item.accountId)) return
+      prevJournalEntries.forEach(entry => {
+        entry.items.forEach(item => {
+          if (!prevAccountsWithValues.some(account => account.id === item.accountId)) return
 
-        const account = prevAccountMap.get(item.accountId)
-        const isRevenue = account.type === "REVENUE"
-        
-        if (isRevenue) {
-          prevTotalRevenue += item.credit - item.debit
-        } else {
-          prevTotalExpenses += item.debit - item.credit
-        }
+          const account = prevAccountsWithValues.find(account => account.id === item.accountId)
+          if (!account) return
+          
+          const isRevenue = account.type === "REVENUE"
+          
+          if (isRevenue) {
+            prevTotalRevenue += item.credit - item.debit
+          } else {
+            prevTotalExpenses += item.debit - item.credit
+          }
+        })
       })
 
       previousPeriodData = {
@@ -257,9 +232,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Prepare response data
-    const incomeStatementData = {
-      revenues: topLevelAccounts.REVENUE,
-      expenses: topLevelAccounts.EXPENSE,
+    const incomeStatementData: any = {
+      revenues: revenueAccounts,
+      expenses: expenseAccounts,
       totalRevenue,
       totalExpenses,
       netIncome: totalRevenue - totalExpenses,

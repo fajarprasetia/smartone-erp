@@ -60,31 +60,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-
-interface JournalEntryItem {
-  id: string
-  journalEntryId: string
-  accountId: string
-  accountCode: string
-  accountName: string
-  description?: string
-  debit: number
-  credit: number
-}
-
-interface JournalEntry {
-  id: string
-  entryNumber: string
-  date: string
-  periodId: string
-  periodName: string
-  description?: string
-  reference?: string
-  status: "DRAFT" | "POSTED" | "VOIDED"
-  createdAt: string
-  updatedAt: string
-  items: JournalEntryItem[]
-}
+import type { JournalEntry } from "@/types/prisma"
 
 interface PaginationData {
   totalCount: number
@@ -293,8 +269,8 @@ export function JournalEntriesList({ onAddEntry, onEditEntry }: JournalEntriesLi
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "dd MMM yyyy")
+  const formatDate = (date: Date | string) => {
+    return format(new Date(date), "dd MMM yyyy")
   }
 
   const renderPagination = () => {

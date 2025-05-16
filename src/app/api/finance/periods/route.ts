@@ -31,6 +31,12 @@ export async function GET(req: NextRequest) {
     }
     
     if (status) {
+      if (!["OPEN", "CLOSED", "PENDING"].includes(status)) {
+        return NextResponse.json(
+          { error: "Invalid status value" },
+          { status: 400 }
+        )
+      }
       where.status = status
     }
 
@@ -84,6 +90,14 @@ export async function POST(req: NextRequest) {
     if (!name || !startDate || !endDate || !type || !year) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      )
+    }
+
+    // Validate status
+    if (status && !["OPEN", "CLOSED", "PENDING"].includes(status)) {
+      return NextResponse.json(
+        { error: "Invalid status value" },
         { status: 400 }
       )
     }

@@ -43,6 +43,14 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 
+const PeriodStatus = {
+  OPEN: "OPEN",
+  CLOSED: "CLOSED",
+  PENDING: "PENDING",
+} as const;
+
+type PeriodStatusType = typeof PeriodStatus[keyof typeof PeriodStatus];
+
 // Form schema validation
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -52,8 +60,8 @@ const formSchema = z.object({
   year: z.coerce.number().int().min(2000, "Year must be 2000 or later"),
   quarter: z.coerce.number().int().min(1).max(4).optional().nullable(),
   month: z.coerce.number().int().min(1).max(12).optional().nullable(),
-  status: z.string().default("OPEN"),
-})
+  status: z.nativeEnum(PeriodStatus),
+}).required();
 
 // Form values type
 type FormValues = z.infer<typeof formSchema>
@@ -79,7 +87,7 @@ export default function FinancialPeriodForm({ periodId }: FinancialPeriodFormPro
       year: new Date().getFullYear(),
       quarter: null,
       month: null,
-      status: "OPEN",
+      status: PeriodStatus.OPEN,
     },
   })
 

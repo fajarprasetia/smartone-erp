@@ -32,13 +32,13 @@ A comprehensive ERP system built with Next.js 15.2.4, TypeScript, and modern web
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/smartone_erp.git
+   git clone https://github.com/fajarprasetia/smartone_erp.git
    cd smartone_erp
    ```
 
 2. Install dependencies:
    ```bash
-   pnpm install
+   pnpm install next@latest react@latest react-dom@latest eslint-config-next@latest
    ```
 
 3. Set up environment variables:
@@ -53,6 +53,29 @@ A comprehensive ERP system built with Next.js 15.2.4, TypeScript, and modern web
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Deployment
+
+### Quick Deployment on Local Windows PC as Server
+
+1. **One-Click Install and Setup**:
+   ```
+   install-server.bat
+   ```
+   This script checks prerequisites, sets up the environment, and configures the application.
+
+2. **Start the Server**:
+   ```
+   start-server.bat
+   ```
+
+3. **Installing as a Windows Service**:
+   To have the application start automatically with Windows:
+   ```
+   node scripts/install-service.js
+   ```
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Project Structure
 

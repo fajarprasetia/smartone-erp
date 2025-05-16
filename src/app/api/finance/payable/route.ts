@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
     }
     
     // Get bills with pagination
-    let bills = [];
+    let bills: any[] = [];
     try {
       bills = await db.bill.findMany({
         where: whereCondition,
@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
     // Prepare data for client
     const processedBills = bills.map(bill => {
       // Calculate paid amount and remaining amount
-      const paidAmount = bill.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+      const paidAmount = bill.payments?.reduce((sum: number, payment: any) => sum + payment.amount, 0) || 0;
       const remainingAmount = bill.totalAmount - paidAmount;
       
       // Determine status based on dueDate and payments
@@ -156,11 +156,11 @@ export async function GET(req: NextRequest) {
     const sevenDaysFromNow = addDays(today, 7);
     
     // Initialize with default values
-    let overdueBills = [];
-    let dueSoonBills = [];
+    let overdueBills: any[] = [];
+    let dueSoonBills: any[] = [];
     let vendorCount = 0;
     let newVendorCount = 0;
-    let vendors = [];
+    let vendors: any[] = [];
 
     try {
       // Count overdue bills
@@ -223,13 +223,13 @@ export async function GET(req: NextRequest) {
       return sum + (bill.status !== "PAID" ? bill.remainingAmount : 0);
     }, 0);
     
-    const overdueAmount = overdueBills.reduce((sum, bill) => {
-      const paidAmount = bill.payments?.reduce((pSum, payment) => pSum + payment.amount, 0) || 0;
+    const overdueAmount = overdueBills.reduce((sum: number, bill: any) => {
+      const paidAmount = bill.payments?.reduce((pSum: number, payment: any) => pSum + payment.amount, 0) || 0;
       return sum + (bill.totalAmount - paidAmount);
     }, 0);
     
-    const dueSoonAmount = dueSoonBills.reduce((sum, bill) => {
-      const paidAmount = bill.payments?.reduce((pSum, payment) => pSum + payment.amount, 0) || 0;
+    const dueSoonAmount = dueSoonBills.reduce((sum: number, bill: any) => {
+      const paidAmount = bill.payments?.reduce((pSum: number, payment: any) => pSum + payment.amount, 0) || 0;
       return sum + (bill.totalAmount - paidAmount);
     }, 0);
     
@@ -317,6 +317,7 @@ export async function POST(req: NextRequest) {
         vendorId: body.vendorId,
         issueDate: new Date(body.issueDate),
         dueDate: new Date(body.dueDate),
+        amount: totalAmount,
         status: "UNPAID",
         notes: body.notes,
         description: body.description,

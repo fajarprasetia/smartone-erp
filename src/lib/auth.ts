@@ -13,6 +13,7 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8 hours
   },
   providers: [
     CredentialsProvider({
@@ -33,7 +34,12 @@ export const authOptions: NextAuthOptions = {
           include: {
             role: {
               include: {
-                permissions: true
+                permissions: {
+                  select: {
+                    id: true,
+                    name: true,
+                  }
+                }
               }
             },
           },
@@ -52,11 +58,18 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Return minimal data to keep token size small
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: {
+            id: user.role.id,
+            name: user.role.name,
+            isAdmin: user.role.isAdmin,
+            // Only include permission IDs and names
+            permissions: user.role.permissions
+          },
         };
       },
     }),
@@ -73,6 +86,7 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
+        // Keep minimal data in token
         token.id = user.id;
         token.name = user.name || "";
         token.email = user.email || "";
@@ -83,6 +97,18 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 8 * 60 * 60,
+      },
+    },
   },
   debug: process.env.NODE_ENV === "development",
 };

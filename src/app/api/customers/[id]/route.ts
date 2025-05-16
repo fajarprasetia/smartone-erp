@@ -51,19 +51,14 @@ export async function GET(
     try {
       console.log(`Looking up customer with string ID: ${customerId}`);
       
-      const customer = await prisma.customer.findFirst({
-        where: {
-          id: customerId.toString()
-        },
-        select: {
-          id: true,
-          nama: true
-        }
-      });
+      // Adjust the query to work with all numeric or UUID based IDs
+      const customer = await prisma.$queryRaw`
+        SELECT id, nama FROM "Customer" WHERE id::text = ${customerId}
+      `;
       
-      if (customer) {
-        console.log("Found customer:", customer);
-        return NextResponse.json(customer);
+      if (customer && Array.isArray(customer) && customer.length > 0) {
+        console.log("Found customer:", customer[0]);
+        return NextResponse.json(customer[0]);
       }
     } catch (error) {
       console.error(`Error finding customer with string ID ${customerId}:`, error);

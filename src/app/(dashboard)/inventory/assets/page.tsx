@@ -22,28 +22,10 @@ import { format } from "date-fns"
 import { formatCurrency } from "@/lib/utils"
 import { AssetsList } from "@/components/inventory/assets-list"
 import { AssetDashboard } from "@/components/inventory/asset-dashboard"
-import { prisma } from "@/lib/prisma" // Import prisma client
-
-// Define asset and maintenance types
-interface Asset {
-  id: string
-  name: string
-  type: string
-  model?: string | null
-  serialNumber?: string | null
-  purchaseDate?: Date | null
-  purchasePrice?: string | null
-  warrantyExpiry?: Date | null
-  manufacturer?: string | null
-  supplier?: string | null
-  location?: string | null
-  status: string
-  lastMaintenanceDate?: Date | null
-  nextMaintenanceDate?: Date | null
-  notes?: string | null
-  createdAt: Date
-  updatedAt: Date
-}
+import { prisma } from "@/lib/db"
+import { assetTypes, assetStatuses, assetLocations } from "@/lib/utils/asset-utils"
+import { Asset as PrismaAsset } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 interface Pagination {
   page: number
@@ -58,34 +40,20 @@ interface AssetCounts {
   repair: number
 }
 
-// Asset options
-const assetTypes = [
-  "Production Equipment",
-  "Office Equipment",
-  "IT Hardware",
-  "Vehicle",
-  "Furniture",
-  "Building",
-  "Software License",
-  "Other"
-]
-
-const assetStatuses = [
-  "Active",
-  "Maintenance",
-  "Retired",
-  "Reserved",
-  "Under Repair"
-]
-
-const assetLocations = [
-  "Production Floor",
-  "Office - Main",
-  "Office - Remote",
-  "Warehouse",
-  "Storage",
-  "Workshop"
-]
+interface Asset {
+  id: string
+  name: string
+  type: string | null
+  serial_number: string | null
+  purchase_date: Date | null
+  value: Decimal | null
+  supplier: string | null
+  location: string | null
+  status: string | null
+  notes: string | null
+  created_at: Date
+  updated_at: Date
+}
 
 // This is a server component
 export default async function AssetsPage({
@@ -93,7 +61,7 @@ export default async function AssetsPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined }
 }) {
-  // Properly handle searchParams for Next.js 15.2.4
+  // Properly handle searchParams for Next.js
   const page = Number(searchParams?.page || "1")
   const pageSize = Number(searchParams?.pageSize || "10")
   const search = typeof searchParams?.search === 'string' ? searchParams.search : ""
@@ -104,28 +72,10 @@ export default async function AssetsPage({
   const where: any = {}
   
   if (search) {
-    // Check which columns actually exist in the database using a raw query
-    // to avoid referencing columns that don't exist
-    const tableInfo = await prisma.$queryRaw`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'Asset'
-    `;
-    
-    const columns = Array.isArray(tableInfo) 
-      ? tableInfo.map((col: any) => col.column_name) 
-      : [];
-    
-    console.log("Available columns in Asset table:", columns);
-    
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } }
-    ];
-    
-    // Only add serialNumber condition if it exists in the database
-    if (columns.includes('serialNumber')) {
-      where.OR.push({ serialNumber: { contains: search, mode: 'insensitive' } });
-    }
+      { name: { contains: search, mode: 'insensitive' } },
+      { serial_number: { contains: search, mode: 'insensitive' } }
+    ]
   }
   
   if (type !== "all") {
@@ -143,20 +93,13 @@ export default async function AssetsPage({
   const totalPages = Math.ceil(total / pageSize)
   const skip = (page - 1) * pageSize
   
-  // Get assets with correct field names directly from prisma
-  // Use a raw query to avoid column naming issues
-  const assets = await prisma.$queryRaw`
-    SELECT 
-      id, name, type, 
-      model, "serialNumber", "purchaseDate", 
-      "purchasePrice", "warrantyExpiry", manufacturer,
-      supplier, location, status,
-      "lastMaintenanceDate", "nextMaintenanceDate", notes,
-      "createdAt", "updatedAt"
-    FROM "Asset"
-    ORDER BY id DESC
-    LIMIT ${pageSize} OFFSET ${skip}
-  `;
+  // Get assets with pagination
+  const assets = await prisma.asset.findMany({
+    where,
+    orderBy: [{ createdAt: 'desc' }],
+    skip,
+    take: pageSize
+  })
 
   // Get counts for dashboard statistics
   const activeAssetsCount = await prisma.asset.count({ 
@@ -201,45 +144,22 @@ export default async function AssetsPage({
         </TabsContent>
         
         <TabsContent value="list" className="space-y-4">
-          <Suspense fallback={<div>Loading assets...</div>}>
+          <Suspense fallback={<div>Loading assets list...</div>}>
             <AssetsList 
-              assets={assets as any[]}
+              assets={assets} 
               pagination={pagination}
+              searchParams={{
+                search,
+                type,
+                status
+              }}
               assetTypes={assetTypes}
               assetStatuses={assetStatuses}
               assetLocations={assetLocations}
-              searchParams={searchParams || {}}
             />
           </Suspense>
         </TabsContent>
       </Tabs>
     </div>
   )
-}
-
-export function getStatusColor(status: string) {
-  switch (status) {
-    case "Active":
-      return "bg-green-500"
-    case "Maintenance":
-      return "bg-yellow-500"
-    case "Under Repair":
-      return "bg-orange-500"
-    case "Retired":
-      return "bg-gray-500"
-    case "Reserved":
-      return "bg-blue-500"
-    default:
-      return "bg-gray-500"
-  }
-}
-
-export function formatDate(dateString: Date | string | null | undefined) {
-  if (!dateString) return "-"
-  try {
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString
-    return format(date, 'dd MMM yyyy')
-  } catch (error) {
-    return "-"
-  }
 }

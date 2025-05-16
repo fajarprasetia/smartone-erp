@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import prisma from "@/lib/prisma"
+import { prisma } from "@/lib/db"
 import axios from "axios"
 
 // GET a specific template by ID
@@ -19,16 +19,8 @@ export async function GET(
     const id = params.id
     
     // Get template
-    const template = await prisma.whatsappTemplate.findUnique({
+    const template = await prisma.whatsAppTemplate.findUnique({
       where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     })
     
     if (!template) {
@@ -59,10 +51,10 @@ export async function PATCH(
     
     const id = params.id
     const body = await request.json()
-    const { description, status } = body
+    const { name, language, category, status, parameters } = body
     
     // Get template to check if it exists
-    const existingTemplate = await prisma.whatsappTemplate.findUnique({
+    const existingTemplate = await prisma.whatsAppTemplate.findUnique({
       where: { id }
     })
     
@@ -73,8 +65,16 @@ export async function PATCH(
     // Prepare update data
     const updateData: any = {}
     
-    if (description !== undefined) {
-      updateData.description = description
+    if (name !== undefined) {
+      updateData.name = name
+    }
+    
+    if (language !== undefined) {
+      updateData.language = language
+    }
+    
+    if (category !== undefined) {
+      updateData.category = category
     }
     
     if (status !== undefined) {
@@ -89,18 +89,16 @@ export async function PATCH(
       updateData.status = status
     }
     
+    if (parameters !== undefined) {
+      updateData.metadata = {
+        parameters: parameters,
+      }
+    }
+    
     // Update template
-    const updatedTemplate = await prisma.whatsappTemplate.update({
+    const updatedTemplate = await prisma.whatsAppTemplate.update({
       where: { id },
       data: updateData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     })
     
     return NextResponse.json({ 
@@ -130,53 +128,28 @@ export async function DELETE(
     
     const id = params.id
     
-    // Get template to access templateId
-    const template = await prisma.whatsappTemplate.findUnique({
-      where: { id }
-    })
+    // Get WhatsApp API settings
+    const settings = await prisma.whatsAppConfig.findFirst();
     
-    if (!template) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 })
+    if (!settings) {
+      return NextResponse.json(
+        { error: "WhatsApp settings not configured" },
+        { status: 400 }
+      );
     }
     
-    // Get WhatsApp API settings
-    const settings = await prisma.appSetting.findMany({
-      where: {
-        key: {
-          in: ["whatsapp_access_token", "whatsapp_business_account_id"]
-        }
-      }
-    })
-    
-    const accessToken = settings.find(s => s.key === "whatsapp_access_token")?.value
-    const businessAccountId = settings.find(s => s.key === "whatsapp_business_account_id")?.value
+    const accessToken = settings.accessToken;
+    const businessAccountId = settings.businessAccountId;
     
     if (!accessToken || !businessAccountId) {
       return NextResponse.json(
-        { error: "WhatsApp API settings not configured" },
+        { error: "Missing WhatsApp configuration: accessToken or businessAccountId" },
         { status: 400 }
-      )
-    }
-    
-    // Delete template from WhatsApp API if templateId exists
-    if (template.templateId) {
-      try {
-        await axios.delete(
-          `https://graph.facebook.com/v17.0/${template.templateId}`,
-          {
-            headers: {
-              "Authorization": `Bearer ${accessToken}`
-            }
-          }
-        )
-      } catch (apiError: any) {
-        console.error("Error deleting template from WhatsApp API:", apiError.message)
-        // Continue with local deletion even if API deletion fails
-      }
+      );
     }
     
     // Delete template from database
-    await prisma.whatsappTemplate.delete({
+    await prisma.whatsAppTemplate.delete({
       where: { id }
     })
     

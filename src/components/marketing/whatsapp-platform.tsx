@@ -14,10 +14,17 @@ import { toast } from '@/components/ui/use-toast'
 // Types for chat messages
 type ChatMessage = {
   id: string
-  customerId: string
+  customerId: bigint
   content: string
   timestamp: Date
   isIncoming: boolean
+  status?: string
+  messageType: string
+  mediaUrl?: string | null
+  metadata?: string | null
+  whatsappMessageId?: string | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Define customer interface that matches what's used in the component
@@ -27,8 +34,10 @@ interface Customer {
   phone?: string
 }
 
-type CustomerWithChats = Customer & {
-  formattedPhone: string
+type CustomerWithChats = {
+  id: bigint
+  nama: string
+  telp?: string | null
   messages: ChatMessage[]
 }
 
@@ -42,58 +51,37 @@ export function WhatsAppPlatform() {
   
   // Load customers on component mount
   useEffect(() => {
-    const loadCustomers = async () => {
+    async function fetchCustomers() {
       try {
-        setIsLoading(true)
-        const res = await fetch('/api/marketing/customers', { cache: 'no-store' })
-        if (!res.ok) throw new Error('Failed to fetch customers')
+        const response = await fetch('/api/marketing/whatsapp/customers')
+        const data = await response.json()
         
-        const customersData = await res.json()
-        
-        // Format customers with empty messages array for now
-        const formattedCustomers = customersData.map((data: customer) => ({
-          id: String(data.id), // Convert BigInt to string
-          name: data.nama,
-          phone: data.telp,
-          formattedPhone: data.telp ? `62${data.telp}` : '',
-          messages: []
+        // Transform the data to match our types
+        const customersWithChats: CustomerWithChats[] = data.map((customer: any) => ({
+          id: BigInt(customer.id),
+          nama: customer.nama,
+          telp: customer.telp,
+          messages: customer.messages.map((msg: any) => ({
+            ...msg,
+            customerId: BigInt(msg.customerId),
+            timestamp: new Date(msg.timestamp),
+            createdAt: new Date(msg.createdAt),
+            updatedAt: new Date(msg.updatedAt)
+          }))
         }))
         
-        setCustomers(formattedCustomers)
-        
-        // Load chat history for all customers
-        await Promise.all(
-          formattedCustomers.map(async (customer: CustomerWithChats) => {
-            try {
-              const chatRes = await fetch(`/api/marketing/whatsapp/chats/${customer.id}`)
-              if (chatRes.ok) {
-                const chatData = await chatRes.json()
-                customer.messages = chatData
-              }
-            } catch (error) {
-              console.error(`Error loading chats for customer ${customer.id}:`, error)
-            }
-          })
-        )
-        
-        setIsLoading(false)
-        
-        // Select first customer if available
-        if (formattedCustomers.length > 0 && !selectedCustomerId) {
-          setSelectedCustomerId(formattedCustomers[0].id)
-        }
+        setCustomers(customersWithChats)
       } catch (error) {
-        console.error('Error loading customers:', error)
-        setIsLoading(false)
+        console.error('Error fetching customers:', error)
         toast({
-          title: "Error",
-          description: "Failed to load customers. Please try again.",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to fetch customers',
+          variant: 'destructive'
         })
       }
     }
     
-    loadCustomers()
+    fetchCustomers()
   }, [])
   
   // Scroll to bottom of messages when new message is added
@@ -103,96 +91,106 @@ export function WhatsAppPlatform() {
   
   // Filter customers based on search term
   const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.formattedPhone.includes(searchTerm)
+    customer.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.telp?.includes(searchTerm) ||
+    customer.id.toString().includes(searchTerm)
   )
   
   // Get selected customer
-  const selectedCustomer = customers.find(c => c.id === selectedCustomerId)
+  const selectedCustomer = customers.find(c => c.id.toString() === selectedCustomerId)
   
   // Handle sending a message
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedCustomerId) return
     
-    const customer = customers.find(c => c.id === selectedCustomerId)
-    if (!customer?.phone) {
+    const customer = customers.find(c => c.id.toString() === selectedCustomerId)
+    if (!customer?.telp) {
       toast({
         title: "No phone number",
-        description: "This customer doesn't have a phone number.",
+        description: "This customer has no phone number registered",
         variant: "destructive"
       })
       return
     }
     
-    try {
-      // Create a temporary message to show immediately
-      const tempMessage: ChatMessage = {
-        id: `temp-${Date.now()}`,
-        customerId: selectedCustomerId,
-        content: messageText,
-        timestamp: new Date(),
-        isIncoming: false
-      }
-      
-      // Add message to UI immediately
-      setCustomers(prev => 
-        prev.map(c => 
-          c.id === selectedCustomerId 
-            ? { ...c, messages: [...c.messages, tempMessage] } 
-            : c
-        )
+    // Create temporary message
+    const tempMessage: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      customerId: customer.id,
+      content: messageText,
+      isIncoming: false,
+      timestamp: new Date(),
+      status: 'sending',
+      messageType: 'text',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    // Add temporary message to UI
+    setCustomers(prev => 
+      prev.map(c => 
+        c.id.toString() === selectedCustomerId 
+          ? { ...c, messages: [...c.messages, tempMessage] } 
+          : c
       )
-      
-      // Clear input
-      setMessageText('')
-      
-      // Send message to API
-      const res = await fetch('/api/marketing/whatsapp/send', {
+    )
+    
+    // Clear input
+    setMessageText('')
+    
+    try {
+      const response = await fetch('/api/marketing/whatsapp/send', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: selectedCustomerId,
           message: messageText,
-          phone: customer.phone
+          phone: customer.telp
         }),
       })
       
-      if (!res.ok) throw new Error('Failed to send message')
+      if (!response.ok) throw new Error('Failed to send message')
       
-      // Update with actual message from API
-      const sentMessage = await res.json()
+      const data = await response.json()
       
-      // Replace temp message with actual message
+      // Update message with server response
       setCustomers(prev => 
         prev.map(c => 
-          c.id === selectedCustomerId 
+          c.id.toString() === selectedCustomerId 
             ? { 
                 ...c, 
-                messages: c.messages
-                  .filter((m: ChatMessage) => m.id !== tempMessage.id)
-                  .concat(sentMessage) 
+                messages: c.messages.map(m => 
+                  m.id === tempMessage.id 
+                    ? {
+                        ...data.message,
+                        customerId: customer.id,
+                        timestamp: new Date(data.message.timestamp),
+                        createdAt: new Date(data.message.createdAt),
+                        updatedAt: new Date(data.message.updatedAt)
+                      }
+                    : m
+                )
               } 
             : c
         )
       )
     } catch (error) {
       console.error('Error sending message:', error)
+      
+      // Remove temporary message on error
+      setCustomers(prev => 
+        prev.map(c => 
+          c.id.toString() === selectedCustomerId 
+            ? { ...c, messages: c.messages.filter((m: ChatMessage) => !m.id.startsWith('temp-')) } 
+            : c
+        )
+      )
+      
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive"
       })
-      
-      // Remove temp message on error
-      setCustomers(prev => 
-        prev.map(c => 
-          c.id === selectedCustomerId 
-            ? { ...c, messages: c.messages.filter((m: ChatMessage) => !m.id.startsWith('temp-')) } 
-            : c
-        )
-      )
     }
   }
   
@@ -230,16 +228,16 @@ export function WhatsAppPlatform() {
             <div className="divide-y">
               {filteredCustomers.map((customer) => (
                 <div
-                  key={customer.id}
-                  className={`flex items-center p-3 cursor-pointer hover:bg-muted/50 ${selectedCustomerId === customer.id ? 'bg-muted' : ''}`}
-                  onClick={() => setSelectedCustomerId(customer.id)}
+                  key={customer.id.toString()}
+                  className={`flex items-center p-3 cursor-pointer hover:bg-muted/50 ${selectedCustomerId === customer.id.toString() ? 'bg-muted' : ''}`}
+                  onClick={() => setSelectedCustomerId(customer.id.toString())}
                 >
                   <Avatar className="h-10 w-10 mr-3">
-                    <AvatarFallback>{customer.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{customer.nama.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
-                      <p className="font-medium truncate">{customer.name}</p>
+                      <p className="font-medium truncate">{customer.nama}</p>
                       {customer.messages.length > 0 && (
                         <span className="text-xs text-muted-foreground">
                           {formatTime(customer.messages[customer.messages.length - 1].timestamp)}
@@ -249,7 +247,7 @@ export function WhatsAppPlatform() {
                     <p className="text-sm text-muted-foreground truncate">
                       {customer.messages.length > 0 
                         ? customer.messages[customer.messages.length - 1].content
-                        : customer.formattedPhone || 'No phone number'}
+                        : customer.telp || 'No phone number'}
                     </p>
                   </div>
                 </div>
@@ -266,12 +264,12 @@ export function WhatsAppPlatform() {
             {/* Chat header */}
             <div className="p-3 border-b flex items-center">
               <Avatar className="h-9 w-9 mr-2">
-                <AvatarFallback>{selectedCustomer.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{selectedCustomer.nama.substring(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">{selectedCustomer.name}</p>
+                <p className="font-medium">{selectedCustomer.nama}</p>
                 <p className="text-xs text-muted-foreground">
-                  {selectedCustomer.formattedPhone || 'No phone number'}
+                  {selectedCustomer.telp || 'No phone number'}
                 </p>
               </div>
             </div>
@@ -284,26 +282,42 @@ export function WhatsAppPlatform() {
                     <p className="text-muted-foreground">No messages yet</p>
                   </div>
                 ) : (
-                  selectedCustomer.messages.map((message: ChatMessage) => (
+                  selectedCustomer.messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.isIncoming ? 'justify-start' : 'justify-end'}`}
+                      className={`flex ${!message.isIncoming ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
                         className={`max-w-[70%] px-4 py-2 rounded-lg ${
-                          message.isIncoming
-                            ? 'bg-muted text-foreground'
-                            : 'bg-primary text-primary-foreground'
+                          !message.isIncoming
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-foreground'
                         }`}
                       >
+                        {message.mediaUrl && (
+                          <div className="mb-2">
+                            <img 
+                              src={message.mediaUrl} 
+                              alt="Media" 
+                              className="rounded-md max-w-full h-auto"
+                            />
+                          </div>
+                        )}
                         <p>{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.isIncoming
-                            ? 'text-muted-foreground'
-                            : 'text-primary-foreground/70'
-                        }`}>
-                          {formatTime(message.timestamp)}
-                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                          <p className={`text-xs ${
+                            !message.isIncoming
+                              ? 'text-primary-foreground/70'
+                              : 'text-muted-foreground'
+                          }`}>
+                            {new Date(message.timestamp).toLocaleTimeString()}
+                          </p>
+                          {message.status && (
+                            <span className="text-xs text-muted-foreground">
+                              {message.status}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))

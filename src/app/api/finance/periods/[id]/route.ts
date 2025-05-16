@@ -74,6 +74,14 @@ export async function PATCH(
     // Extract updatable fields
     const { name, startDate, endDate, type, year, quarter, month, status } = body
 
+    // Validate status if provided
+    if (status && !["OPEN", "CLOSED", "PENDING"].includes(status)) {
+      return NextResponse.json(
+        { error: "Invalid status value" },
+        { status: 400 }
+      )
+    }
+
     // Check for overlapping periods if dates are being updated
     if (startDate && endDate) {
       const overlappingPeriod = await db.financialPeriod.findFirst({

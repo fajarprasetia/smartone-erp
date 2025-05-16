@@ -46,10 +46,10 @@ export async function PATCH(
     } = body as StartCuttingParams;
 
     // Create a cutting record first
-    const cutting = await prisma.cutting.create({
+    const cutting = await prisma.order.create({
       data: {
-        name: assignee,
-        notes: notes || "",
+        cutting_id: assignee,
+        catatan_cutting: notes || "",
         cutting_mesin,
         cutting_speed,
         acc: acc || "",
@@ -57,21 +57,25 @@ export async function PATCH(
         cutting_bagus: cutting_bagus || "0",
         cutting_reject: cutting_reject || "0",
         userId: userId || null,
-        createdAt: new Date(),
+        tgl_cutting: new Date(),
       },
     });
 
     // Update the order with the cutting information
     const updatedOrder = await prisma.order.update({
-      where: {
-        id: orderId,
-      },
+      where: { id: params.id },
       data: {
-        cutting_id: cutting.id, // Link to the newly created cutting record
-        tgl_cutting: new Date(), // Record the current date/time as the cutting start time
-        status: "CUTTING IN PROGRESS", // Update the order status
-        catatan_cutting: notes || "", // Store any cutting notes
-        userId: userId, // Record which user started the cutting process
+        status: "CUTTING_IN_PROGRESS",
+        tgl_cutting: new Date(),
+        cutting_id: session.user.id,
+      },
+      include: {
+        cutting: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 

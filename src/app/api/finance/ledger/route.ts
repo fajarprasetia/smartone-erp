@@ -131,7 +131,7 @@ export async function GET(req: Request) {
       where: {
         startDate: { lte: new Date() },
         endDate: { gte: new Date() },
-        isClosed: false
+        status: "OPEN"
       }
     });
     

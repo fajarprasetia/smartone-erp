@@ -64,11 +64,13 @@ export async function PUT(
       where: { id },
       data: {
         name,
+        contactName: contactPerson,
         email,
         phone,
         address,
-        contactPerson,
+        taxId: null,
         notes,
+        status: "ACTIVE",
       },
     });
 
