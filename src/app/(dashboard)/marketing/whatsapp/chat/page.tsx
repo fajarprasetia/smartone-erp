@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +49,8 @@ interface Template {
   parameterCount: number;
 }
 
-export default function WhatsAppChatPage() {
+// Content component that uses searchParams
+function WhatsAppChatContent() {
   const searchParams = useSearchParams();
   const contactId = searchParams.get("contact");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -262,7 +263,7 @@ export default function WhatsAppChatPage() {
       setTimeout(scrollToBottom, 100);
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -609,5 +610,17 @@ export default function WhatsAppChatPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function WhatsAppChatPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="ml-2">Loading WhatsApp Chat...</span>
+    </div>}>
+      <WhatsAppChatContent />
+    </Suspense>
   );
 }

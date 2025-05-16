@@ -1,16 +1,14 @@
 import { Metadata } from "next"
 import FinancialPeriodForm from "@/components/finance/financial-period-form"
+import { PageProps } from "../../../../../../../build/types/app/page"
 
 export const metadata: Metadata = {
   title: "Edit Financial Period | SmartOne ERP",
   description: "Edit an existing financial period",
 }
 
-export default function EditFinancialPeriodPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function EditFinancialPeriodPage({ params }: PageProps){
+  const {id} = await params;
   return (
     <div className="flex flex-col gap-8 p-8">
       <div>
@@ -19,7 +17,7 @@ export default function EditFinancialPeriodPage({
           Update the details of an existing financial period
         </p>
       </div>
-      <FinancialPeriodForm periodId={params.id} />
+      <FinancialPeriodForm periodId={id} />
     </div>
   )
 } 

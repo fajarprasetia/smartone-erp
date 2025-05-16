@@ -52,7 +52,7 @@ A comprehensive ERP system built with Next.js 15.2.4, TypeScript, and modern web
    pnpm dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. Open [http://localhost:9000](http://localhost:9000) in your browser.
 
 ## Deployment
 

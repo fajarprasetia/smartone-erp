@@ -59,7 +59,7 @@ interface Asset {
 export default async function AssetsPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined }
+  searchParams: { [key: string]: string | string[] | undefined }
 }) {
   // Properly handle searchParams for Next.js
   const page = Number(searchParams?.page || "1")
