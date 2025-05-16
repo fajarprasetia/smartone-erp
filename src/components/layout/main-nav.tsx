@@ -225,11 +225,6 @@ const navItems: NavItem[] = [
         icon: <LayoutDashboard className="h-4 w-4" />,
       },
       {
-        title: "Products",
-        href: "/settings/products",
-        icon: <Package className="h-4 w-4" />,
-      },
-      {
         title: "Users",
         href: "/settings/users",
         icon: <User className="h-4 w-4" />,
